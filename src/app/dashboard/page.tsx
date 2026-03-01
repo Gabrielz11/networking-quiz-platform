@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BookMarked, HelpCircle, Layers } from "lucide-react";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -22,39 +23,63 @@ export default function Dashboard() {
         });
     }, [router]);
 
-    if (loading) return <div className="p-8">Carregando Dashboard...</div>;
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+    );
     if (!session) return null;
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-5xl">
-            <header className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Professor Dashboard</h1>
-                <Button variant="outline" onClick={() => supabase.auth.signOut().then(() => router.push("/"))}>
-                    Sair
-                </Button>
+        <div className="container mx-auto py-12 px-4 max-w-5xl">
+            <header className="mb-10 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Painel do Professor</h1>
+                    <p className="text-gray-500 mt-2">Gerencie seus módulos de ensino e base de questões para Inteligência Artificial.</p>
+                </div>
             </header>
 
             <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Módulos</CardTitle>
+                <Card className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-blue-500">
+                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                        <div className="bg-blue-100 p-3 rounded-xl">
+                            <Layers className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl">Módulos</CardTitle>
+                        </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-gray-600">Gerenciar módulos de estudo de IPv6.</p>
-                        <Link href="/dashboard/modules">
-                            <Button className="w-full">Gerenciar Módulos</Button>
+                    <CardContent className="space-y-6 pt-4">
+                        <p className="text-gray-600 leading-relaxed">
+                            Crie, edite e organize os conteúdos textuais em Markdown que seus alunos irão estudar.
+                        </p>
+                        <Link href="/dashboard/modules" className="block w-full">
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md">
+                                <BookMarked className="w-4 h-4 mr-2" />
+                                Gerenciar Módulos
+                            </Button>
                         </Link>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Questões</CardTitle>
+                <Card className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-indigo-500">
+                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                        <div className="bg-indigo-100 p-3 rounded-xl">
+                            <HelpCircle className="w-6 h-6 text-indigo-600" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl">Questões e IA</CardTitle>
+                        </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-gray-600">Cadastrar quizzes e estruturas explicativas (IA).</p>
-                        <Link href="/dashboard/questions">
-                            <Button className="w-full">Gerenciar Questões</Button>
+                    <CardContent className="space-y-6 pt-4">
+                        <p className="text-gray-600 leading-relaxed">
+                            Cadastre quizzes e forneça as &quot;Explicações Base&quot; que vão nutrir o tutor de Inteligência Artificial.
+                        </p>
+                        <Link href="/dashboard/questions" className="block w-full">
+                            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-md">
+                                <HelpCircle className="w-4 h-4 mr-2" />
+                                Gerenciar Questões
+                            </Button>
                         </Link>
                     </CardContent>
                 </Card>
