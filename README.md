@@ -51,11 +51,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUA_CHAVE_AQUI>
 ```
 
 ### 3. Passo-a-passo (Ollama)
-O sistema foi configurado para bater na API Rest Padrão da Ollama em `localhost:11434`. Assumindo que você tenha instalado o gerenciador na máquina, vamos puxar o modelo:
+O sistema foi configurado para bater na API Rest Padrão da Ollama em `localhost:11434`. Assumindo que você tenha instalado o gerenciador na máquina ou utilize Docker, vamos puxar o modelo:
 
+#### Opção A: Usando Instalação Nativa
 \`\`\`bash
 # Puxará ±4.7GBs pra memória. Pode ser trocado no `src/app/api/explain/route.ts` caso tenha limitações no Setup
 ollama run llama3
+\`\`\`
+
+#### Opção B: Usando Docker (Recomendado)
+Se preferir rodar em um contêiner Docker para manter sua máquina limpa:
+\`\`\`bash
+# Cria o contêiner com persistência de volume e exporta a porta 11434
+docker run -d --name ollama -p 11434:11434 -v ollama:/root/.ollama ollama/ollama
+
+# Executa e faz o download do modelo Llama3 dentro do contêiner
+docker exec ollama ollama run llama3
 \`\`\`
 
 ### 4. Rodando o Projeto
