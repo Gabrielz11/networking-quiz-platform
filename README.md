@@ -1,6 +1,6 @@
-# 🎓 AI-Powered Learning Management System (LMS)
+# 🎓 Lumina LMS
 
-Uma plataforma interativa web voltada para ensino, ondem professores podem adicionar seus próprios conteúdos e criar quizzes sobre **qualquer matéria ou assunto**.
+O **Lumina LMS** é uma plataforma interativa web voltada para ensino, onde professores podem adicionar seus próprios conteúdos e criar quizzes sobre **qualquer matéria ou assunto**.
 
 O sistema aplica conceitos de redução do ruído cognitivo visual através da metodologia **"uma-pergunta-por-vez"** e usa uma Inteligência Artificial local para fornecer correções construtivas e explicações personalizadas baseadas nas respostas erradas dos alunos, sempre de acordo com o gabarito e a explicação base estabelecida previamente pelo professor.
 
