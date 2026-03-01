@@ -2,7 +2,25 @@
 
 O **Lumina LMS** é uma plataforma interativa web voltada para ensino, onde professores podem adicionar seus próprios conteúdos e criar quizzes sobre **qualquer matéria ou assunto**.
 
-O sistema aplica conceitos de redução do ruído cognitivo visual através da metodologia **"uma-pergunta-por-vez"** e usa uma Inteligência Artificial local para fornecer correções construtivas e explicações personalizadas baseadas nas respostas erradas dos alunos, sempre de acordo com o gabarito e a explicação base estabelecida previamente pelo professor.
+O sistema aplica princípios de **redução de carga cognitiva visual**, organizando a interface de forma a apresentar **uma pergunta por vez**. Essa abordagem reduz a sobrecarga de informação simultânea, direciona o foco atencional do aluno e melhora o processamento das informações relevantes para a resolução do exercício.
+A estrutura sequencial das questões segue o princípio de **divulgação progressiva**, no qual apenas o conteúdo necessário no momento é exibido, evitando distrações visuais e minimizando a carga cognitiva extrínseca.
+Além disso, o sistema integra uma **Inteligência Artificial local** responsável por fornecer **correções construtivas e explicações personalizadas**, baseadas nas respostas incorretas dos alunos. 
+
+### A IA opera sempre alinhada:
+
+- Ao **gabarito oficial** definido previamente pelo professor  
+- À **explicação base estruturada** da disciplina  
+- Aos **critérios pedagógicos estabelecidos no planejamento do conteúdo**
+---
+
+Dessa forma, o sistema garante:
+
+- Consistência pedagógica  
+- Feedback adaptativo individualizado  
+- Correção orientada por critérios previamente validados  
+- Redução de respostas imprecisas ou divergentes do conteúdo oficial  
+
+Essa combinação entre organização cognitiva da interface e feedback inteligente promove um ambiente de aprendizagem mais focado, estruturado e pedagogicamente confiável.
 
 ## 🛠 Features Principais
 
@@ -15,7 +33,7 @@ O sistema aplica conceitos de redução do ruído cognitivo visual através da m
 * **Dashboard Autenticado**: Autenticação encriptada pelo Supabase. CRUD completo de módulos.
 * **Banco de Questões**: O professor elabora o quiz e vincula uma "Explicação Mestra" para cada questão. A IA se subordina a esse texto base e restringe possíveis alucinações. 
 
----
+
 
 ## 🚀 Arquitetura e Stack
 Este projeto foi desenvolvido com uma arquitetura moderna para suportar Next.js App Router num repositório SSR (Server Side Rendering), além de tecnologias locais para garantir R$0,00 de custo operacional de LLMs pra instituições acadêmicas:
