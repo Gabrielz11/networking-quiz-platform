@@ -1,8 +1,8 @@
-# 🎓 IPv6 Pedagogy App
+# 🎓 AI-Powered Learning Management System (LMS)
 
-Uma plataforma interativa web voltada para alunos iniciantes em Redes de Computadores, focada especificamente em contornar as dificuldades na compreensão do **endereçamento IPv6 (representação, abreviação e estrutura dos 128-bits)**. 
+Uma plataforma interativa web voltada para ensino, ondem professores podem adicionar seus próprios conteúdos e criar quizzes sobre **qualquer matéria ou assunto**.
 
-O sistema aplica conceitos de redução do ruído cognitivo visual através da metodologia **"uma-pergunta-por-vez"** e usa uma Inteligência Artificial local para fornecer correções construtivas e explicações baseadas nas respostas erradas dos alunos frente ao gabarito do professor.
+O sistema aplica conceitos de redução do ruído cognitivo visual através da metodologia **"uma-pergunta-por-vez"** e usa uma Inteligência Artificial local para fornecer correções construtivas e explicações personalizadas baseadas nas respostas erradas dos alunos, sempre de acordo com o gabarito e a explicação base estabelecida previamente pelo professor.
 
 ## 🛠 Features Principais
 
@@ -67,16 +67,16 @@ docker run -d --name ollama -p 11434:11434 -v ollama:/root/.ollama ollama/ollama
 
 # Executa e faz o download do modelo Llama3 dentro do contêiner
 docker exec ollama ollama run llama3
-\`\`\`
+```
 
 ### 4. Rodando o Projeto
 
-\`\`\`bash
-git clone https://github.com/SEU_USER/ipv6-lms.git
-cd ipv6-lms
+```bash
+git clone https://github.com/Gabrielz11/networking-quiz-platform.git
+cd networking-quiz-platform
 npm install
 npm run dev
-\`\`\`
+```
 A plataforma estará acessível agora em `http://localhost:3000`.
 
 ---
