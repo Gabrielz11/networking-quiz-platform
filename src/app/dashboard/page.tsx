@@ -51,34 +51,12 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="space-y-6 pt-4">
                         <p className="text-gray-600 leading-relaxed">
-                            Crie, edite e organize os conteúdos textuais em Markdown que seus alunos irão estudar.
+                            Crie, edite e organize os conteúdos textuais em Markdown que seus alunos irão estudar. A IA irá gerar questões automaticamente!
                         </p>
                         <Link href="/dashboard/modules" className="block w-full">
                             <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md">
                                 <BookMarked className="w-4 h-4 mr-2" />
                                 Gerenciar Módulos
-                            </Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-indigo-500">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                        <div className="bg-indigo-100 p-3 rounded-xl">
-                            <HelpCircle className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-xl">Questões e IA</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6 pt-4">
-                        <p className="text-gray-600 leading-relaxed">
-                            Cadastre quizzes e forneça as &quot;Explicações Base&quot; que vão nutrir o tutor de Inteligência Artificial.
-                        </p>
-                        <Link href="/dashboard/questions" className="block w-full">
-                            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-md">
-                                <HelpCircle className="w-4 h-4 mr-2" />
-                                Gerenciar Questões
                             </Button>
                         </Link>
                     </CardContent>
