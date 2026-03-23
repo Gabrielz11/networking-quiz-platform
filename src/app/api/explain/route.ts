@@ -14,9 +14,15 @@ export async function POST(req: Request) {
         const { prompt, base_explanation, student_answer, correct_answer } = await req.json();
 
         // System Instruction enviada diretamente ao Gemini configurado
-        const systemPrompt = `Você é um professor de Redes de Computadores especializado em IPv6. 
-Um aluno respondeu incorretamente a uma questão. 
-Sua tarefa é explicar o porquê do erro de forma encorajadora e pedagógica, utilizando a estrutura base fornecida.`;
+        const systemPrompt = `Você é um professor universitário especializado em Redes de Computadores 
+        com foco em IPv6. Um aluno respondeu incorretamente a uma questão de redes, e sua tarefa é explicar 
+        o erro de forma clara, encorajadora e pedagógica, ajudando o aluno a compreender o conceito correto. 
+        Comece reconhecendo o esforço do aluno com um tom motivador, depois explique de forma objetiva por que 
+        a resposta está incorreta, apontando qual conceito foi confundido; em seguida apresente o conceito correto 
+        de maneira simples e didática, utilizando exemplos quando possível; relacione esse conceito com situações 
+        reais de redes IPv6 ou infraestrutura de rede para reforçar a compreensão prática; e finalize com um breve
+        resumo que consolide o aprendizado, sempre usando linguagem acessível, evitando tom punitivo e incentivando 
+        o aluno a continuar aprendendo.`;
 
         // --- CÓDIGO COM GOOGLE GEMINI ---
         const model = genAI.getGenerativeModel({
@@ -28,13 +34,13 @@ Sua tarefa é explicar o porquê do erro de forma encorajadora e pedagógica, ut
         });
 
         const promptText = `Questão: ${prompt}
-Resposta correta: ${correct_answer}
-Resposta do aluno: ${student_answer}
+        Resposta correta: ${correct_answer}
+        Resposta do aluno: ${student_answer}
 
-[ESTRUTURA BASE PARA A EXPLICAÇÃO - USE ISTO COMO GUIA]
-${base_explanation}
+        [ESTRUTURA BASE PARA A EXPLICAÇÃO - USE ISTO COMO GUIA]
+        ${base_explanation}
 
-Explique o erro do aluno baseando-se na estrutura acima. Seja claro, direto e limite-se a 3-4 parágrafos pequenos.`;
+        Explique o erro do aluno baseando-se na estrutura acima. Seja claro, direto e limite-se a 1-3 parágrafos pequenos.`;
 
         const result = await model.generateContent(promptText);
         const explanationResponse = result.response.text() || "Não foi possível gerar a explicação.";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { getQuestions, getModules, createQuestion, updateQuestion, deleteQuestion } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function QuestionsManager() {
-    const [questions, setQuestions] = useState<Record<string, unknown>[]>([]);
-    const [modules, setModules] = useState<Record<string, unknown>[]>([]);
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [modules, setModules] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Form State
@@ -27,11 +27,11 @@ export default function QuestionsManager() {
     const fetchData = async () => {
         setLoading(true);
         const [qRes, mRes] = await Promise.all([
-            supabase.from("questions").select("*, modules(title)").order("created_at", { ascending: false }),
-            supabase.from("modules").select("id, title")
+            getQuestions(),
+            getModules()
         ]);
-        if (qRes.data) setQuestions(qRes.data);
-        if (mRes.data) setModules(mRes.data);
+        setQuestions(qRes);
+        setModules(mRes);
         setLoading(false);
     };
 
@@ -50,30 +50,30 @@ export default function QuestionsManager() {
         setIsDialogOpen(true);
     };
 
-    const openEditDialog = (q: Record<string, unknown>) => {
-        setEditingId(q.id as string);
-        setModuleId(q.module_id as string);
-        setPrompt(q.prompt as string);
+    const openEditDialog = (q: any) => {
+        setEditingId(q.id);
+        setModuleId(q.moduleId);
+        setPrompt(q.prompt);
         setOptions((q.options as string[]) || ["", "", "", ""]);
-        setCorrectIndex(typeof q.correct_option_index === 'number' ? q.correct_option_index : 0);
-        setExplanationBase((q.explanation_base as string) || "");
+        setCorrectIndex(typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : 0);
+        setExplanationBase((q.explanationBase as string) || "");
         setIsDialogOpen(true);
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         const qData = {
-            module_id: moduleId,
+            moduleId,
             prompt,
             options,
-            correct_option_index: Number(correctIndex),
-            explanation_base: explanationBase,
+            correctOptionIndex: Number(correctIndex),
+            explanationBase,
         };
 
         if (editingId) {
-            await supabase.from("questions").update(qData).eq("id", editingId);
+            await updateQuestion(editingId, qData);
         } else {
-            await supabase.from("questions").insert([qData]);
+            await createQuestion(qData);
         }
         setIsDialogOpen(false);
         fetchData();
@@ -81,7 +81,7 @@ export default function QuestionsManager() {
 
     const handleDelete = async (id: string) => {
         if (confirm("Excluir esta questão?")) {
-            await supabase.from("questions").delete().eq("id", id);
+            await deleteQuestion(id);
             fetchData();
         }
     };
@@ -118,6 +118,7 @@ export default function QuestionsManager() {
                                         value={moduleId}
                                         onChange={(e) => setModuleId(e.target.value)}
                                     >
+                                        <option value="" disabled>Selecione um módulo</option>
                                         {modules.map(m => (
                                             <option key={m.id as string} value={m.id as string}>{m.title as string}</option>
                                         ))}
@@ -170,11 +171,11 @@ export default function QuestionsManager() {
                         <CardContent className="pt-6">
                             <div className="flex justify-between items-start gap-4">
                                 <div className="space-y-2 w-full">
-                                    <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">Módulo: {(q.modules as Record<string, string>)?.title}</span>
+                                    <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">Módulo: {q.module?.title}</span>
                                     <h3 className="text-lg font-medium">{q.prompt as string}</h3>
                                     <div className="text-sm text-gray-600 space-y-1">
                                         {(q.options as string[])?.map((opt: string, i: number) => (
-                                            <div key={i} className={i === q.correct_option_index ? "font-bold text-green-600" : ""}>
+                                            <div key={i} className={i === q.correctOptionIndex ? "font-bold text-green-600" : ""}>
                                                 - {opt}
                                             </div>
                                         ))}
