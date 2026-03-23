@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modules   Module[]
+}
+
+model Module {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  content     String     @db.Text
+  imageUrl    String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  questions   Question[]
+}
+
+model Question {
+  id                  String   @id @default(cuid())
+  moduleId            String
+  module              Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  prompt              String   @db.Text
+  options             String[]
+  correctOptionIndex  Int
+  explanationBase     String?  @db.Text
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}

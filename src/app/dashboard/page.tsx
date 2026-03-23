@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookMarked, HelpCircle, Layers } from "lucide-react";
+import { BookMarked, Layers } from "lucide-react";
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -31,7 +31,7 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="max-w-md mx-auto sm:mx-0">
                 <Card className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-blue-500">
                     <CardHeader className="flex flex-row items-center gap-4 pb-2">
                         <div className="bg-blue-100 p-3 rounded-xl">
@@ -49,27 +49,6 @@ export default function Dashboard() {
                             <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md outline-none">
                                 <BookMarked className="w-4 h-4 mr-2" />
                                 Gerenciar Módulos
-                            </Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 border-t-4 border-t-indigo-500">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                        <div className="bg-indigo-100 p-3 rounded-xl">
-                            <HelpCircle className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-xl">Questões</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6 pt-4">
-                        <p className="text-gray-600 leading-relaxed">
-                            Gerencie o banco de questões manuais e as bases de explicação master utilizadas pela IA para o feedback dos alunos.
-                        </p>
-                        <Link href="/dashboard/questions" className="block w-full">
-                            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-md outline-none">
-                                <HelpCircle className="w-4 h-4 mr-2" />
-                                Gerenciar Questões
                             </Button>
                         </Link>
                     </CardContent>

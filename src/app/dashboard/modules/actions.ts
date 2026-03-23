@@ -10,14 +10,16 @@ export async function getModules() {
   });
 }
 
-export async function createModule(data: { title: string; content: string }) {
+export async function createModule(data: { title: string; content: string; description?: string; imageUrl?: string }) {
   const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (!session?.user?.id) throw new Error("Não autorizado");
 
   await prisma.module.create({
     data: {
       title: data.title,
       content: data.content,
+      description: data.description,
+      imageUrl: data.imageUrl,
       authorId: session.user.id,
     },
   });
@@ -26,12 +28,14 @@ export async function createModule(data: { title: string; content: string }) {
   revalidatePath("/student");
 }
 
-export async function updateModule(id: string, data: { title: string; content: string }) {
+export async function updateModule(id: string, data: { title: string; content: string; description?: string; imageUrl?: string }) {
   await prisma.module.update({
     where: { id },
     data: {
       title: data.title,
       content: data.content,
+      description: data.description,
+      imageUrl: data.imageUrl,
     },
   });
 

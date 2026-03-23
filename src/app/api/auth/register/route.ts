@@ -4,10 +4,10 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, role } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+      return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400 });
     }
 
     const exists = await prisma.user.findUnique({
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     });
 
     if (exists) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+      return NextResponse.json({ error: "Este usuário já existe" }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -25,13 +25,13 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         name: name || email.split("@")[0],
-        role: "STUDENT", // Default to student
+        role: role === "TEACHER" ? "TEACHER" : "STUDENT",
       },
     });
 
-    return NextResponse.json({ message: "User created successfully" }, { status: 201 });
+    return NextResponse.json({ message: "Usuário criado com sucesso!" }, { status: 201 });
   } catch (error) {
     console.error("REGISTRATION ERROR:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });
   }
 }
