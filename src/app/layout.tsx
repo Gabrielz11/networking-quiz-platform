@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "Plataforma interativa com correção pedagógica via IA local",
 };
 
+import { AuthProvider } from "@/components/providers/SessionProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,11 +21,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth">
       <body className={`${inter.className} min-h-screen bg-gray-50/50 flex flex-col antialiased`}>
-        <Navbar />
-        <main className="flex-1 flex flex-col">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

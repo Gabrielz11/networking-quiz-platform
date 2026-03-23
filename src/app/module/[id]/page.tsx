@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 import { marked } from "marked";
 import { Button } from "@/components/ui/button";
 
@@ -8,13 +8,11 @@ export const revalidate = 0; // Disable cache for SSR
 export default async function ModulePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
-    const { data: moduleData, error } = await supabase
-        .from("modules")
-        .select("*")
-        .eq("id", id)
-        .single();
+    const moduleData = await prisma.module.findUnique({
+        where: { id },
+    });
 
-    if (error || !moduleData) {
+    if (!moduleData) {
         return (
             <div className="container mx-auto py-8 text-center text-red-500">
                 Módulo não encontrado.
@@ -32,9 +30,6 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
 
             <div className="bg-white rounded-xl shadow-sm p-8 border">
                 <h1 className="text-3xl font-bold mb-4">{moduleData.title}</h1>
-                {moduleData.description && (
-                    <p className="text-gray-600 mb-8 border-b pb-4">{moduleData.description}</p>
-                )}
 
                 <article
                     className="prose prose-blue max-w-none"

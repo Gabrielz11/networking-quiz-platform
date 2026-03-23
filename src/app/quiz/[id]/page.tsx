@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { getQuizQuestions } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -18,8 +18,8 @@ interface Question {
     id: string;
     prompt: string;
     options: string[];
-    correct_option_index: number;
-    explanation_base: string; 
+    correctOptionIndex: number;
+    explanationBase: string; 
     difficulty: "easy" | "medium" | "hard";
     base_text: string;
 }
@@ -64,47 +64,41 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [finished, setFinished] = useState(false);
 
     useEffect(() => {
-        supabase
-            .from("questions")
-            .select("*")
-            .eq("module_id", id)
-            .then(({ data }) => {
-                if (data && data.length > 0) {
-                    const parsed: Question[] = data.map((q: any) => {
-                        let diff: "easy" | "medium" | "hard" = "easy";
-                        let baseTxt = q.explanation_base;
-                        try {
-                            const p = JSON.parse(q.explanation_base);
-                            if (p.difficulty) diff = p.difficulty;
-                            if (p.text) baseTxt = p.text;
-                        } catch (e) {
-                            // legacy string format
-                        }
-                        return { ...q, difficulty: diff, base_text: baseTxt };
-                    });
-
-                    setAllQuestions(parsed);
-                    const easy = parsed.filter(q => q.difficulty === "easy");
-                    const med = parsed.filter(q => q.difficulty === "medium");
-                    const hards = parsed.filter(q => q.difficulty === "hard");
-
-                    // Fallback se não vier alguma dificuldade
-                    setEasyQs(easy);
-                    setMediumQs(med);
-                    setHardQs(hards);
-
-                    // Inicializar primeira questão
-                    let firstLocal = easy.length > 0 ? easy[0] : (med.length > 0 ? med[0] : hards[0]);
-                    if (firstLocal) {
-                        setCurrentQuestion(firstLocal);
-                        setCurrentDifficulty(firstLocal.difficulty);
-                        if (firstLocal.difficulty === "easy") setEasyQs(easy.slice(1));
-                        else if (firstLocal.difficulty === "medium") setMediumQs(med.slice(1));
-                        else setHardQs(hards.slice(1));
+        getQuizQuestions(id).then((data) => {
+            if (data && data.length > 0) {
+                const parsed: Question[] = data.map((q: any) => {
+                    let diff: "easy" | "medium" | "hard" = "easy";
+                    let baseTxt = q.explanationBase || "";
+                    try {
+                        const p = JSON.parse(q.explanationBase as string);
+                        if (p.difficulty) diff = p.difficulty;
+                        if (p.text) baseTxt = p.text;
+                    } catch (e) {
+                        // legacy or plain string
                     }
+                    return { ...q, difficulty: diff, base_text: baseTxt };
+                });
+
+                setAllQuestions(parsed);
+                const easy = parsed.filter(q => q.difficulty === "easy");
+                const med = parsed.filter(q => q.difficulty === "medium");
+                const hards = parsed.filter(q => q.difficulty === "hard");
+
+                setEasyQs(easy);
+                setMediumQs(med);
+                setHardQs(hards);
+
+                let firstLocal = easy.length > 0 ? easy[0] : (med.length > 0 ? med[0] : hards[0]);
+                if (firstLocal) {
+                    setCurrentQuestion(firstLocal);
+                    setCurrentDifficulty(firstLocal.difficulty);
+                    if (firstLocal.difficulty === "easy") setEasyQs(easy.slice(1));
+                    else if (firstLocal.difficulty === "medium") setMediumQs(med.slice(1));
+                    else setHardQs(hards.slice(1));
                 }
-                setLoading(false);
-            });
+            }
+            setLoading(false);
+        });
     }, [id]);
 
     const pullNextQuestion = (targetDiff: "easy" | "medium" | "hard") => {
@@ -148,15 +142,14 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const handleAnswer = async () => {
         if (selectedOption === null || !currentQuestion) return;
 
-        const isCorrect = selectedOption === currentQuestion.correct_option_index;
+        const isCorrect = selectedOption === currentQuestion.correctOptionIndex;
 
         if (isCorrect) {
-            // Acertou: Registra e sobe dificuldade (ou mantém hard)
             const newRes: AttemptResult = {
                 questionId: currentQuestion.id,
                 prompt: currentQuestion.prompt,
                 chosenIndex: selectedOption,
-                correctIndex: currentQuestion.correct_option_index,
+                correctIndex: currentQuestion.correctOptionIndex,
                 isCorrect: true,
                 explanationAi: null,
                 baseExplanation: currentQuestion.base_text,
@@ -173,7 +166,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
             pullNextQuestion(nextDiff);
 
         } else {
-            // Errou: Busca explicação IA, exibe erro
             setFetchingAi(true);
             let explanationAi = null;
             let imageUrlAi = null;
@@ -185,7 +177,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                         prompt: currentQuestion.prompt,
                         base_explanation: currentQuestion.base_text,
                         student_answer: currentQuestion.options[selectedOption],
-                        correct_answer: currentQuestion.options[currentQuestion.correct_option_index],
+                        correct_answer: currentQuestion.options[currentQuestion.correctOptionIndex],
                     }),
                 });
                 const aiData = await aiReq.json();
@@ -210,7 +202,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 questionId: currentQuestion.id,
                 prompt: currentQuestion.prompt,
                 chosenIndex: selectedOption,
-                correctIndex: currentQuestion.correct_option_index,
+                correctIndex: currentQuestion.correctOptionIndex,
                 isCorrect: false,
                 explanationAi,
                 imageUrlAi,
@@ -228,10 +220,9 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         
         let nextDiff = currentDifficulty;
         if (newErrors > 1) {
-            // Cai nível
             if (currentDifficulty === "hard") nextDiff = "medium";
             else if (currentDifficulty === "medium") nextDiff = "easy";
-            setConsecutiveErrors(0); // reset
+            setConsecutiveErrors(0);
         } else {
             setConsecutiveErrors(newErrors);
         }
@@ -290,7 +281,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
                                         {!r.isCorrect && r.explanationAi && (
                                             <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded text-blue-900">
-                                                <strong className="block mb-2">Explicação da IA Pedagógica:</strong>
+                                                <strong className="block mb-2 font-sans">IA Pedagógica:</strong>
                                                 <div className="whitespace-pre-wrap text-sm leading-relaxed mb-4">
                                                     {r.explanationAi}
                                                 </div>
@@ -351,8 +342,8 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                                 className={`
                                     justify-start h-auto py-4 px-6 text-left whitespace-normal font-normal text-md
                                     ${selectedOption === idx ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
-                                    ${showingFeedback && idx === currentQuestion.correct_option_index ? 'bg-green-100 border-green-500 text-green-800' : ''}
-                                    ${showingFeedback && selectedOption === idx && idx !== currentQuestion.correct_option_index ? 'bg-red-100 border-red-500 text-red-800' : ''}
+                                    ${showingFeedback && idx === currentQuestion.correctOptionIndex ? 'bg-green-100 border-green-500 text-green-800' : ''}
+                                    ${showingFeedback && selectedOption === idx && idx !== currentQuestion.correctOptionIndex ? 'bg-red-100 border-red-500 text-red-800' : ''}
                                 `}
                                 onClick={() => setSelectedOption(idx)}
                             >

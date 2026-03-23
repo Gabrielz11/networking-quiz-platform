@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Sparkles, BrainCircuit } from "lucide-react";
@@ -7,7 +7,10 @@ import { BookOpen, Sparkles, BrainCircuit } from "lucide-react";
 export const revalidate = 0; // Disable cache for dev
 
 export default async function Home() {
-  const { data: modules, error } = await supabase.from("modules").select("*").order("created_at", { ascending: true });
+  const modules = await prisma.module.findMany({
+    orderBy: { createdAt: "asc" },
+  });
+  const error = null;
 
   return (
     <div className="flex flex-col min-h-full">
@@ -47,7 +50,6 @@ export default async function Home() {
         {error && (
           <div className="p-4 border-l-4 border-red-500 bg-red-50 text-red-700 rounded-md shadow-sm mb-6">
             <p className="font-semibold">Erro ao carregar Módulos.</p>
-            <p className="text-sm">{error.message}</p>
           </div>
         )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,15 +20,20 @@ export default function AuthPage() {
         setLoading(true);
         setErrorMSG("");
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const res = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            });
 
-        if (error) {
-            setErrorMSG(error.message);
-        } else {
-            router.push("/dashboard");
+            if (res?.error) {
+                setErrorMSG("Email ou senha inválidos.");
+            } else {
+                router.push("/dashboard");
+            }
+        } catch (err: any) {
+            setErrorMSG(err.message || "Erro inesperado ao realizar login.");
         }
         setLoading(false);
     };
@@ -37,15 +42,22 @@ export default function AuthPage() {
         setLoading(true);
         setErrorMSG("");
 
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-        });
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
 
-        if (error) {
-            setErrorMSG(error.message);
-        } else {
-            alert("Verifique seu email para confirmar o cadastro.");
+            const data = await res.json();
+
+            if (!res.ok) {
+                setErrorMSG(data.error || "Erro ao realizar cadastro.");
+            } else {
+                alert("Cadastro realizado com sucesso! Agora você pode entrar.");
+            }
+        } catch (err: any) {
+            setErrorMSG("Falha na conexão com o servidor ao cadastrar.");
         }
         setLoading(false);
     };
@@ -58,7 +70,7 @@ export default function AuthPage() {
                         <CardTitle className="text-2xl text-center">Login | Cadastro</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {errorMSG && <p className="text-red-500 font-medium text-sm">{errorMSG}</p>}
+                        {errorMSG && <p className="text-red-500 font-medium text-sm text-center">{errorMSG}</p>}
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -93,7 +105,7 @@ export default function AuthPage() {
                         >
                             Criar Conta
                         </Button>
-                        <Button variant="link" className="w-full mt-4" onClick={() => router.push("/")}>
+                        <Button variant="link" className="w-full mt-4" onClick={() => router.push("/")} type="button">
                             Voltar ao Início
                         </Button>
                     </CardFooter>

@@ -4,30 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { signOut, useSession } from "next-auth/react";
 
 export function Navbar() {
     const pathname = usePathname();
-    const [session, setSession] = useState<unknown>(null);
-
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-        });
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+    const { data: session } = useSession();
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        window.location.href = "/";
+        await signOut({ callbackUrl: "/" });
     };
 
     return (
