@@ -16,7 +16,7 @@ export interface AttemptResult {
     isCorrect: boolean;
     explanationAi: string | null;
     imageUrlAi?: string | null;
-    baseExplanation: string;
+    baseExplanation?: string;
     options: string[];
     difficulty: string;
 }

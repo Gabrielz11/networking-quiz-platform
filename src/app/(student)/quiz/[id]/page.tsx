@@ -1,220 +1,216 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getQuizQuestions } from "../actions";
-import { Question, AttemptResult } from "./_components/_types";
 import { QuizLoadingState } from "./_components/QuizLoadingState";
-import { QuizEmptyState } from "./_components/QuizEmptyState";
 import { QuizResultsCard } from "./_components/QuizResultsCard";
 import { QuizProgressBar } from "./_components/QuizProgressBar";
 import { QuizQuestionCard } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+interface Question {
+    id: string;
+    prompt: string;
+    options: string[];
+    difficulty: "EASY" | "MEDIUM" | "HARD";
+}
+
+interface AttemptResult {
+    questionId: string;
+    prompt: string;
+    chosenIndex: number;
+    correctIndex: number;
+    isCorrect: boolean;
+    explanationAi: string | null;
+    options: string[];
+    difficulty: string;
+}
 
 export default function QuizPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+    const { id: moduleId } = use(params);
     const router = useRouter();
 
-    const [allQuestions, setAllQuestions] = useState<Question[]>([]);
-    const [easyQs, setEasyQs] = useState<Question[]>([]);
-    const [mediumQs, setMediumQs] = useState<Question[]>([]);
-    const [hardQs, setHardQs] = useState<Question[]>([]);
-
+    const [sessionId, setSessionId] = useState<string | null>(null);
     const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-    const [currentDifficulty, setCurrentDifficulty] = useState<"easy" | "medium" | "hard">("easy");
-    const [consecutiveErrors, setConsecutiveErrors] = useState(0);
+    const [currentDifficulty, setCurrentDifficulty] = useState<"EASY" | "MEDIUM" | "HARD">("EASY");
     const [questionsAnswered, setQuestionsAnswered] = useState(0);
+    const [score, setScore] = useState(0);
 
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [generatingQuestion, setGeneratingQuestion] = useState(false);
+    const isFetchingRef = useRef(false);
 
     // AI feedback state
-    const [fetchingAi, setFetchingAi] = useState(false);
-    const [aiFeedback, setAiFeedback] = useState<{ explanationAi: string | null, imageUrlAi: string | null, baseStr: string } | null>(null);
+    const [aiFeedback, setAiFeedback] = useState<{ explanationAi: string | null, correctIndex: number | null } | null>(null);
     const [showingFeedback, setShowingFeedback] = useState(false);
 
     // Results
     const [results, setResults] = useState<AttemptResult[]>([]);
     const [finished, setFinished] = useState(false);
 
+    // 1. Initial Load: Start or Resume Session
     useEffect(() => {
-        getQuizQuestions(id).then((data) => {
-            if (data && data.length > 0) {
-                const parsed: Question[] = data.map((q: any) => {
-                    let diff: "easy" | "medium" | "hard" = "easy";
-                    let baseTxt = q.explanationBase || "";
-                    try {
-                        const p = JSON.parse(q.explanationBase as string);
-                        if (p.difficulty) diff = p.difficulty;
-                        if (p.text) baseTxt = p.text;
-                    } catch (e) {
-                        // legacy or plain string
-                    }
-                    return { ...q, difficulty: diff, base_text: baseTxt };
-                });
+        let isMounted = true;
 
-                setAllQuestions(parsed);
-                const easy = parsed.filter(q => q.difficulty === "easy");
-                const med = parsed.filter(q => q.difficulty === "medium");
-                const hards = parsed.filter(q => q.difficulty === "hard");
-
-                setEasyQs(easy);
-                setMediumQs(med);
-                setHardQs(hards);
-
-                let firstLocal = easy.length > 0 ? easy[0] : (med.length > 0 ? med[0] : hards[0]);
-                if (firstLocal) {
-                    setCurrentQuestion(firstLocal);
-                    setCurrentDifficulty(firstLocal.difficulty);
-                    if (firstLocal.difficulty === "easy") setEasyQs(easy.slice(1));
-                    else if (firstLocal.difficulty === "medium") setMediumQs(med.slice(1));
-                    else setHardQs(hards.slice(1));
-                }
-            }
-            setLoading(false);
-        });
-    }, [id]);
-
-    const pullNextQuestion = (targetDiff: "easy" | "medium" | "hard") => {
-        let e = [...easyQs];
-        let m = [...mediumQs];
-        let h = [...hardQs];
-
-        let nextQ: Question | undefined;
-        let actualDiff = targetDiff;
-
-        if (targetDiff === "easy") {
-            if (e.length > 0) { nextQ = e.shift(); }
-            else if (m.length > 0) { nextQ = m.shift(); actualDiff = "medium" }
-            else if (h.length > 0) { nextQ = h.shift(); actualDiff = "hard" }
-        } else if (targetDiff === "medium") {
-            if (m.length > 0) { nextQ = m.shift(); }
-            else if (h.length > 0) { nextQ = h.shift(); actualDiff = "hard" }
-            else if (e.length > 0) { nextQ = e.shift(); actualDiff = "easy" }
-        } else if (targetDiff === "hard") {
-            if (h.length > 0) { nextQ = h.shift(); }
-            else if (m.length > 0) { nextQ = m.shift(); actualDiff = "medium" }
-            else if (e.length > 0) { nextQ = e.shift(); actualDiff = "easy" }
-        }
-
-        setEasyQs(e);
-        setMediumQs(m);
-        setHardQs(h);
-
-        if (nextQ) {
-            setCurrentQuestion(nextQ);
-            setCurrentDifficulty(actualDiff);
-            setSelectedOption(null);
-            setShowingFeedback(false);
-            setAiFeedback(null);
-            setQuestionsAnswered(prev => prev + 1);
-        } else {
-            setFinished(true);
-        }
-    };
-
-    const handleAnswer = async () => {
-        if (selectedOption === null || !currentQuestion) return;
-
-        const isCorrect = selectedOption === currentQuestion.correctOptionIndex;
-
-        if (isCorrect) {
-            const newRes: AttemptResult = {
-                questionId: currentQuestion.id,
-                prompt: currentQuestion.prompt,
-                chosenIndex: selectedOption,
-                correctIndex: currentQuestion.correctOptionIndex,
-                isCorrect: true,
-                explanationAi: null,
-                baseExplanation: currentQuestion.base_text,
-                options: currentQuestion.options,
-                difficulty: currentDifficulty
-            };
-            setResults(prev => [...prev, newRes]);
-            setConsecutiveErrors(0);
-
-            let nextDiff = currentDifficulty;
-            if (currentDifficulty === "easy") nextDiff = "medium";
-            else if (currentDifficulty === "medium") nextDiff = "hard";
-
-            pullNextQuestion(nextDiff);
-
-        } else {
-            setFetchingAi(true);
-            let explanationAi = null;
-            let imageUrlAi = null;
+        const initQuiz = async () => {
             try {
-                const aiReq = await fetch("/api/explain", {
+                const res = await fetch("/api/quiz/session/start", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        prompt: currentQuestion.prompt,
-                        base_explanation: currentQuestion.base_text,
-                        student_answer: currentQuestion.options[selectedOption],
-                        correct_answer: currentQuestion.options[currentQuestion.correctOptionIndex],
-                    }),
+                    body: JSON.stringify({ moduleId })
                 });
-                const aiData = await aiReq.json();
-                if (aiData.fallback) {
-                    explanationAi = `Sem resposta IA. Explicativo: ${currentQuestion.base_text}`;
+                const data = await res.json();
+
+                if (!isMounted) return;
+
+                if (data.success) {
+                    setSessionId(data.quizSession.id);
+                    setQuestionsAnswered(data.quizSession.currentQuestionIndex);
+                    setScore(data.quizSession.score);
+                    setCurrentDifficulty(data.quizSession.currentLevel);
+                    
+                    if (data.quizSession.status === "COMPLETED") {
+                        setFinished(true);
+                    } else {
+                        // Load current question for this session
+                        fetchNextQuestion(data.quizSession.id);
+                    }
                 } else {
-                    explanationAi = aiData.explanation;
-                    imageUrlAi = aiData.imageUrl;
+                    toast.error("Erro ao iniciar quiz.");
                 }
             } catch (err) {
-                explanationAi = `Erro de rede. Explicativo: ${currentQuestion.base_text}`;
+                console.error(err);
+                toast.error("Erro de conexão.");
+            } finally {
+                setLoading(false);
             }
-            setFetchingAi(false);
+        };
 
-            setAiFeedback({
-                explanationAi,
-                imageUrlAi: imageUrlAi || null,
-                baseStr: currentQuestion.base_text,
+        initQuiz();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [moduleId]);
+
+    // 2. Fetch Question from IA
+    const fetchNextQuestion = async (sid: string) => {
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
+        setGeneratingQuestion(true);
+        try {
+            const res = await fetch("/api/quiz/generate-question", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: sid })
             });
+            const data = await res.json();
 
-            const newRes: AttemptResult = {
-                questionId: currentQuestion.id,
-                prompt: currentQuestion.prompt,
-                chosenIndex: selectedOption,
-                correctIndex: currentQuestion.correctOptionIndex,
-                isCorrect: false,
-                explanationAi,
-                imageUrlAi,
-                baseExplanation: currentQuestion.base_text,
-                options: currentQuestion.options,
-                difficulty: currentDifficulty
-            };
-            setResults(prev => [...prev, newRes]);
-            setShowingFeedback(true);
+            if (data.success) {
+                setCurrentQuestion(data.question);
+                setSelectedOption(null);
+                setShowingFeedback(false);
+                setAiFeedback(null);
+            } else {
+                toast.error(data.error || "Erro ao gerar questão.");
+            }
+        } catch (err) {
+            toast.error("Falha na comunicação com a IA.");
+        } finally {
+            setGeneratingQuestion(false);
+            isFetchingRef.current = false;
         }
     };
 
-    const handleProceedAfterFeedback = () => {
-        let newErrors = consecutiveErrors + 1;
+    // 3. Handle Answer Submission
+    const handleAnswer = async () => {
+        if (selectedOption === null || !currentQuestion || !sessionId) return;
 
-        let nextDiff = currentDifficulty;
-        if (newErrors > 1) {
-            if (currentDifficulty === "hard") nextDiff = "medium";
-            else if (currentDifficulty === "medium") nextDiff = "easy";
-            setConsecutiveErrors(0);
+        setLoading(true); // Small overlay for logic
+        try {
+            const res = await fetch("/api/quiz/answer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sessionId,
+                    questionId: currentQuestion.id,
+                    studentAnswerIndex: selectedOption
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // Add to results list for the final screen
+                const newRes: AttemptResult = {
+                    questionId: currentQuestion.id,
+                    prompt: currentQuestion.prompt,
+                    chosenIndex: selectedOption,
+                    correctIndex: data.correctOptionIndex,
+                    isCorrect: data.isCorrect,
+                    explanationAi: data.explanation,
+                    options: currentQuestion.options,
+                    difficulty: currentDifficulty
+                };
+                setResults(prev => [...prev, newRes]);
+                setAiFeedback({
+                    explanationAi: data.explanation,
+                    correctIndex: data.correctOptionIndex
+                });
+                
+                setScore(data.newScore);
+                setCurrentDifficulty(data.nextLevel); // SYNC UI BADGE
+                setShowingFeedback(true);
+                
+                if (data.completed) {
+                    // We'll show feedback first, then finish
+                }
+            } else {
+                toast.error("Erro ao processar resposta.");
+            }
+        } catch (err) {
+            toast.error("Erro ao enviar resposta.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleProceedAfterFeedback = async () => {
+        const isCompleted = (questionsAnswered + 1) >= 10;
+        
+        if (isCompleted) {
+            setFinished(true);
         } else {
-            setConsecutiveErrors(newErrors);
+            setQuestionsAnswered(prev => prev + 1);
+            // Refresh session status/difficulty from last result or let next fetch handle it
+            // For simplicity, we just fetch the next one which will use the updated session state
+            if (sessionId) fetchNextQuestion(sessionId);
         }
-
-        pullNextQuestion(nextDiff);
     };
 
-    if (loading) return <QuizLoadingState />;
+    const handleFinish = async () => {
+        if (sessionId) {
+            try {
+                await fetch("/api/quiz/session/cleanup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId })
+                });
+            } catch (err) {
+                console.error("Erro ao limpar sessão:", err);
+            }
+        }
+        router.push("/student");
+    };
 
-    if (allQuestions.length === 0) return (
-        <QuizEmptyState onBack={() => router.push("/dashboard/modules")} />
-    );
+    if (loading && !sessionId) return <QuizLoadingState />;
 
-    if (finished || !currentQuestion) {
+    if (finished) {
         return (
             <QuizResultsCard
                 results={results}
-                onFinish={() => router.push("/")}
+                onFinish={handleFinish}
             />
         );
     }
@@ -222,27 +218,39 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     return (
         <div className="container mx-auto py-8 px-4 max-w-2xl min-h-screen flex flex-col justify-center">
             <div className="mb-4">
-                <Button variant="ghost" onClick={() => router.push(`/module/${id}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-2 w-fit">
+                <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-2 w-fit">
                     &larr; Voltar para o Módulo
                 </Button>
             </div>
 
             <QuizProgressBar
                 questionsAnswered={questionsAnswered}
-                totalQuestions={allQuestions.length}
-                currentDifficulty={currentDifficulty}
+                totalQuestions={10}
+                currentDifficulty={currentDifficulty.toLowerCase() as any}
             />
 
-            <QuizQuestionCard
-                currentQuestion={currentQuestion}
-                selectedOption={selectedOption}
-                showingFeedback={showingFeedback}
-                fetchingAi={fetchingAi}
-                aiFeedback={aiFeedback}
-                onSelectOption={setSelectedOption}
-                onAnswer={handleAnswer}
-                onProceed={handleProceedAfterFeedback}
-            />
+            {(generatingQuestion || !currentQuestion) ? (
+                <div className="bg-white rounded-2xl shadow-xl p-12 flex flex-col items-center justify-center space-y-6 border border-slate-100 animate-pulse">
+                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="text-center">
+                        <h3 className="text-xl font-semibold text-slate-800">IA Gerando Questão Adaptativa...</h3>
+                        <p className="text-slate-500 mt-2">Personalizando o nível para você.</p>
+                    </div>
+                </div>
+            ) : (
+                <QuizQuestionCard
+                    currentQuestion={currentQuestion as any}
+                    selectedOption={selectedOption}
+                    showingFeedback={showingFeedback}
+                    fetchingAi={false} 
+                    aiFeedback={aiFeedback}
+                    onSelectOption={setSelectedOption}
+                    onAnswer={handleAnswer}
+                    onProceed={handleProceedAfterFeedback}
+                    correctOptionIndexFromServer={aiFeedback?.correctIndex ?? undefined}
+                    isLastQuestion={questionsAnswered + 1 >= 10}
+                />
+            )}
         </div>
     );
 }
