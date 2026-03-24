@@ -17,11 +17,6 @@ export function Footer() {
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-6 text-sm text-gray-500">
-                        <Link href="/" className="hover:text-blue-600 transition-colors">Catálogo</Link>
-                        <Link href="/auth" className="hover:text-blue-600 transition-colors">Área do Professor</Link>
-                    </div>
-
                     <div className="flex items-center gap-4">
                         <Link
                             href="https://github.com/Gabrielz11/networking-quiz-platform"
