@@ -3,39 +3,13 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { getQuizQuestions } from "../actions";
+import { Question, AttemptResult } from "./_components/_types";
+import { QuizLoadingState } from "./_components/QuizLoadingState";
+import { QuizEmptyState } from "./_components/QuizEmptyState";
+import { QuizResultsCard } from "./_components/QuizResultsCard";
+import { QuizProgressBar } from "./_components/QuizProgressBar";
+import { QuizQuestionCard } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
-
-interface Question {
-    id: string;
-    prompt: string;
-    options: string[];
-    correctOptionIndex: number;
-    explanationBase: string; 
-    difficulty: "easy" | "medium" | "hard";
-    base_text: string;
-}
-
-interface AttemptResult {
-    questionId: string;
-    prompt: string;
-    chosenIndex: number;
-    correctIndex: number;
-    isCorrect: boolean;
-    explanationAi: string | null;
-    imageUrlAi?: string | null;
-    baseExplanation: string;
-    options: string[];
-    difficulty: string;
-}
 
 export default function QuizPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -45,7 +19,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [easyQs, setEasyQs] = useState<Question[]>([]);
     const [mediumQs, setMediumQs] = useState<Question[]>([]);
     const [hardQs, setHardQs] = useState<Question[]>([]);
-    
+
     const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
     const [currentDifficulty, setCurrentDifficulty] = useState<"easy" | "medium" | "hard">("easy");
     const [consecutiveErrors, setConsecutiveErrors] = useState(0);
@@ -217,7 +191,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
     const handleProceedAfterFeedback = () => {
         let newErrors = consecutiveErrors + 1;
-        
+
         let nextDiff = currentDifficulty;
         if (newErrors > 1) {
             if (currentDifficulty === "hard") nextDiff = "medium";
@@ -230,77 +204,20 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         pullNextQuestion(nextDiff);
     };
 
-    if (loading) return <div className="p-8 text-center">Carregando quiz...</div>;
+    if (loading) return <QuizLoadingState />;
 
     if (allQuestions.length === 0) return (
-        <div className="p-8 text-center">
-            Nenhuma questão encontrada para este módulo. Retorne e gere questões com IA.
-            <br />
-            <Button className="mt-4" onClick={() => router.push("/dashboard/modules")}>Voltar</Button>
-        </div>
+        <QuizEmptyState onBack={() => router.push("/dashboard/modules")} />
     );
 
     if (finished || !currentQuestion) {
-        const score = results.filter((r) => r.isCorrect).length;
-        const totalAnswers = results.length;
-        const progressPerc = totalAnswers > 0 ? Math.round((score / totalAnswers) * 100) : 0;
-
         return (
-            <div className="container mx-auto py-8 max-w-3xl">
-                <Card className="border-t-4 border-t-blue-600">
-                    <CardHeader>
-                        <CardTitle className="text-3xl text-center">Resultados do Quiz</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center mb-8">
-                            <span className="text-5xl font-bold text-gray-900">{progressPerc}%</span>
-                            <p className="text-xl text-gray-600">Pontuação Total ({score}/{totalAnswers})</p>
-                        </div>
-
-                        <Accordion type="single" collapsible className="w-full space-y-2">
-                            {results.map((r, i) => (
-                                <AccordionItem value={`item-${i}`} key={i}>
-                                    <AccordionTrigger className="text-left py-2">
-                                        <div className="flex items-center gap-4 w-full">
-                                            {r.isCorrect ? (
-                                                <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Correto</Badge>
-                                            ) : (
-                                                <Badge variant="destructive">Incorreto</Badge>
-                                            )}
-                                            <span className="font-semibold text-gray-700">Q{i + 1} ({r.difficulty})</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="p-4 bg-gray-50 rounded-lg mt-2">
-                                        <p className="font-medium text-gray-800 mb-2">{r.prompt}</p>
-                                        <p className="text-sm">Sua resposta: {r.options[r.chosenIndex]}</p>
-                                        {!r.isCorrect && (
-                                            <p className="text-sm text-green-600 mt-1 font-semibold">
-                                                Gabarito: {r.options[r.correctIndex]}
-                                            </p>
-                                        )}
-
-                                        {!r.isCorrect && r.explanationAi && (
-                                            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded text-blue-900">
-                                                <strong className="block mb-2 font-sans">IA Pedagógica:</strong>
-                                                <div className="whitespace-pre-wrap text-sm leading-relaxed mb-4">
-                                                    {r.explanationAi}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </CardContent>
-                    <CardFooter className="flex justify-center mt-6">
-                        <Button size="lg" onClick={() => router.push("/")}>Finalizar e Voltar</Button>
-                    </CardFooter>
-                </Card>
-            </div>
+            <QuizResultsCard
+                results={results}
+                onFinish={() => router.push("/")}
+            />
         );
     }
-
-    const progressPerc = ((questionsAnswered) / allQuestions.length) * 100;
 
     return (
         <div className="container mx-auto py-8 px-4 max-w-2xl min-h-screen flex flex-col justify-center">
@@ -309,81 +226,23 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     &larr; Voltar para o Módulo
                 </Button>
             </div>
-            
-            <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm rounded text-gray-500 font-medium block">
-                        Questão {questionsAnswered + 1} de {allQuestions.length}
-                    </label>
-                    <Badge variant="outline" className={`
-                        ${currentDifficulty === "easy" ? "bg-green-100 text-green-700 border-green-200" : ""}
-                        ${currentDifficulty === "medium" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : ""}
-                        ${currentDifficulty === "hard" ? "bg-red-100 text-red-700 border-red-200" : ""}
-                    `}>
-                        {currentDifficulty.toUpperCase()}
-                    </Badge>
-                </div>
-                <Progress value={progressPerc} className="h-2" />
-            </div>
 
-            <Card className={`shadow-lg animate-in fade-in-0 duration-500 ${showingFeedback ? "ring-2 ring-red-500" : "border-t"}`}>
-                <CardHeader className="bg-gray-50 border-b">
-                    <CardTitle className="text-xl font-medium leading-relaxed">
-                        {currentQuestion.prompt}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <div className="flex flex-col gap-3">
-                        {currentQuestion.options.map((opt, idx) => (
-                            <Button
-                                key={idx}
-                                disabled={showingFeedback}
-                                variant={selectedOption === idx ? "default" : "outline"}
-                                className={`
-                                    justify-start h-auto py-4 px-6 text-left whitespace-normal font-normal text-md
-                                    ${selectedOption === idx ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
-                                    ${showingFeedback && idx === currentQuestion.correctOptionIndex ? 'bg-green-100 border-green-500 text-green-800' : ''}
-                                    ${showingFeedback && selectedOption === idx && idx !== currentQuestion.correctOptionIndex ? 'bg-red-100 border-red-500 text-red-800' : ''}
-                                `}
-                                onClick={() => setSelectedOption(idx)}
-                            >
-                                {opt}
-                            </Button>
-                        ))}
-                    </div>
+            <QuizProgressBar
+                questionsAnswered={questionsAnswered}
+                totalQuestions={allQuestions.length}
+                currentDifficulty={currentDifficulty}
+            />
 
-                    {showingFeedback && aiFeedback && (
-                        <div className="mt-8 p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
-                            <h3 className="text-blue-800 font-bold mb-3 flex items-center gap-2">
-                                <span className="text-xl">💡</span> Tutor IA Pedagógico
-                            </h3>
-                            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                {aiFeedback.explanationAi}
-                            </p>
-                        </div>
-                    )}
-                </CardContent>
-                <CardFooter className="bg-gray-50 border-t flex justify-end p-6">
-                    {!showingFeedback ? (
-                        <Button
-                            size="lg"
-                            disabled={selectedOption === null || fetchingAi}
-                            onClick={handleAnswer}
-                            className="w-full sm:w-auto px-10 text-lg"
-                        >
-                            {fetchingAi ? "Processando..." : "Responder"}
-                        </Button>
-                    ) : (
-                        <Button
-                            size="lg"
-                            onClick={handleProceedAfterFeedback}
-                            className="w-full sm:w-auto px-10 text-lg bg-gray-900 hover:bg-gray-800 text-white"
-                        >
-                            Próxima Questão
-                        </Button>
-                    )}
-                </CardFooter>
-            </Card>
+            <QuizQuestionCard
+                currentQuestion={currentQuestion}
+                selectedOption={selectedOption}
+                showingFeedback={showingFeedback}
+                fetchingAi={fetchingAi}
+                aiFeedback={aiFeedback}
+                onSelectOption={setSelectedOption}
+                onAnswer={handleAnswer}
+                onProceed={handleProceedAfterFeedback}
+            />
         </div>
     );
 }
