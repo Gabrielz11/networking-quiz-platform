@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Question } from "./_types";
 
 interface AiFeedback {
@@ -36,111 +35,107 @@ export function QuizQuestionCard({
     const isCorrect = showingFeedback && selectedOption === correctIdx;
 
     return (
-        <Card className={`
-            shadow-2xl transition-all duration-500 border-none overflow-hidden
-            ${showingFeedback ? (isCorrect ? "ring-4 ring-green-500/50" : "ring-4 ring-red-500/50") : "ring-1 ring-slate-200"}
-        `}>
-            <CardHeader className={`
-                transition-colors duration-500
-                ${showingFeedback ? (isCorrect ? "bg-green-50" : "bg-red-50") : "bg-slate-50"}
-                border-b border-slate-100 p-8
+        <div className="flex flex-col gap-4">
+            {/* Enunciado */}
+            <div className={`
+                py-4 px-1 border-b-2 transition-colors duration-300
+                ${showingFeedback ? (isCorrect ? "border-green-400" : "border-red-400") : "border-blue-100"}
             `}>
-                <div className="flex justify-between items-start gap-4">
-                    <CardTitle className="text-xl md:text-2xl font-bold text-slate-800 leading-snug">
+                <div className="flex justify-between items-start gap-3">
+                    <h2 className="text-lg font-bold text-slate-800 leading-snug">
                         {currentQuestion.prompt}
-                    </CardTitle>
+                    </h2>
                     {showingFeedback && (
                         <div className={`
-                            shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl
-                            ${isCorrect ? "bg-green-500 text-white animate-bounce" : "bg-red-500 text-white animate-shake"}
+                            shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                            ${isCorrect ? "bg-green-500 text-white" : "bg-red-500 text-white"}
                         `}>
                             {isCorrect ? "✓" : "✗"}
                         </div>
                     )}
                 </div>
-            </CardHeader>
-            
-            <CardContent className="p-8">
-                <div className="grid gap-4">
-                    {currentQuestion.options.map((opt, idx) => {
-                        const isSelected = selectedOption === idx;
-                        const isCorrectOption = idx === correctIdx;
-                        
-                        let btnStyle = "border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 text-slate-700";
-                        if (isSelected) btnStyle = "border-blue-500 bg-blue-50 text-blue-700 font-semibold ring-2 ring-blue-500/20";
-                        
-                        if (showingFeedback) {
-                            if (isCorrectOption) btnStyle = "border-green-600 bg-green-50 text-green-700 font-bold ring-2 ring-green-500/20";
-                            else if (isSelected) btnStyle = "border-red-600 bg-red-50 text-red-700 font-bold opacity-90";
-                            else btnStyle = "border-slate-200 text-slate-400 grayscale opacity-50";
-                        }
+            </div>
 
-                        return (
-                            <button
-                                key={idx}
-                                disabled={showingFeedback}
-                                onClick={() => onSelectOption(idx)}
-                                className={`
-                                    w-full text-left p-5 rounded-2xl border-2 transition-all duration-200
-                                    text-base md:text-lg flex items-center justify-between group
-                                    ${btnStyle}
-                                `}
-                            >
-                                <span className="pr-4">{opt}</span>
-                                {isSelected && !showingFeedback && (
-                                    <div className="w-4 h-4 rounded-full bg-blue-500 animate-pulse"></div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+            {/* Opções */}
+            <div className="grid gap-2">
+                {currentQuestion.options.map((opt, idx) => {
+                    const isSelected = selectedOption === idx;
+                    const isCorrectOption = idx === correctIdx;
 
-                {showingFeedback && aiFeedback && (
-                    <div className={`
-                        mt-10 p-8 rounded-3xl border-2 animate-in slide-in-from-bottom-4 fade-in duration-700
-                        ${isCorrect ? "bg-green-50/50 border-green-100" : "bg-blue-50/50 border-blue-100 shadow-inner"}
-                    `}>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className={`
-                                w-10 h-10 rounded-xl flex items-center justify-center text-xl
-                                ${isCorrect ? "bg-green-500/20 text-green-600" : "bg-blue-500/20 text-blue-600"}
-                            `}>
-                                {isCorrect ? "🏅" : "🎓"}
-                            </div>
-                            <h3 className={`font-black text-lg ${isCorrect ? "text-green-800" : "text-blue-800"}`}>
-                                {isCorrect ? "EXCELENTE!" : "TUTOR IA PEDAGÓGICO"}
-                            </h3>
-                        </div>
-                        <p className="text-slate-700 leading-relaxed text-lg italic bg-white/40 p-4 rounded-2xl border border-white/60">
-                            {aiFeedback.explanationAi}
-                        </p>
+                    let btnStyle = "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 text-slate-700";
+                    if (isSelected) btnStyle = "border-blue-500 bg-blue-50 text-blue-700 font-semibold ring-1 ring-blue-500/20";
+
+                    if (showingFeedback) {
+                        if (isCorrectOption) btnStyle = "border-green-500 bg-green-50 text-green-700 font-bold";
+                        else if (isSelected) btnStyle = "border-red-500 bg-red-50 text-red-700 font-bold opacity-80";
+                        else btnStyle = "border-gray-100 text-slate-400 opacity-40";
+                    }
+
+                    return (
+                        <button
+                            key={idx}
+                            disabled={showingFeedback}
+                            onClick={() => onSelectOption(idx)}
+                            className={`
+                                w-full text-left px-4 py-3 rounded-xl border transition-all duration-200
+                                text-sm flex items-center justify-between
+                                ${btnStyle}
+                            `}
+                        >
+                            <span className="flex items-center gap-3">
+                                <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
+                                    {String.fromCharCode(65 + idx)}
+                                </span>
+                                {opt}
+                            </span>
+                            {isSelected && !showingFeedback && (
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Feedback da IA */}
+            {showingFeedback && aiFeedback && (
+                <div className={`
+                    p-4 rounded-xl border animate-in slide-in-from-bottom-2 fade-in duration-500
+                    ${isCorrect ? "bg-green-50/70 border-green-200" : "bg-blue-50/70 border-blue-200"}
+                `}>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-base">{isCorrect ? "🏅" : "🎓"}</span>
+                        <h3 className={`font-bold text-sm ${isCorrect ? "text-green-700" : "text-blue-700"}`}>
+                            {isCorrect ? "Excelente!" : "Tutor IA"}
+                        </h3>
                     </div>
-                )}
-            </CardContent>
+                    <p className="text-slate-700 text-sm leading-relaxed">
+                        {aiFeedback.explanationAi}
+                    </p>
+                </div>
+            )}
 
-            <CardFooter className="bg-slate-50/50 border-t border-slate-100 p-8 flex justify-center sm:justify-end">
+            {/* Botão de ação */}
+            <div className="flex justify-end pt-2">
                 {!showingFeedback ? (
                     <Button
-                        size="lg"
                         disabled={selectedOption === null || fetchingAi}
                         onClick={onAnswer}
-                        className="w-full sm:w-auto px-12 py-8 text-xl font-bold rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                        className="px-8 py-5 text-sm font-bold rounded-xl bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95"
                     >
-                        {fetchingAi ? "Analisando..." : "ENVIAR RESPOSTA"}
+                        {fetchingAi ? "Analisando..." : "Enviar Resposta"}
                     </Button>
                 ) : (
                     <Button
-                        size="lg"
                         onClick={onProceed}
                         className={`
-                            w-full sm:w-auto px-12 py-8 text-xl font-black rounded-2xl shadow-xl transition-all active:scale-95
-                            ${isCorrect ? "bg-green-600 hover:bg-green-700 shadow-green-500/20" : "bg-slate-800 hover:bg-slate-900 shadow-slate-500/20 text-white"}
+                            px-8 py-5 text-sm font-bold rounded-xl shadow-md transition-all active:scale-95
+                            ${isCorrect ? "bg-green-600 hover:bg-green-700" : "bg-slate-800 hover:bg-slate-900 text-white"}
                         `}
                     >
-                        {isLastQuestion ? "FINALIZAR QUESTIONÁRIO" : (isCorrect ? "CONTINUAR" : "PRÓXIMA QUESTÃO")}
+                        {isLastQuestion ? "Finalizar Questionário" : (isCorrect ? "Continuar" : "Próxima Questão")}
                     </Button>
                 )}
-            </CardFooter>
-        </Card>
+            </div>
+        </div>
     );
 }

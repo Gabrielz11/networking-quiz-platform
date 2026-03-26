@@ -43,7 +43,7 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="space-y-6 pt-4">
                         <p className="text-gray-600 leading-relaxed">
-                            Crie, edite e organize os conteúdos textuais em Markdown que seus alunos irão estudar. A IA poderá gerar questões automaticamente!
+                            Crie, edite e organize os conteúdos que seus alunos irão estudar. A IA poderá gerar questões automaticamente!
                         </p>
                         <Link href="/dashboard/modules" className="block w-full">
                             <Button className="w-full bg-blue-600 hover:bg-blue-700 shadow-md outline-none">

@@ -216,9 +216,9 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 max-w-2xl min-h-screen flex flex-col justify-center">
-            <div className="mb-4">
-                <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-2 w-fit">
+        <div className="container mx-auto py-4 px-4 max-w-xl">
+            <div className="mb-3">
+                <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-1 w-fit text-sm">
                     &larr; Voltar para o Módulo
                 </Button>
             </div>
@@ -230,11 +230,11 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
             />
 
             {(generatingQuestion || !currentQuestion) ? (
-                <div className="bg-white rounded-2xl shadow-xl p-12 flex flex-col items-center justify-center space-y-6 border border-slate-100 animate-pulse">
-                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     <div className="text-center">
-                        <h3 className="text-xl font-semibold text-slate-800">IA Gerando Questão Adaptativa...</h3>
-                        <p className="text-slate-500 mt-2">Personalizando o nível para você.</p>
+                        <h3 className="text-base font-semibold text-slate-700">IA gerando questão adaptativa...</h3>
+                        <p className="text-slate-400 mt-1 text-sm">Personalizando o nível para você.</p>
                     </div>
                 </div>
             ) : (
