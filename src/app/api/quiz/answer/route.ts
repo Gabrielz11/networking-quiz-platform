@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { QuizService } from "@/services/quiz.service";
 
 export async function POST(req: Request) {
     try {
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
 
         // Verify if the question instance exists and hasn't been answered yet
         const question = session.questions.find(q => q.id === questionId);
-        
+
         if (!question) {
             return NextResponse.json({ error: "Questão não encontrada nesta sessão." }, { status: 404 });
         }
@@ -46,36 +47,12 @@ export async function POST(req: Request) {
         // Answer analysis
         const isCorrect = studentAnswerIndex === question.correctOptionIndex;
 
-        // Adaptive logic progression (v3.0 PDR rules)
-        let nextLevel = session.currentLevel;
-        let nextErrors = 0; // Default: reset if level moves or correct
-
-        if (isCorrect) {
-            // Rule 1: Acerto: Sobe de nível IMEDIATAMENTE e LINEARMENTE
-            nextErrors = 0; 
-            if (session.currentLevel === "EASY") {
-                nextLevel = "MEDIUM";
-            } else if (session.currentLevel === "MEDIUM") {
-                nextLevel = "HARD";
-            } else {
-                nextLevel = "HARD"; // Already at limit
-            }
-        } else {
-            // Rule 2: Erro
-            const currentErrors = session.errorsInCurrentLevel + 1;
-            
-            if (currentErrors >= 2) {
-                // Rule 2.2: Segunda vez seguida de erro no mesmo nível: Cai para o nível anterior
-                nextErrors = 0; // Reset counter AFTER drop
-                if (session.currentLevel === "HARD") nextLevel = "MEDIUM";
-                else if (session.currentLevel === "MEDIUM") nextLevel = "EASY";
-                else nextLevel = "EASY";
-            } else {
-                // Rule 2.1: Primeira vez no nível: Mantém o nível atual.
-                nextLevel = session.currentLevel;
-                nextErrors = currentErrors;
-            }
-        }
+        // Lógica adaptativa delegada ao QuizService
+        const { nextLevel, nextErrors } = QuizService.calculateAdaptiveProgression(
+            session.currentLevel,
+            session.errorsInCurrentLevel,
+            isCorrect
+        );
 
         const updatedScore = isCorrect ? session.score + 1 : session.score;
         const nextIndex = session.currentQuestionIndex + 1;
@@ -115,7 +92,7 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error("Answer Question Error:", error);
         return NextResponse.json(
-            { error: "Falha ao analisar resposta da questão.", details: error.message },
+            { error: "Falha ao analisar resposta da questão." },
             { status: 500 }
         );
     }

@@ -4,31 +4,31 @@ import { auth } from "@/auth";
 
 export async function POST(req: Request) {
     try {
-        const sessionReq = await auth();
-        if (!sessionReq?.user) {
+        const authSession = await auth();
+        if (!authSession?.user) {
             return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
         }
 
         const { sessionId } = await req.json();
 
-        if (!sessionId) {
+        if (!sessionId || typeof sessionId !== "string") {
             return NextResponse.json({ error: "sessionId é obrigatório." }, { status: 400 });
         }
 
-        const session = await prisma.quizSession.findUnique({
+        //aqui podemos ter um problema se o usuario não for o dono da sessão
+        //mas vamos deixar assim por enquanto, pois o usuario só pode acessar a sua sessão 
+        const quizSession = await prisma.quizSession.findUnique({
             where: { id: sessionId }
         });
 
-        if (!session) {
+        if (!quizSession) {
             return NextResponse.json({ error: "Sessão não encontrada." }, { status: 404 });
         }
 
-        if (session.userId !== sessionReq.user.id) {
+        if (quizSession.userId !== authSession.user.id) {
             return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
         }
 
-        // According to PDR v3.0 strategy: Delete session and all related question instances
-        // Cascading delete is handled by Prisma schema (onDelete: Cascade)
         await prisma.quizSession.delete({
             where: { id: sessionId }
         });
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error("Cleanup Session Error:", error);
         return NextResponse.json(
-            { error: "Falha ao finalizar e limpar a sessão.", details: error.message },
+            { error: "Falha ao finalizar e limpar a sessão." },
             { status: 500 }
         );
     }

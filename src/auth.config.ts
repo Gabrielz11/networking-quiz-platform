@@ -45,3 +45,6 @@ export const authConfig = {
   },
   providers: [], // Configurado no auth.ts
 } satisfies NextAuthConfig;
+// tipar user
+// tipar session
+// criar util de authorization - requireTeacher() por exemplo.
