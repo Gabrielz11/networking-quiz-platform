@@ -13,6 +13,7 @@ export default function AuthPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+    const [teacherKey, setTeacherKey] = useState("");
     const [loading, setLoading] = useState(false);
     const [errorMSG, setErrorMSG] = useState("");
     const router = useRouter();
@@ -54,7 +55,12 @@ export default function AuthPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, role }),
+                body: JSON.stringify({ 
+                    email, 
+                    password, 
+                    role,
+                    teacherKey: role === "TEACHER" ? teacherKey : undefined
+                }),
             });
 
             const data = await res.json();
@@ -62,7 +68,19 @@ export default function AuthPage() {
             if (!res.ok) {
                 setErrorMSG(data.error || "Erro ao realizar cadastro.");
             } else {
-                alert("Cadastro realizado com sucesso! Agora você pode entrar.");
+                // Auto Login após sucesso no cadastro
+                const loginRes = await signIn("credentials", {
+                    email,
+                    password,
+                    redirect: false,
+                });
+
+                if (loginRes?.error) {
+                    setErrorMSG("Cadastro realizado, mas falha ao entrar automaticamente. Tente logar manualmente.");
+                } else {
+                    router.refresh();
+                    router.push("/");
+                }
             }
         } catch (err: any) {
             setErrorMSG("Falha na conexão com o servidor ao cadastrar.");
@@ -139,6 +157,28 @@ export default function AuthPage() {
                                     <span className="font-semibold text-sm">Professor</span>
                                 </button>
                             </div>
+                            
+                            {/* Campo de Chave Secreta para Professor */}
+                            {role === "TEACHER" && (
+                                <div className="space-y-2 mt-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100 animate-in fade-in slide-in-from-top-2">
+                                    <Label htmlFor="teacherKey" className="text-blue-800 font-bold flex items-center gap-2">
+                                        Chave Secreta de Acesso
+                                    </Label>
+                                    <Input
+                                        id="teacherKey"
+                                        type="password"
+                                        placeholder="Digite a chave mestre de professor"
+                                        value={teacherKey}
+                                        onChange={(e) => setTeacherKey(e.target.value)}
+                                        className="h-11 border-blue-200 focus:border-blue-400 bg-white"
+                                        required={role === "TEACHER"}
+                                    />
+                                    <p className="text-[10px] text-blue-600 font-medium italic">
+                                        * Solicite a chave secreta com a administração para validar seu perfil de educador.
+                                    </p>
+                                </div>
+                            )}
+
                             <p className="text-[10px] text-gray-400 text-center uppercase tracking-wider">A escolha do papel só afeta novos cadastros</p>
                         </div>
                     </CardContent>

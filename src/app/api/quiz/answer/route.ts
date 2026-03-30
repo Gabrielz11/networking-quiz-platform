@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { QuizService } from "@/services/quiz.service";
 
+import { z } from "zod";
+
+const AnswerSchema = z.object({
+    sessionId: z.string().min(1, "ID da sessão é obrigatório"),
+    questionId: z.string().min(1, "ID da questão é obrigatório"),
+    studentAnswerIndex: z.number().int().min(0).max(3, "Índice de resposta deve ser entre 0 e 3"),
+});
+
 export async function POST(req: Request) {
     try {
         const sessionReq = await auth();
@@ -10,11 +18,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
         }
 
-        const { sessionId, questionId, studentAnswerIndex } = await req.json();
+        const body = await req.json();
+        const parsed = AnswerSchema.safeParse(body);
 
-        if (!sessionId || !questionId || studentAnswerIndex === undefined) {
-            return NextResponse.json({ error: "Parâmetros obrigatórios ausentes." }, { status: 400 });
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: "Parâmetros inválidos ou ausentes.", details: parsed.error.flatten().fieldErrors },
+                { status: 400 }
+            );
         }
+
+        const { sessionId, questionId, studentAnswerIndex } = parsed.data;
 
         const session = await prisma.quizSession.findUnique({
             where: { id: sessionId },

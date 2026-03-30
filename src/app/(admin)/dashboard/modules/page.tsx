@@ -5,6 +5,7 @@ import { getModules, createModule, updateModule, deleteModule } from "./actions"
 import { ModulesLoadingSpinner } from "./_components/ModulesLoadingSpinner";
 import { ModulesPageHeader } from "./_components/ModulesPageHeader";
 import { ModulesGrid } from "./_components/ModulesGrid";
+import { toast } from "sonner";
 
 export default function ModulesManager() {
     const [modules, setModules] = useState<any[]>([]);
@@ -65,16 +66,37 @@ export default function ModulesManager() {
         fetchModules();
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm("Tem certeza que deseja excluir este módulo e todas as suas questões?")) {
-            setLoading(true);
-            await deleteModule(id);
-            fetchModules();
-        }
+    const handleDelete = (id: string) => {
+        toast("Deseja mesmo excluir?", {
+            description: "Esta ação apagará permanentemente o módulo.",
+            action: {
+                label: "Excluir",
+                onClick: async () => {
+                    setLoading(true);
+                    try {
+                        await deleteModule(id);
+                        toast.success("Módulo removido com sucesso!");
+                        fetchModules();
+                    } catch (error) {
+                        toast.error("Erro ao remover o módulo.");
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            },
+            actionButtonStyle: {
+                backgroundColor: '#dc2626',
+                color: 'white'
+            },
+            cancel: {
+                label: "Cancelar",
+                onClick: () => toast.dismiss()
+            }
+        });
     };
 
     const handleGenerateContent = async () => {
-        if (!title) return alert("Por favor, defina um título primeiro.");
+        if (!title) return toast.warning("Por favor, defina um título primeiro.");
         setIsGenerating(true);
         try {
             const res = await fetch("/api/generate-content", {
@@ -91,7 +113,7 @@ export default function ModulesManager() {
                 throw new Error(data.error);
             }
         } catch (error: any) {
-            alert("Erro ao gerar conteúdo: " + error.message);
+            toast.error("Erro ao gerar conteúdo: " + error.message);
         } finally {
             setIsGenerating(false);
         }

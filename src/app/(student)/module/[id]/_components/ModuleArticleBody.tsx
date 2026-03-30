@@ -1,3 +1,5 @@
+import DOMPurify from "isomorphic-dompurify";
+
 interface ModuleArticleBodyProps {
     htmlContent: string;
     description: string;
@@ -5,6 +7,9 @@ interface ModuleArticleBodyProps {
 }
 
 export function ModuleArticleBody({ htmlContent, description, title }: ModuleArticleBodyProps) {
+    // Sanitização de segurança contra XSS
+    const sanitizedHtml = DOMPurify.sanitize(htmlContent);
+
     return (
         <div className="p-8 md:p-10 lg:p-15">
             <div className="max-w-none w-full">
@@ -23,7 +28,7 @@ export function ModuleArticleBody({ htmlContent, description, title }: ModuleArt
                                 prose-ul:bg-blue-50/40 prose-ul:p-10 prose-ul:rounded-[2rem] prose-ul:my-10
                                 prose-li:text-gray-800 prose-li:mb-4
                                 prose-strong:text-black font-serif"
-                            dangerouslySetInnerHTML={{ __html: htmlContent }}
+                            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
                         />
                     </div>
                 </div>
