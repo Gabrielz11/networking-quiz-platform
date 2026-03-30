@@ -124,3 +124,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos para o conteúdo formatado dos módulos (Artigo Técnico) */
+.article-body article {
+  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.article-body article p {
+  text-indent: 0;
+  margin-bottom: 24px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.article-body article h2 {
+  letter-spacing: -0.02em;
+}

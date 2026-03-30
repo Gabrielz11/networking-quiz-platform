@@ -11,9 +11,9 @@ interface ModuleHeroProps {
 
 export function ModuleHero({ title, formattedDate, authorName, linkedinShareUrl }: ModuleHeroProps) {
     return (
-        <div className="p-8 md:p-16 lg:p-24 border-b bg-gray-50/30">
+        <div className="p-8 md:p-12 lg:p-8 border-b bg-gray-50/30">
             {/* Breadcrumb sutil */}
-            <nav className="flex text-[12px] uppercase font-black tracking-[0.2em] text-gray-400 mb-8 gap-2 items-center">
+            <nav className="flex text-[12px] uppercase font-black tracking-[0.2em] text-gray-400 mb-3 gap-2 items-center">
                 <Link href="/student" className="hover:text-blue-700">Portal do Aluno</Link>
                 <span className="text-gray-300">/</span>
                 <span>Módulos Ativos</span>
@@ -21,7 +21,7 @@ export function ModuleHero({ title, formattedDate, authorName, linkedinShareUrl 
                 <span className="text-blue-600">Panorama Técnico</span>
             </nav>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-[#003366] leading-[1.1] mb-10 tracking-tighter">
+            <h1 className="text-3xl md:text-5xl lg:text-5xl font-black text-[#003366] leading-[1.1] mb-10 tracking-tighter">
                 {title}
             </h1>
 

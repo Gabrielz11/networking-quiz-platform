@@ -40,7 +40,8 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
     }).format(moduleData.createdAt);
 
     // URL para compartilhamento no LinkedIn baseada no título do módulo
-    const shareUrl = `https://lumina-lms.vercel.app/module/${moduleData.id}`; // URL base do projeto (ajuste se necessário)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const shareUrl = `${appUrl}/module/${moduleData.id}`;
     const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
 
     return (
@@ -59,7 +60,6 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
                     <ModuleArticleBody
                         htmlContent={htmlContent}
                         description={moduleData.description || ""}
-                        imageUrl={moduleData.imageUrl || ""}
                         title={moduleData.title}
                     />
 
@@ -69,25 +69,6 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
                 </div>
             </main>
 
-            {/* Injeção de CSS para o estilo "Gov.br" */}
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                .article-body article {
-                    font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-                }
-                .article-body article p {
-                    text-indent: 0;
-                    margin-bottom: 24px;
-                }
-                .article-body article h2 {
-                    letter-spacing: -0.02em;
-                }
-                /* Ajuste de justificação via browser */
-                .article-body article p {
-                    text-align: justify;
-                    text-justify: inter-word;
-                }
-            ` }} />
         </div>
     );
 }

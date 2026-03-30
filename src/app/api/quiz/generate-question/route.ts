@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         //Aqui eu pego todas as perguntas que já foram feitas naquela sessão e passo para a IA para que ela não repita as perguntas.
         //Ajuda porém não é 100% eficaz, pois a IA pode gerar perguntas similares mesmo com essa instrução.
         //Mas é melhor do que nada.
-        const previousPrompts = session.questions.map(q => q.prompt).join("\n- ");
+        const previousPrompts = session.questions.map(q => q.prompt);
         const qData = await QuizLlmService.generate(
             difficulty,
             moduleContent,
