@@ -12,6 +12,7 @@ import {
     BookOpen,
     Edit3,
     ArrowRight,
+    Wand2,
 } from "lucide-react";
 
 interface ModulesPageHeaderProps {
@@ -24,8 +25,7 @@ interface ModulesPageHeaderProps {
     setDescription: (v: string) => void;
     content: string;
     setContent: (v: string) => void;
-    imageUrl: string;
-    setImageUrl: (v: string) => void;
+    canGenerate: boolean;
     isGenerating: boolean;
     handleGenerateContent: () => void;
     handleSave: (e: React.FormEvent) => void;
@@ -42,8 +42,7 @@ export function ModulesPageHeader({
     setDescription,
     content,
     setContent,
-    imageUrl,
-    setImageUrl,
+    canGenerate,
     isGenerating,
     handleGenerateContent,
     handleSave,
@@ -83,6 +82,7 @@ export function ModulesPageHeader({
                         <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden bg-white">
                             <div className="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 <div className="space-y-6">
+                                    {/* Título do Módulo */}
                                     <div className="space-y-3">
                                         <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Título do Módulo</Label>
                                         <Input
@@ -93,6 +93,8 @@ export function ModulesPageHeader({
                                             className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2 text-lg font-medium"
                                         />
                                     </div>
+
+                                    {/* Resumo Curto */}
                                     <div className="space-y-3">
                                         <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Resumo Curto (Descrição)</Label>
                                         <Input
@@ -102,46 +104,73 @@ export function ModulesPageHeader({
                                             className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2"
                                         />
                                     </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">URL da Imagem Ilustrativa</Label>
-                                        <Input
-                                            value={imageUrl}
-                                            onChange={(e) => setImageUrl(e.target.value)}
-                                            placeholder="https://images.unsplash.com/..."
-                                            className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2"
-                                        />
-                                    </div>
+
+                                    {/* Material de Estudo */}
                                     <div className="space-y-4">
-                                        <div className="flex justify-between items-center ml-1">
-                                            <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">Material de Estudo</Label>
-                                            <div className="flex gap-2">
+                                        <div className="flex justify-between items-start ml-1 gap-4 flex-wrap">
+                                            <div>
+                                                <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">Material de Estudo</Label>
+                                                <p className="text-gray-400 text-xs mt-1 font-medium">
+                                                    {canGenerate
+                                                        ? "Clique em \"Assistente IA\" para gerar o conteúdo com base no que foi preenchido."
+                                                        : "Preencha o Título, o Resumo ou escreva algum tópico abaixo para ativar o Assistente IA."}
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-2 flex-shrink-0">
                                                 <Button
                                                     type="button"
                                                     variant="secondary"
                                                     size="sm"
                                                     onClick={handleGenerateContent}
-                                                    disabled={isGenerating || !title}
-                                                    className="bg-purple-100 text-purple-700 border-none font-bold hover:bg-purple-200 h-9 px-4 flex gap-2 active:scale-95 transition-all shadow-sm"
+                                                    disabled={isGenerating || !canGenerate}
+                                                    title={!canGenerate ? "Preencha algum campo para usar o Assistente IA" : "Gerar conteúdo com IA"}
+                                                    className={`border-none font-bold h-9 px-4 flex gap-2 active:scale-95 transition-all shadow-sm
+                                                        ${canGenerate
+                                                            ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                                                            : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+                                                        }`}
                                                 >
-                                                    <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                                                    {isGenerating
+                                                        ? <Sparkles className="w-4 h-4 animate-spin" />
+                                                        : <Wand2 className="w-4 h-4" />
+                                                    }
                                                     {isGenerating ? "Gerando..." : "Assistente IA"}
                                                 </Button>
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none font-black h-9 px-4 uppercase text-[10px]">Texto Livre</Badge>
                                             </div>
                                         </div>
-                                        <div className="relative group">
+
+                                        <div className={`relative group transition-all duration-300 ${isGenerating ? "opacity-70" : ""}`}>
+                                            {/* Borda animada durante geração */}
+                                            {isGenerating && (
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-3xl opacity-75 animate-pulse blur-sm pointer-events-none z-10" />
+                                            )}
                                             <Textarea
                                                 rows={15}
                                                 value={content}
                                                 onChange={(e) => setContent(e.target.value)}
-                                                placeholder="Descreva o conteúdo técnico ou use o Assistente IA para gerar uma estrutura profissional automaticamente..."
-                                                required
-                                                className="rounded-3xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-600 resize-none font-sans text-lg p-8 leading-relaxed min-h-[450px] shadow-inner transition-all"
+                                                placeholder={
+                                                    `Escreva tópicos ou conteúdo de base aqui...\n\nExemplo:\n- Conceitos de endereçamento IPv6\n- Diferenças em relação ao IPv4\n- Tipos de endereços: unicast, multicast, anycast\n\nA IA irá expandir e estruturar o conteúdo automaticamente.`
+                                                }
+                                                disabled={isGenerating}
+                                                className={`relative rounded-3xl border-2 bg-gray-50 focus:bg-white resize-none font-sans text-base p-8 leading-relaxed min-h-[380px] shadow-inner transition-all z-0
+                                                    ${isGenerating
+                                                        ? "border-purple-200 cursor-wait"
+                                                        : "border-gray-100 focus:ring-blue-600"
+                                                    }`}
                                             />
                                             {!content && !isGenerating && (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30 pointer-events-none">
-                                                    <BookOpen className="w-16 h-16 mb-4 text-gray-400" />
-                                                    <span className="text-sm font-bold text-gray-400">Título + Assistente IA = Módulo Completo</span>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
+                                                    <BookOpen className="w-14 h-14 mb-3 text-gray-400" />
+                                                    <span className="text-sm font-bold text-gray-400">Conteúdo do Professor + IA = Módulo Completo</span>
+                                                </div>
+                                            )}
+                                            {isGenerating && (
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
+                                                    <div className="flex items-center gap-3 bg-white/90 px-6 py-3 rounded-2xl shadow-lg">
+                                                        <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
+                                                        <span className="text-sm font-bold text-purple-700">A IA está gerando o conteúdo...</span>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

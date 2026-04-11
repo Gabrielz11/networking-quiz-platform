@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { jsonrepair } from "jsonrepair"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -18,6 +19,7 @@ export function cleanMarkdownCodeFences(rawContent: string): string {
   return cleaned.trim();
 }
 
+
 export interface SafeJsonResult<T = unknown> {
   success: boolean;
   data?: T;
@@ -25,13 +27,24 @@ export interface SafeJsonResult<T = unknown> {
 }
 
 /**
- * Wrapper seguro para JSON.parse. Nunca lança exceção.
+ * Wrapper seguro para JSON.parse com fallback jsonrepair.
+ * Corrige JSON malformado gerado por LLMs (aspas não escapadas,
+ * quebras de linha cruas dentro de strings, vírgulas pendentes, etc.).
  */
 export function safeJsonParse<T = unknown>(raw: string): SafeJsonResult<T> {
+  // Tentativa 1: JSON válido direto
   try {
     const data = JSON.parse(raw) as T;
     return { success: true, data };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+  } catch {
+    // Tentativa 2: corrigir com jsonrepair
+    try {
+      const repaired = jsonrepair(raw);
+      const data = JSON.parse(repaired) as T;
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err : new Error(String(err)) };
+    }
   }
 }
+

@@ -1,98 +1,102 @@
-# 🎓 Lumina LMS
+# 🎓 Lumina LMS (IPv6 Edition)
 
-O **Lumina LMS** é uma plataforma interativa web voltada para ensino, onde professores podem adicionar seus próprios conteúdos e criar quizzes adaptativos sobre **qualquer matéria ou assunto**. A plataforma evoluiu para integrar inteligência artificial avançada tanto na tutoria dos alunos quanto na geração de conteúdos.
-
----
-
-## 🛠 Features Principais
-
-### Para o Aluno
-* **Módulos Limpos**: Conteúdos redigidos pelo tutor lidos num ambiente acadêmico Markdown, com zero distração. Componentes modulares garantem alta performance e foco total no aprendizado.
-* **Sistema de Quiz Adaptativo (v3.0)**: Um motor de simulados inteligente que se adapta ao nível de proficiência do aluno. A progressão de dificuldade é dinâmica (ex: 1 acerto = sobe de nível, 2 erros = desce de nível). O quiz é finalizado de forma estruturada (ex: após 10 questões), preservando o estado de sessão de forma persistente.
-* **Tutor de IA Integrado e Resiliente**: Ao errar uma alternativa, o sistema fornece uma explicação pedagógica robusta. Utiliza **Google Gemini** como motor principal e possui uma arquitetura de **fallback automático nativo para Groq**, assegurando alta disponibilidade ininterrupta. Adicionalmente, gera diagramas técnicos explicativos via **DALL-E 3**.
-
-### Para o Professor
-* **Dashboard Autenticado e Protegido**: Arquitetura segura via **NextAuth v5**, garantindo que as rotas administrativas sejam rigorosamente isoladas do acesso de alunos e visitantes.
-* **Gestão e CRUD Completo**: Gerenciamento integrado de módulos acadêmicos e bancos de questões.
-* **Geração de Questões via IA**: O professor pode gerar automaticamente um banco de questões em lotes estruturados, potencializado pelo Google Gemini.
+O **Lumina LMS** é uma plataforma educacional de última geração, projetada para transformar o ensino de redes de computadores com foco especial em **IPv6**. Através de uma interface minimalista e um motor de inteligência artificial resiliente, a plataforma oferece uma experiência de aprendizado adaptativa e personalizada.
 
 ---
 
-## 🚀 Arquitetura e Stack
+## ✨ Diferenciais e Funcionalidades
 
-A fundação do projeto foi refatorada para maximizar a governança de código e a escalabilidade, adotando **Route Groups** para organizar a aplicação por domínio lógico de negócios, sem comprometer roteamento ou integrações.
+### 👨‍🎓 Para o Aluno: Foco e Adaptação
+*   **Ambiente Clean (v3.0)**: Experiência de leitura em Markdown otimizada para reduzir a fadiga cognitiva e aumentar o foco no conteúdo.
+*   **Motor Adaptativo Inteligente**: O sistema ajusta a dificuldade das questões em tempo real com base no desempenho do aluno (ex: 1 acerto sobe o nível, 2 erros descem para reforçar a base).
+*   **Tutor IA Resiliente**: Feedback pedagógico imediato após cada resposta, utilizando **Google Gemini** com redundância automática (**fallback**) para **Groq (Llama 3)**, garantindo 100% de disponibilidade.
+*   **Persistência de Sessão**: Inicie um quiz e continue exatamente de onde parou, com o estado de dificuldade e progresso preservados.
 
-- **Framework**: `Next.js 16 (App Router)`
-- **Linguagem**: `TypeScript`
-- **UI & Componentes**: `React 19` + `Tailwind CSS V4` + `shadcn/ui`
-- **Banco de Dados Relacional**: `PostgreSQL` (Rodando via Docker)
-- **ORM**: `Prisma`
-- **Autenticação e Sessão**: `NextAuth.js v5 (Auth.js)`
-- **Engine IA Principal**: `Google Gemini 2.5 Flash`
-- **Engine IA de Fallback**: `Groq`
-- **Engine IA Gráfica**: `OpenAI DALL-E 3`
-
----
-
-## 📂 Visão Geral da Estrutura (Route Groups)
-
-O projeto é particionado nos seguintes domínios:
-- `app/(public)/`: Rotas abertas e páginas institucionais com ampla acessibilidade.
-- `app/(admin)/`: Rotas estritamente protegidas contendo o painel de professores e gerenciamento sistêmico.
-- `app/(student)/`: Ambiente focado no aprendizado do aluno, englobando acesso a módulos e simulados adaptativos.
+### 👨‍🏫 Para o Professor: Gestão e Escala
+*   **Dashboard Administrativo Premium**: Interface de alta performance com navegação fixa e área de trabalho independente para gestão de conteúdos.
+*   **Segurança Avançada**: Acesso protegido via **NextAuth v5** com controle de rotas por domínios lógicos (Route Groups).
+*   **Geração de Questões via IA**: Ferramentas integradas para gerar bancos de questões estruturados automaticamente a partir de tópicos específicos.
+*   **Gestão de Módulos**: CRUD completo para criação e edição de módulos acadêmicos e bancos de questões.
 
 ---
 
-## 💻 Configuração Local
+## 🛠 Tech Stack & Arquitetura
 
-### 1. Requisitos
-- [Node.js](https://nodejs.org/) (versão 18+)
-- [Docker](https://www.docker.com/) instalado
-- Chaves de API das plataformas provedoras de inteligência e dados:
-  - Google AI Studio (Gemini)
-  - Groq (Sistema de Fallback)
-  - OpenAI (Geração de Imagem)
+A aplicação utiliza as tecnologias mais modernas do ecossistema Web para garantir escalabilidade, segurança e uma experiência de usuário fluida.
+
+*   **Estrutura Principal**: `Next.js 16 (App Router)` + `React 19`
+*   **Linguagem**: `TypeScript`
+*   **Estilização**: `Tailwind CSS V4` + `shadcn/ui` + `Lucide Icons`
+*   **Banco de Dados**: `PostgreSQL` via `Docker`
+*   **Persistência (ORM)**: `Prisma ORM`
+*   **Autenticação**: `NextAuth.js v5 (Auth.js)`
+*   **Inteligência Artificial**:
+    *   **Primária**: `Google Gemini 1.5/2.0 Flash`
+    *   **Fallback**: `Groq (Llama 3 API)`
+*   **UX/UI**: `Sonner` (Notificações) + `Zod` (Validação de Dados)
+
+---
+
+## 📂 Organização do Projeto (Route Groups)
+
+O roteamento da aplicação é organizado por domínios de negócio para facilitar a manutenção e segurança:
+- `app/(public)/`: Páginas institucionais e acesso aberto.
+- `app/(admin)/`: Painel do professor e ferramentas de gestão (protegido por middleware).
+- `app/(student)/`: Ecossistema de aprendizado, módulos e simulados adaptativos.
+
+---
+
+## 🚀 Configuração Local
+
+### 1. Pré-requisitos
+- **Node.js** (v18 ou superior)
+- **Docker** & **Docker Compose**
+- Chaves de API (Gemini e Groq)
 
 ### 2. Variáveis de Ambiente
-Renomeie o arquivo `.env.example` para `.env` (ou `.env.local`) e defina rigorosamente as seguintes chaves requeridas:
+Crie um arquivo `.env` na raiz do projeto seguindo o modelo:
+
 ```env
-# Banco de Dados Relacional (Docker Local)
+# Database (PostgreSQL no Docker)
 DATABASE_URL="postgresql://admin:password123@localhost:5432/lumina_lms?schema=public"
 
-# Autenticação (NextAuth)
-AUTH_SECRET="seu_secret_aqui_gerado"
+# Autenticação
+AUTH_SECRET="sua_chave_secreta_aqui"
 
-# Inteligência Artificial e Modelos LLMs
+# Chave de Registro de Professores (Segurança)
+TEACHER_REGISTRATION_KEY="chave_secreta_para_registro"
+
+# AI Engines
 GEMINI_API_KEY="sua_chave_gemini"
-OPENAI_API_KEY="sua_chave_openai"
 GROQ_API_KEY="sua_chave_groq"
 ```
 
-### 3. Rodando os Serviços Auxiliares
-```bash
-docker-compose up -d
-```
+### 3. Instalação e Execução
 
-### 4. Rodando o Projeto
 ```bash
-# 1. Instalação das dependências
+# Sobe o banco de dados
+docker-compose up -d
+
+# Instala as dependências
 npm install
 
-# 2. Resolução de esquema e sincronização de dados
+# Sincroniza o banco de dados
 npx prisma generate
 npx prisma db push
 
-# 3. Iniciando ambiente de desenvolvimento
+# Inicia o servidor de desenvolvimento
 npm run dev
 ```
-A plataforma estará acessível localmente escutando em `http://localhost:3000`.
+
+Acesse `http://localhost:3000` para começar!
 
 ---
 
-## 🎨 Design Guideline
-A aparência e experiência de usuário baseia-se num espectro minimalista utilitário, com uma assinatura de Vercel/Linear vibes:
-1. `Light Mode` primário como guia central de contraste e usabilidade diurna. Foco na cor primária `#2563EB`.
-2. Interações reativas hiper fluidas com foco em tipografia limpa.
-3. Componentização visual desengatada de lógicas pesadas, garantindo baixo Time to Interactive.
+## 🎨 Design System
+O Lumina LMS segue uma estética utilitarista e moderna ("Linear/Vercel vibes"):
+- **Contraste**: Foco no `Light Mode` primário com acentos em `#2563EB`.
+- **Tipografia**: Uso de fontes modernas e legíveis para conteúdo acadêmico.
+- **Feedback**: Micro-interações e transições suaves para uma sensação de aplicação nativa.
 
-> Open Source - 2026. Divirta-se quebrando código e ensinando Internet!
+> Built with ☕ and Code by Gabrielz11 - 2026.
+

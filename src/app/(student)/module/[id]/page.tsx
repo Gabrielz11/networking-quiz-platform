@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { marked } from "marked";
+import { renderModuleMarkdown } from "@/lib/markdown";
 import { Button } from "@/components/ui/button";
 import { ModuleTopNav } from "./_components/ModuleTopNav";
 import { ModuleHero } from "./_components/ModuleHero";
@@ -32,7 +32,7 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
         );
     }
 
-    const htmlContent = marked(moduleData.content || "") as string;
+    const htmlContent = renderModuleMarkdown(moduleData.content || "");
     const formattedDate = new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: 'long',

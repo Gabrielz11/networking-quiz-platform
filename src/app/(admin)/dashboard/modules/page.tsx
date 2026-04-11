@@ -17,7 +17,6 @@ export default function ModulesManager() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [content, setContent] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
 
     const fetchModules = async () => {
@@ -41,7 +40,6 @@ export default function ModulesManager() {
         setTitle(mod.title);
         setDescription(mod.description || "");
         setContent(mod.content);
-        setImageUrl(mod.imageUrl || "");
         setIsDialogOpen(true);
     };
 
@@ -50,7 +48,6 @@ export default function ModulesManager() {
         setTitle("");
         setDescription("");
         setContent("");
-        setImageUrl("");
         setIsDialogOpen(true);
     };
 
@@ -58,9 +55,9 @@ export default function ModulesManager() {
         e.preventDefault();
         setLoading(true);
         if (editingId) {
-            await updateModule(editingId, { title, description, content, imageUrl });
+            await updateModule(editingId, { title, description, content });
         } else {
-            await createModule({ title, description, content, imageUrl });
+            await createModule({ title, description, content });
         }
         setIsDialogOpen(false);
         fetchModules();
@@ -95,20 +92,29 @@ export default function ModulesManager() {
         });
     };
 
+    // O botão de geração só ativa se título, resumo OU material de estudo estiver preenchido
+    const canGenerate = !!(title.trim() || description.trim() || content.trim());
+
     const handleGenerateContent = async () => {
-        if (!title) return toast.warning("Por favor, defina um título primeiro.");
+        if (!canGenerate) {
+            return toast.warning("Preencha pelo menos o Título, o Resumo ou adicione algum conteúdo no Material de Estudo.");
+        }
         setIsGenerating(true);
         try {
             const res = await fetch("/api/generate-content", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, description }),
+                body: JSON.stringify({
+                    title,
+                    description,
+                    // Passa o material que o professor já colocou como contexto
+                    studyMaterial: content.trim() || undefined,
+                }),
             });
             const data = await res.json();
             if (res.ok) {
                 setContent(data.content);
                 if (!description && data.description) setDescription(data.description);
-                if (data.imageUrl) setImageUrl(data.imageUrl);
             } else {
                 throw new Error(data.error);
             }
@@ -133,8 +139,7 @@ export default function ModulesManager() {
                 setDescription={setDescription}
                 content={content}
                 setContent={setContent}
-                imageUrl={imageUrl}
-                setImageUrl={setImageUrl}
+                canGenerate={canGenerate}
                 isGenerating={isGenerating}
                 handleGenerateContent={handleGenerateContent}
                 handleSave={handleSave}

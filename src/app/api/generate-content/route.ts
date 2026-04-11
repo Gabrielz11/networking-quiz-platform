@@ -3,13 +3,18 @@ import { ContentLlmService } from "@/services/llm/content-llm.service";
 
 export async function POST(req: Request) {
     try {
-        const { title, description } = await req.json();
+        const { title, description, studyMaterial } = await req.json();
 
-        if (!title) {
-            return NextResponse.json({ error: "Título é obrigatório" }, { status: 400 });
+        const hasStudyMaterial = studyMaterial && studyMaterial.trim().length > 0;
+
+        if (!title && !hasStudyMaterial) {
+            return NextResponse.json(
+                { error: "Preencha o Título, o Resumo ou adicione algum Material de Estudo para usar o Assistente IA." },
+                { status: 400 }
+            );
         }
 
-        const parsedData = await ContentLlmService.generate(title, description);
+        const parsedData = await ContentLlmService.generate(title ?? "", description ?? "", studyMaterial);
 
         return NextResponse.json(parsedData);
     } catch (error: any) {

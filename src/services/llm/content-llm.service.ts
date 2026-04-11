@@ -1,4 +1,4 @@
-import { AiService } from "@/services/ai.service";
+import { AiService, CONTENT_TIMEOUT_MS } from "@/services/ai.service";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("ContentLlmService");
@@ -6,46 +6,74 @@ const logger = new Logger("ContentLlmService");
 export interface GeneratedModuleContent {
     content: string;
     description: string;
-    imageUrl: string;
 }
 
 export class ContentLlmService {
     /**
-     * Gera conteúdo de módulo (markdown + descrição + imageUrl) via IA.
+     * Gera conteúdo de módulo (markdown + descrição) via IA.
+     * Prioridade do contexto: studyMaterial > title + description.
      */
     static async generate(
         title: string,
-        description: string
+        description: string,
+        studyMaterial?: string
     ): Promise<GeneratedModuleContent> {
+        const hasStudyMaterial = studyMaterial && studyMaterial.trim().length > 0;
+
+        const contextBlock = hasStudyMaterial
+            ? `O professor forneceu o seguinte material de base para o módulo:\n\n---\n${studyMaterial.trim()}\n---\n\nUse esse material como fonte principal para estruturar, expandir e enriquecer o conteúdo. Preserve a coerência com o que foi escrito pelo professor.`
+            : `Use o título "${title}" e a descrição "${description || "não fornecida"}" como base principal para criar o conteúdo do módulo.`;
+
         const prompt = `
-        Você é um especialista em educação tecnológica. 
-        Crie o conteúdo de um módulo de estudo para uma plataforma LMS sobre o tema: "${title}".
-        A descrição base é: "${description}".
+            Você é um especialista em educação tecnológica e design instrucional para plataformas LMS.
+            Sua tarefa é criar um material de estudo completo, didático e bem estruturado sobre o tema: "${title}".
 
-        REGRAS DE FORMATAÇÃO (MUITO IMPORTANTE):
-        1. O conteúdo deve ser em Markdown estruturado, mas visando uma renderização HTML acadêmica.
-        2. Use subtítulos (##) para organizar os tópicos.
-        3. Use parágrafos claros e explicativos.
-        4. Use listas (bullets) para destacar pontos importantes.
-        5. Use negrito para termos técnicos.
-        6. O tom deve ser profissional, didático e encorajador.
-        7. NÃO use HTML puro, use Markdown padrão que será convertido pelo frontend.
-        8. NÃO inclua o título principal (h1) no corpo, foque nos tópicos.
-        9. Se o tema for técnico, inclua exemplos práticos.
+            ${contextBlock}
 
-        Também sugira uma descrição curta (máximo 150 caracteres) se a descrição atual for vazia.
+            REGRAS DE CONTEÚDO (DENSIDADE PREMIUM):
+            - O material deve ter entre 3500 e 6000 caracteres para ser considerado completo.
+            - PROFUNDIDADE: Não se limite ao básico. Explore detalhes técnicos, arquitetura, nuances e "porquês". 
+            - ANALÍTICO: Discuta vantagens, desvantagens e trade-offs.
+            - PRÁTICO: Cada conceito deve vir acompanhado de um exemplo de uso real ou cenário de mercado.
+            - DIDÁTICA: Use analogias para conceitos complexos, mas mantenha o rigor técnico.
+            - Evite ser genérico. Se o tema for IPv6, fale de cabeçalhos, endereçamento, segurança e transição, não apenas "é o novo padrão".
 
-        Retorne no formato JSON:
-        {
-            "content": "Conteúdo em markdown aqui...",
-            "description": "Breve resumo...",
-            "imageUrl": "URL de uma foto técnica relevante (use o formato https://images.unsplash.com/photo-[ID]?q=80&w=1600&auto=format&fit=crop para fotos de tecnologia/servidores/globos digitais)"
-        }
+            REGRAS DE FORMATAÇÃO MARKDOWN:
+            - Use # para os títulos de cada seção principal.
+            - Use **negrito** para termos técnicos e conceitos-chave.
+            - Use listas (-) apenas quando fizer sentido didático.
+            - Use tabelas Markdown (| col | col |) obrigatoriamente na seção de Comparação.
+            - Use blocos de código (\`\`\`) para exemplos técnicos, configurações ou comandos.
+            - Cada parágrafo deve ser denso mas fluido (4 a 6 frases).
+
+            ESTRUTURA OBRIGATÓRIA (Explore cada seção exaustivamente):
+            # Introdução
+            # Problema, Contexto ou Motivação
+            # Conceito Principal ou Solução (Base técnica profunda)
+            # Funcionamento, Estrutura ou Componentes
+            # Exemplos Práticos (Cenários Reais)
+            # Principais Características
+            # Aplicações Reais e Casos de Uso
+            # Comparação (Tabela detalhada)
+            # Conclusão e Tendências Futuras
+
+            ${!description
+                ? `Gere também uma descrição curta para o módulo com no máximo 150 caracteres.`
+                : `Refine a descrição atual se necessário, mantendo no máximo 150 caracteres. Descrição atual: "${description}".`
+            }
+
+            Retorne estritamente no formato JSON, sem qualquer texto antes ou depois:
+            {
+                "content": "conteúdo completo em markdown aqui",
+                "description": "resumo curto do módulo com no máximo 150 caracteres"
+            }
         `;
 
-        logger.info("generate", "Gerando conteúdo de módulo", { title });
+        logger.info("generate", "Gerando conteúdo de módulo", { title, hasStudyMaterial });
 
-        const data = await AiService.generateJson<GeneratedModuleContent>(prompt);
+        const data = await AiService.generateJson<GeneratedModuleContent>(prompt, {
+            timeoutMs: CONTENT_TIMEOUT_MS,
+        });
 
         // Validação da estrutura
         if (
@@ -53,14 +81,13 @@ export class ContentLlmService {
             data === null ||
             typeof data.content !== "string" ||
             data.content.trim() === "" ||
-            typeof data.description !== "string" ||
-            typeof data.imageUrl !== "string"
+            typeof data.description !== "string"
         ) {
             logger.error("generate", "Validação falhou na resposta da IA", { keys: Object.keys(data) });
             throw new Error("Formato de resposta inválido da IA.");
         }
 
-        logger.info("generate", "Conteúdo de módulo gerado com sucesso", { title });
+        logger.info("generate", "Conteúdo de módulo gerado com sucesso", { title, hasStudyMaterial });
         return data;
     }
 }

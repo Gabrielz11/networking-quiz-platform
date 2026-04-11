@@ -4,7 +4,10 @@ import { Logger } from "@/lib/logger";
 
 const logger = new Logger("AiService");
 
-const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_TIMEOUT_MS = 45_000;  // 45s — suficiente para respostas JSON curtas
+const CONTENT_TIMEOUT_MS = 90_000; // 90s — para geração de conteúdo longo (gemini-2.5-flash é um modelo de raciocínio)
+
+export { CONTENT_TIMEOUT_MS };
 
 // ========== Interfaces ==========
 
@@ -75,11 +78,15 @@ export class AiService {
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
                 messages: [
-                    { role: "system", content: "Você é um assistente que responde APENAS e EXCLUSIVAMENTE com o objeto JSON válido solicitado." },
+                    {
+                        role: "system",
+                        content: "Você é um especialista em educação tecnológica e criação de materiais didáticos. Responda EXCLUSIVAMENTE com um objeto JSON válido, sem qualquer texto antes ou depois. O conteúdo gerado deve ser completo, detalhado, bem estruturado e rico em informações relevantes."
+                    },
                     { role: "user", content: promptText }
                 ],
                 response_format: { type: "json_object" },
-                temperature: 0.8
+                temperature: 0.6,
+                max_tokens: 8192,
             })
         });
 
