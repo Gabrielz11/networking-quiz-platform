@@ -4,7 +4,9 @@ import {
     BookOpen,
     Trash2,
     Edit3,
+    Eye,
 } from "lucide-react";
+import { ModulePreviewDialog } from "./ModulePreviewDialog";
 
 interface ModuleCardProps {
     mod: any;
@@ -39,10 +41,21 @@ export function ModuleCard({
                 </p>
             </CardContent>
 
-            <CardFooter className="p-3 pt-2 flex gap-1 mt-auto border-t border-gray-50">
+            <CardFooter className="p-3 pt-2 flex gap-1 mt-auto border-t border-gray-50 flex-wrap">
+                <ModulePreviewDialog 
+                    title={mod.title} 
+                    description={mod.description || ""} 
+                    content={mod.content || ""}
+                >
+                    <Button variant="ghost" size="sm" className="h-8 rounded-lg hover:bg-blue-50 text-blue-600 font-semibold text-xs gap-1 transition-colors flex-1">
+                        <Eye className="w-3.5 h-3.5" /> Ver
+                    </Button>
+                </ModulePreviewDialog>
+
                 <Button variant="ghost" size="sm" onClick={() => onEdit(mod)} className="h-8 rounded-lg hover:bg-gray-100 text-gray-600 font-semibold text-xs gap-1 transition-colors flex-1">
                     <Edit3 className="w-3.5 h-3.5" /> Editar
                 </Button>
+                
                 <Button variant="ghost" size="sm" onClick={() => onDelete(mod.id)} className="h-8 rounded-lg hover:bg-red-50 text-red-500 font-semibold text-xs gap-1 transition-colors flex-1">
                     <Trash2 className="w-3.5 h-3.5" /> Deletar
                 </Button>
