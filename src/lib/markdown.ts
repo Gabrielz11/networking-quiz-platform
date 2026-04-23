@@ -1,9 +1,5 @@
-import { marked, Renderer } from "marked";
+import { marked, Renderer, type Tokens } from "marked";
 
-/**
- * Mapeamento de emojis por nome de seção.
- * A IA gera os títulos sem emojis; o renderizador os injeta aqui.
- */
 const SECTION_EMOJIS: Record<string, string> = {
     "introdução": "📌",
     "problema, contexto ou motivação": "🔍",
@@ -21,14 +17,11 @@ function getSectionEmoji(title: string): string {
     return SECTION_EMOJIS[key] ?? "📖";
 }
 
-
 function createModuleRenderer(): Renderer {
     const renderer = new Renderer();
 
-    // H1 → Seção principal premium com emoji mapeado pelo renderizador
     renderer.heading = ({ text, depth }) => {
         if (depth === 1) {
-            // Remove notas entre parênteses que a IA possa incluir ex: "Comparação (omita se...)"
             const cleanTitle = text.replace(/\(.*?\)/g, "").trim();
             const emoji = getSectionEmoji(cleanTitle);
 
@@ -62,7 +55,6 @@ function createModuleRenderer(): Renderer {
         return `<h3 style="font-size: 1.1rem; font-weight: 600; color: #374151; margin-top: 1.5rem; margin-bottom: 0.5rem;">${text}</h3>`;
     };
 
-    // Tabelas → Design moderno com bordas e cabeçalho destacado
     renderer.table = ({ header, rows }) => {
         const headerCells = header
             .map(
@@ -77,7 +69,7 @@ function createModuleRenderer(): Renderer {
                         letter-spacing: 0.05em;
                         background-color: #f9fafb;
                         border-bottom: 2px solid #e5e7eb;
-                    ">${cell.text}</th>`
+                    ">${marked.parseInline(cell.text)}</th>`
             )
             .join("");
 
@@ -92,7 +84,7 @@ function createModuleRenderer(): Renderer {
                                 color: #374151;
                                 border-bottom: 1px solid #f3f4f6;
                                 background-color: ${rowIndex % 2 === 1 ? "#f9fafb" : "#ffffff"};
-                            ">${cell.text}</td>`
+                            ">${marked.parseInline(cell.text)}</td>`
                     )
                     .join("");
                 return `<tr>${cells}</tr>`;
@@ -109,52 +101,51 @@ function createModuleRenderer(): Renderer {
         `;
     };
 
-    // Parágrafo → Espaçamento confortável
     renderer.paragraph = ({ text }) => {
         return `<p style="margin-bottom: 1.25rem; line-height: 1.8; color: #374151;">${text}</p>`;
     };
 
-    // Negrito e itálico NÃO são sobrescritos pelo renderer —
-    // o marked v17 lida com isso no pipeline de inline tokens.
-    // O pós-processamento abaixo injeta os estilos diretamente no HTML final.
+    renderer.codespan = ({ text }) => {
+        return `<code style="
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.85em;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 0.375rem;
+            padding: 0.15em 0.45em;
+            white-space: nowrap;
+        ">${text}</code>`;
+    };
 
     return renderer;
 }
 
-/**
- * Pós-processamento: injeta estilos inline nas tags de formatação.
- * Usamos regexes flexíveis para capturar variações (strong, b, em, i)
- * e garantir que o estilo seja aplicado mesmo se houver atributos extras.
- */
-function postProcess(html: string): string {
+function styleHtml(html: string): string {
     return html
-        // Negrito: Transforma <strong> ou <b> em nosso estilo premium
-        .replace(/<(strong|b)\b([^>]*)>/gi, '<strong style="font-weight: 700; color: #111827;" $2>')
-        .replace(/<\/(strong|b)>/gi, '</strong>')
-
-        // Itálico: Transforma <em> ou <i>
-        .replace(/<(em|i)\b([^>]*)>/gi, '<em style="font-style: italic; color: #374151;" $2>')
-        .replace(/<\/(em|i)>/gi, '</em>')
-
-        // Garante que links tenham cor de destaque
-        .replace(/<a\b([^>]*)>/gi, '<a style="color: #2563eb; text-decoration: underline;" $1>');
+        // Estilizar tags <strong> e <b> já geradas pelo marked
+        .replace(/<(strong|b)\b([^>]*)>/gi, '<strong style="font-weight: 700; color: #111827;"$2>')
+        .replace(/<\/(strong|b)>/gi, "</strong>")
+        // Estilizar tags <em> e <i> já geradas pelo marked
+        .replace(/<(em|i)\b([^>]*)>/gi, '<em style="font-style: italic; font-weight: 600; color: #1e40af;"$2>')
+        .replace(/<\/(em|i)>/gi, "</em>")
+        // Fallback: converter **texto** que o marked não processou como <strong>
+        .replace(/\*\*([^*\n<>]+?)\*\*/g, '<strong style="font-weight: 700; color: #111827;">$1</strong>')
+        // Fallback: converter *texto* que o marked não processou como <em>
+        .replace(/(?<!\*)\*(?!\*)([^*\n<>]+?)(?<!\*)\*(?!\*)/g, '<em style="font-style: italic; font-weight: 600; color: #1e40af;">$1</em>')
+        // Estilizar links
+        .replace(/<a\b([^>]*)>/gi, '<a style="color: #2563eb; text-decoration: underline;"$1>');
 }
 
-/**
- * Converte Markdown gerado pela IA em HTML estilizado para exibição no módulo.
- * Use esta função no lugar do `marked()` direto.
- */
+
 export function renderModuleMarkdown(markdown: string): string {
     const renderer = createModuleRenderer();
 
-    // Configurações extras para o marked v17 garantir parsing robusto
     const rawHtml = marked.parse(markdown, {
         renderer,
         gfm: true,
-        breaks: true
+        breaks: true,
     }) as string;
 
-    return postProcess(rawHtml);
+    return styleHtml(rawHtml);
 }
-
-

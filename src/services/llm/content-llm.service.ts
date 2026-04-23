@@ -73,6 +73,20 @@ export class ContentLlmService {
 
         const data = await AiService.generateJson<GeneratedModuleContent>(prompt, {
             timeoutMs: CONTENT_TIMEOUT_MS,
+            responseSchema: {
+                type: "object",
+                properties: {
+                    content: { 
+                        type: "string",
+                        description: "Conteúdo completo do módulo em formato Markdown rico"
+                    },
+                    description: { 
+                        type: "string",
+                        description: "Resumo curto do módulo com no máximo 150 caracteres"
+                    }
+                },
+                required: ["content", "description"]
+            }
         });
 
         // Validação da estrutura

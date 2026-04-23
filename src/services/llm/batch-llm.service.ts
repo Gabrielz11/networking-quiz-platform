@@ -47,7 +47,33 @@ export class BatchLlmService {
 
         logger.info("generate", "Gerando lote de questões", { title });
 
-        const data = await AiService.generateJson<BatchResponse>(prompt);
+        const data = await AiService.generateJson<BatchResponse>(prompt, {
+            responseSchema: {
+                type: "object",
+                properties: {
+                    questions: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                prompt: { type: "string" },
+                                options: { 
+                                    type: "array", 
+                                    items: { type: "string" },
+                                    minItems: 4,
+                                    maxItems: 4
+                                },
+                                correct_option_index: { type: "number" },
+                                difficulty: { type: "string" },
+                                explanation_base: { type: "string" }
+                            },
+                            required: ["prompt", "options", "correct_option_index", "difficulty", "explanation_base"]
+                        }
+                    }
+                },
+                required: ["questions"]
+            }
+        });
 
         // Validação do array
         if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {

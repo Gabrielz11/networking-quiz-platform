@@ -119,7 +119,24 @@ ${sanitizedModuleContent}`;
         });
 
         try {
-            const qData = await AiService.generateJson<unknown>(prompt, { temperature: 0.6 });
+            const qData = await AiService.generateJson<unknown>(prompt, { 
+                temperature: 0.6,
+                responseSchema: {
+                    type: "object",
+                    properties: {
+                        prompt: { type: "string" },
+                        options: { 
+                            type: "array",
+                            items: { type: "string" },
+                            minItems: 4,
+                            maxItems: 4
+                        },
+                        correct_option_index: { type: "number" },
+                        explanation: { type: "string" }
+                    },
+                    required: ["prompt", "options", "correct_option_index", "explanation"]
+                }
+            });
             const validatedData = validateAIQuestionResponse(qData);
 
             logger.info("generate", "Questão gerada com sucesso", {

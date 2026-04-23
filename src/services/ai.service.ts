@@ -15,6 +15,7 @@ export interface AiGenerateJsonOptions {
     temperature?: number;
     timeoutMs?: number;
     modelName?: string;
+    responseSchema?: any; // Adicionado suporte para schema tipado
 }
 
 export interface AiGenerateTextOptions {
@@ -69,6 +70,18 @@ export class AiService {
 
         logger.info("callGroqFallback", "Iniciando fallback para Groq", { provider: "groq" });
 
+        const systemPrompt = `Você é um Especialista Sênior em Engenharia de Redes (IPv6) e Designer Instrucional de elite além de professor doutor na área de redes e segurança cibernética.
+        Sua missão é criar materiais educacionais de altíssimo nível, comparáveis aos melhores cursos técnicos do mundo.
+
+        DIRETRIZES RÍGIDAS DE CONTEÚDO:
+        1. PROFUNDIDADE MÁXIMA: Nunca resuma. Explique o "porquê" e o "como" de cada detalhe técnico. Se o tema for IPv6, aborde bits, cabeçalhos, escopo e protocolos relacionados (ICMPv6, NDP, etc) logicamente relacionados com o pedido.
+        2. DENSIDADE DE INFORMAÇÃO: Cada parágrafo deve ser rico em dados. Evite frases genéricas como "é muito importante". Diga POR QUE é importante tecnicamente.
+        3. EXEMPLOS PRÁTICOS: Inclua sempre cenários reais, comandos de configuração ou estruturas de endereçamento detalhadas.
+        4. ESTRUTURA PEDAGÓGICA: Use uma linguagem que desafie o aluno, sendo didática mas extremamente técnica.
+        5. FORMATO: Responda EXCLUSIVAMENTE com um objeto JSON válido, sem qualquer texto antes ou depois.
+
+        NUNCA retorne respostas curtas, rasas ou simplificadas. O usuário espera um conteúdo denso que sirva para estudo profundo.`;
+
         const groqPromise = fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -78,10 +91,7 @@ export class AiService {
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
                 messages: [
-                    {
-                        role: "system",
-                        content: "Você é um especialista em educação tecnológica e criação de materiais didáticos. Responda EXCLUSIVAMENTE com um objeto JSON válido, sem qualquer texto antes ou depois. O conteúdo gerado deve ser completo, detalhado, bem estruturado e rico em informações relevantes."
-                    },
+                    { role: "system", content: systemPrompt },
                     { role: "user", content: promptText }
                 ],
                 response_format: { type: "json_object" },
@@ -123,10 +133,12 @@ export class AiService {
                 generationConfig: {
                     responseMimeType: "application/json",
                     temperature,
+                    maxOutputTokens: 8192,
+                    ...(options.responseSchema && { responseSchema: options.responseSchema })
                 }
             });
 
-            logger.info("generateJson", "Chamando Gemini", { provider: "gemini", temperature });
+            logger.info("generateJson", "Chamando Gemini", { provider: "gemini", temperature, model: model.model });
             const result = await this.withTimeout(model.generateContent(promptText), timeoutMs);
             rawContent = result.response.text();
             logger.info("generateJson", "Gemini respondeu com sucesso", { provider: "gemini", durationMs: Date.now() - start });
@@ -140,7 +152,16 @@ export class AiService {
         const { success, data, error } = safeJsonParse<T>(cleaned);
 
         if (!success || !data) {
-            logger.error("generateJson", `JSON inválido da IA: ${error?.message}`, { rawPreview: cleaned.substring(0, 200) });
+            const previewStart = cleaned.substring(0, 300);
+            const previewEnd = cleaned.length > 300 ? cleaned.substring(cleaned.length - 300) : "";
+
+            logger.error("generateJson", `JSON inválido da IA: ${error?.message}`, {
+                totalLength: cleaned.length,
+                previewStart,
+                previewEnd,
+                errorPosition: (error?.message?.match(/at position (\d+)/) || [])[1]
+            });
+
             throw new Error(`Resposta da IA não é JSON válido: ${error?.message}`);
         }
 
@@ -176,6 +197,10 @@ export class AiService {
             const groqKey = process.env.GROQ_API_KEY;
             if (!groqKey) throw geminiError;
 
+            const textSystemPrompt = systemInstruction
+                ? `${systemInstruction}\n\nIMPORTANTE: Gere um conteúdo profundo, detalhado e tecnicamente denso. Evite respostas superficiais ou curtas.`
+                : "Você é um especialista em educação tecnológica. Gere uma resposta detalhada, profunda e didaticamente rica.";
+
             const groqPromise = fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -185,7 +210,7 @@ export class AiService {
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        ...(systemInstruction ? [{ role: "system", content: systemInstruction }] : []),
+                        { role: "system", content: textSystemPrompt },
                         { role: "user", content: promptText }
                     ],
                     temperature
