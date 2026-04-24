@@ -13,7 +13,12 @@ import {
     Edit3,
     ArrowRight,
     Wand2,
+    Paperclip,
 } from "lucide-react";
+import { useState } from "react";
+import { ModuleSourceUploader } from "@/components/admin/modules/ModuleSourceUploader";
+import { ModuleSourceFilesList } from "@/components/admin/modules/ModuleSourceFilesList";
+import { GenerateContentWithRagButton } from "@/components/admin/modules/GenerateContentWithRagButton";
 
 interface ModulesPageHeaderProps {
     isDialogOpen: boolean;
@@ -48,6 +53,13 @@ export function ModulesPageHeader({
     handleSave,
     openCreateDialog,
 }: ModulesPageHeaderProps) {
+    const [fileRefreshKey, setFileRefreshKey] = useState(0);
+    const [hasProcessedFiles, setHasProcessedFiles] = useState(false);
+
+    const handleFilesChange = (files: { status: string }[]) => {
+        setHasProcessedFiles(files.some((f) => f.status === "PROCESSED"));
+    };
+
     return (
         <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
             <Link href="/dashboard" className="group inline-flex items-center text-sm font-semibold text-gray-400 hover:text-blue-600 transition-colors mb-4">
@@ -141,7 +153,6 @@ export function ModulesPageHeader({
                                         </div>
 
                                         <div className={`relative group transition-all duration-300 ${isGenerating ? "opacity-70" : ""}`}>
-                                            {/* Borda animada durante geração */}
                                             {isGenerating && (
                                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-3xl opacity-75 animate-pulse blur-sm pointer-events-none z-10" />
                                             )}
@@ -149,9 +160,7 @@ export function ModulesPageHeader({
                                                 rows={15}
                                                 value={content}
                                                 onChange={(e) => setContent(e.target.value)}
-                                                placeholder={
-                                                    `Escreva tópicos ou conteúdo de base aqui...\n\nExemplo:\n- Conceitos de endereçamento IPv6\n- Diferenças em relação ao IPv4\n- Tipos de endereços: unicast, multicast, anycast\n\nA IA irá expandir e estruturar o conteúdo automaticamente.`
-                                                }
+                                                placeholder={`Escreva tópicos ou conteúdo de base aqui...\n\nExemplo:\n- Conceitos de endereçamento IPv6\n- Diferenças em relação ao IPv4\n- Tipos de endereços: unicast, multicast, anycast\n\nA IA irá expandir e estruturar o conteúdo automaticamente.`}
                                                 disabled={isGenerating}
                                                 className={`relative rounded-3xl border-2 bg-gray-50 focus:bg-white resize-none font-sans text-base p-8 leading-relaxed min-h-[380px] shadow-inner transition-all z-0
                                                     ${isGenerating
@@ -175,6 +184,50 @@ export function ModulesPageHeader({
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* ===== SEÇÃO RAG: Materiais de Apoio ===== */}
+                                    {editingId && (
+                                        <div className="space-y-4 pt-2 border-t border-gray-100">
+                                            <div className="flex items-center justify-between pt-2">
+                                                <div className="flex items-center gap-2 ml-1">
+                                                    <Paperclip className="w-4 h-4 text-emerald-600" />
+                                                    <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">
+                                                        Materiais de Apoio para Geração por IA
+                                                    </Label>
+                                                </div>
+                                                <GenerateContentWithRagButton
+                                                    moduleId={editingId}
+                                                    hasProcessedFiles={hasProcessedFiles}
+                                                    onContentGenerated={(newContent, newDescription) => {
+                                                        setContent(newContent);
+                                                        if (newDescription && !description) setDescription(newDescription);
+                                                    }}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-gray-400 ml-1">
+                                                Envie PDFs ou TXTs. Após processar, clique em <strong>Gerar com Materiais</strong> para criar conteúdo baseado nos seus arquivos.
+                                            </p>
+
+                                            <ModuleSourceUploader
+                                                moduleId={editingId}
+                                                onUploadSuccess={() => setFileRefreshKey((k) => k + 1)}
+                                            />
+
+                                            <ModuleSourceFilesList
+                                                moduleId={editingId}
+                                                refreshKey={fileRefreshKey}
+                                                onFilesChange={handleFilesChange}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {!editingId && (
+                                        <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center">
+                                            <p className="text-xs text-gray-400">
+                                                💡 <strong>Dica:</strong> Salve o módulo primeiro e depois edite-o para adicionar materiais de apoio (PDFs/TXTs) para geração com IA.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
