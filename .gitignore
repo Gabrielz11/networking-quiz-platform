@@ -18,15 +18,17 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # local env files
-.env*.local
 .env
+.env*.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -34,6 +36,20 @@ yarn-error.log*
 # vercel
 .vercel
 
+# documentation (keep only README.md)
+*.md
+!README.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# user uploaded files (PDFs, etc.)
+/storage/uploads/
+
+# IDE / editor configs
+.vscode/
+.idea/
+
+# Gemini / AI agent configs
+.agents/

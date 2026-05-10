@@ -1,7 +1,14 @@
 // src/lib/rag/document-parser.ts
 
 import fs from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { PDFParse } from "pdf-parse";
 import type { ParsedDocument } from "./rag-types";
+
+// No Node.js com Next.js, desabilitar o worker costuma ser mais estável
+// para evitar que o Turbopack tente resolver caminhos dinâmicos incorretamente.
+// O PDFParse suporta passar disableWorker nas opções do construtor.
 
 export async function parseDocument(input: {
     filePath: string;
@@ -40,21 +47,25 @@ async function parsePdf(input: {
     fileName: string;
     mimeType: string;
 }): Promise<ParsedDocument> {
-    // Dynamic import para evitar problemas de SSR com pdf-parse
-    const pdf = (await import("pdf-parse")).default;
     const buffer = await fs.readFile(input.filePath);
-    const data = await pdf(buffer);
+    const parser = new PDFParse({ 
+        data: buffer,
+        disableWorker: true,
+        useSystemFonts: true
+    });
+    const result = await parser.getText();
+    await parser.destroy();
 
-    if (!data.text || data.text.trim().length === 0) {
+    if (!result.text || result.text.trim().length === 0) {
         throw new Error("Não foi possível extrair texto deste PDF.");
     }
 
     return {
-        text: data.text.trim(),
+        text: result.text.trim(),
         metadata: {
             fileName: input.fileName,
             mimeType: input.mimeType,
-            pageCount: data.numpages,
+            pageCount: result.total,
         },
     };
 }

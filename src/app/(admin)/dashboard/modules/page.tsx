@@ -56,11 +56,17 @@ export default function ModulesManager() {
         setLoading(true);
         if (editingId) {
             await updateModule(editingId, { title, description, content });
+            setIsDialogOpen(false);
         } else {
-            await createModule({ title, description, content });
+            // Cria o módulo e já fica em modo edição para o professor
+            // adicionar materiais RAG sem precisar reabrir o dialog
+            const created = await createModule({ title, description, content });
+            setEditingId(created.id);
+            toast.success("Módulo criado! Agora você pode adicionar materiais de apoio para geração com IA.");
+            // Não fecha o dialog — apenas atualiza para modo edição
         }
-        setIsDialogOpen(false);
         fetchModules();
+        setLoading(false);
     };
 
     const handleDelete = (id: string) => {

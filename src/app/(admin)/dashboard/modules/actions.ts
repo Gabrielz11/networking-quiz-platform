@@ -14,7 +14,7 @@ export async function createModule(data: { title: string; content: string; descr
   const session = await auth();
   if (!session?.user?.id) throw new Error("Não autorizado");
 
-  await prisma.module.create({
+  const module = await prisma.module.create({
     data: {
       title: data.title,
       content: data.content,
@@ -25,6 +25,8 @@ export async function createModule(data: { title: string; content: string; descr
 
   revalidatePath("/dashboard/modules");
   revalidatePath("/student");
+
+  return module;
 }
 
 export async function updateModule(id: string, data: { title: string; content: string; description?: string }) {

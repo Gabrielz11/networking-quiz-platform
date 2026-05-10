@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { cleanMarkdownCodeFences, safeJsonParse } from "@/lib/utils";
 import { Logger } from "@/lib/logger";
 
@@ -27,19 +27,19 @@ export interface AiGenerateTextOptions {
 // ========== AiService — Orquestrador ==========
 
 export class AiService {
-    private static geminiClient: GoogleGenerativeAI | null = null;
+    private static geminiClient: GoogleGenAI | null = null;
 
     /**
      * Inicialização lazy do client Gemini.
      * Só cria a instância quando o primeiro request chegar.
      */
-    private static getGeminiClient(): GoogleGenerativeAI {
+    private static getGeminiClient(): GoogleGenAI {
         if (!this.geminiClient) {
             const apiKey = process.env.GEMINI_API_KEY;
             if (!apiKey) {
                 throw new Error("GEMINI_API_KEY não configurada.");
             }
-            this.geminiClient = new GoogleGenerativeAI(apiKey);
+            this.geminiClient = new GoogleGenAI({ apiKey });
         }
         return this.geminiClient;
     }
@@ -128,19 +128,24 @@ export class AiService {
 
         try {
             const client = this.getGeminiClient();
-            const model = client.getGenerativeModel({
-                model: modelName || process.env.GEMINI_MODEL || "gemini-2.5-flash",
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    temperature,
-                    maxOutputTokens: 8192,
-                    ...(options.responseSchema && { responseSchema: options.responseSchema })
-                }
-            });
 
-            logger.info("generateJson", "Chamando Gemini", { provider: "gemini", temperature, model: model.model });
-            const result = await this.withTimeout(model.generateContent(promptText), timeoutMs);
-            rawContent = result.response.text();
+            logger.info("generateJson", "Chamando Gemini", { provider: "gemini", temperature });
+
+            const result = await this.withTimeout(
+                client.models.generateContent({
+                    model: modelName || process.env.GEMINI_MODEL || "gemini-2.5-flash",
+                    contents: [{ role: "user", parts: [{ text: promptText }] }],
+                    config: {
+                        responseMimeType: "application/json",
+                        temperature,
+                        maxOutputTokens: 8192,
+                        responseSchema: options.responseSchema
+                    }
+                }),
+                timeoutMs
+            );
+
+            rawContent = result.text || "";
             logger.info("generateJson", "Gemini respondeu com sucesso", { provider: "gemini", durationMs: Date.now() - start });
         } catch (geminiError: any) {
             logger.warn("generateJson", `Gemini falhou: ${geminiError.message}`, { provider: "gemini", durationMs: Date.now() - start });
@@ -181,16 +186,23 @@ export class AiService {
 
         try {
             const client = this.getGeminiClient();
-            const model = client.getGenerativeModel({
-                model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-                ...(systemInstruction && { systemInstruction }),
-                generationConfig: { temperature }
-            });
 
             logger.info("generateText", "Chamando Gemini", { provider: "gemini" });
-            const result = await this.withTimeout(model.generateContent(promptText), timeoutMs);
+
+            const result = await this.withTimeout(
+                client.models.generateContent({
+                    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+                    contents: [{ role: "user", parts: [{ text: promptText }] }],
+                    config: {
+                        systemInstruction,
+                        temperature
+                    }
+                }),
+                timeoutMs
+            );
+
             logger.info("generateText", "Gemini respondeu", { provider: "gemini", durationMs: Date.now() - start });
-            return result.response.text() || "Não foi possível gerar a resposta.";
+            return result.text || "Não foi possível gerar a resposta.";
         } catch (geminiError: any) {
             logger.warn("generateText", `Gemini falhou: ${geminiError.message}`, { provider: "gemini", durationMs: Date.now() - start });
 

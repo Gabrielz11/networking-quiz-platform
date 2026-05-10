@@ -1,7 +1,7 @@
 // src/lib/rag/embedding-service.ts
 // Reutiliza a GEMINI_API_KEY já configurada no projeto.
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 export interface EmbeddingService {
     embedText(text: string): Promise<number[]>;
@@ -9,22 +9,28 @@ export interface EmbeddingService {
 }
 
 export class GeminiEmbeddingService implements EmbeddingService {
-    private client: GoogleGenerativeAI;
+    private client: GoogleGenAI;
 
     constructor() {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
             throw new Error("GEMINI_API_KEY não configurada.");
         }
-        this.client = new GoogleGenerativeAI(apiKey);
+        this.client = new GoogleGenAI({ apiKey });
     }
 
     async embedText(text: string): Promise<number[]> {
-        const modelName = process.env.EMBEDDING_MODEL ?? "text-embedding-004";
-        const model = this.client.getGenerativeModel({ model: modelName });
+        const modelName = process.env.EMBEDDING_MODEL ?? "gemini-embedding-001";
+        
+        const result = await this.client.models.embedContent({
+            model: modelName,
+            contents: [{ parts: [{ text }] }],
+            config: {
+                outputDimensionality: 768
+            }
+        });
 
-        const result = await model.embedContent(text);
-        const embedding = result.embedding?.values;
+        const embedding = result.embeddings[0]?.values;
 
         if (!embedding || embedding.length === 0) {
             throw new Error("Erro ao gerar embedding: resposta vazia do provider.");
