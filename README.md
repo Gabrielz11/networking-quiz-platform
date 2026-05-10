@@ -1,86 +1,144 @@
-# 🎓 Lumina LMS (IPv6 Edition)
+# 🎓 Lumina LMS — Plataforma Educacional Adaptativa para IPv6
 
-O **Lumina LMS** é uma plataforma educacional de última geração, projetada para transformar o ensino de redes de computadores com foco especial em **IPv6**. Através de uma interface minimalista e um motor de inteligência artificial resiliente, a plataforma oferece uma experiência de aprendizado adaptativa e personalizada.
-
----
-
-## ✨ Diferenciais e Funcionalidades
-
-### 👨‍🎓 Para o Aluno: Foco e Adaptação
-*   **Ambiente Clean (v3.0)**: Experiência de leitura em Markdown otimizada para reduzir a fadiga cognitiva e aumentar o foco no conteúdo.
-*   **Motor Adaptativo Inteligente**: O sistema ajusta a dificuldade das questões em tempo real com base no desempenho do aluno (ex: 1 acerto sobe o nível, 2 erros descem para reforçar a base).
-*   **Tutor IA Resiliente**: Feedback pedagógico imediato após cada resposta, utilizando **Google Gemini** com redundância automática (**fallback**) para **Groq (Llama 3)**, garantindo 100% de disponibilidade.
-*   **Persistência de Sessão**: Inicie um quiz e continue exatamente de onde parou, com o estado de dificuldade e progresso preservados.
-
-### 👨‍🏫 Para o Professor: Gestão e Escala
-*   **Dashboard Administrativo Premium**: Interface de alta performance com navegação fixa e área de trabalho independente para gestão de conteúdos.
-*   **Segurança Avançada**: Acesso protegido via **NextAuth v5** com controle de rotas por domínios lógicos (Route Groups).
-*   **Geração de Questões via IA**: Ferramentas integradas para gerar bancos de questões estruturados automaticamente a partir de tópicos específicos.
-*   **Gestão de Módulos**: CRUD completo para criação e edição de módulos acadêmicos e bancos de questões.
+O **Lumina LMS** é uma plataforma educacional de última geração voltada ao ensino de **Redes de Computadores** com foco em **IPv6**. O sistema combina quizzes adaptativos com inteligência artificial generativa e uma arquitetura **RAG (Retrieval-Augmented Generation)**, permitindo que professores enviem materiais didáticos e a IA gere conteúdo pedagógico fundamentado nesses documentos.
 
 ---
 
-## 🛠 Tech Stack & Arquitetura
+## ✨ Funcionalidades Principais
 
-A aplicação utiliza as tecnologias mais modernas do ecossistema Web para garantir escalabilidade, segurança e uma experiência de usuário fluida.
+### 👨‍🎓 Para o Aluno
+- **Quiz Adaptativo**: Motor de dificuldade dinâmica (`EASY → MEDIUM → HARD`) que se ajusta em tempo real conforme o desempenho — 1 acerto sobe o nível, 2 erros consecutivos descem para reforçar a base.
+- **Tutor IA com Feedback Imediato**: Explicações pedagógicas personalizadas geradas por IA após cada resposta, incentivando o aprendizado pelo erro.
+- **Persistência de Sessão**: O aluno pode pausar e retomar o quiz exatamente de onde parou, preservando o progresso e o nível de dificuldade.
+- **Conteúdo Fundamentado (RAG)**: Os módulos de estudo são gerados a partir de materiais reais enviados pelo professor, eliminando alucinações da IA.
 
-*   **Estrutura Principal**: `Next.js 16 (App Router)` + `React 19`
-*   **Linguagem**: `TypeScript`
-*   **Estilização**: `Tailwind CSS V4` + `shadcn/ui` + `Lucide Icons`
-*   **Banco de Dados**: `PostgreSQL` via `Docker`
-*   **Persistência (ORM)**: `Prisma ORM`
-*   **Autenticação**: `NextAuth.js v5 (Auth.js)`
-*   **Inteligência Artificial**:
-    *   **Primária**: `Google Gemini 1.5/2.0 Flash`
-    *   **Fallback**: `Groq (Llama 3 API)`
-*   **UX/UI**: `Sonner` (Notificações) + `Zod` (Validação de Dados)
-
----
-
-## 📂 Organização do Projeto (Route Groups)
-
-O roteamento da aplicação é organizado por domínios de negócio para facilitar a manutenção e segurança:
-- `app/(public)/`: Páginas institucionais e acesso aberto.
-- `app/(admin)/`: Painel do professor e ferramentas de gestão (protegido por middleware).
-- `app/(student)/`: Ecossistema de aprendizado, módulos e simulados adaptativos.
+### 👨‍🏫 Para o Professor
+- **Dashboard Administrativo**: Interface completa com navegação fixa para gestão de módulos, questões e materiais de apoio.
+- **Upload de Materiais (RAG)**: Envio de arquivos PDF e TXT que são processados automaticamente — extração de texto, fragmentação em chunks e vetorização com embeddings.
+- **Geração de Conteúdo com IA + RAG**: A IA gera conteúdo pedagógico rico, ancorado estritamente nos materiais enviados pelo professor.
+- **Geração de Questões via IA**: Criação automática de bancos de questões estruturados a partir de tópicos específicos.
+- **CRUD Completo de Módulos**: Criação, edição e exclusão de módulos acadêmicos com feedback visual instantâneo.
 
 ---
 
-## 🚀 Configuração Local
+## 🏗️ Arquitetura RAG
 
-### 1. Pré-requisitos
-- **Node.js** (v18 ou superior)
+O diferencial técnico do Lumina LMS é seu pipeline RAG completo integrado ao banco relacional:
+
+```
+Professor cria módulo → Upload de PDF/TXT → Extração de texto
+    → Chunking (1200 chars, 200 overlap) → Embeddings (gemini-embedding-001, 768d)
+    → PostgreSQL + pgvector → Busca Semântica (Cosine Similarity)
+    → Contexto Recuperado → LLM Gera Conteúdo Fundamentado
+```
+
+### Componentes do Pipeline RAG
+| Etapa | Tecnologia | Descrição |
+| :--- | :--- | :--- |
+| **Parsing** | `pdf-parse` | Extração de texto de PDFs e TXT |
+| **Chunking** | Custom service | Fragmentação com overlap para manter contexto |
+| **Embeddings** | `gemini-embedding-001` | Vetores de 768 dimensões via `@google/genai` |
+| **Vector Store** | `pgvector` (PostgreSQL) | Busca vetorial com operador `<=>` (Cosine Distance) |
+| **Geração** | `Gemini 2.5 Flash` + Groq fallback | Conteúdo ancorado nos chunks recuperados |
+
+---
+
+## 🛠 Tech Stack
+
+| Camada | Tecnologia |
+| :--- | :--- |
+| **Framework** | Next.js 16 (App Router) + React 19 |
+| **Linguagem** | TypeScript |
+| **Estilização** | Tailwind CSS v4 + shadcn/ui + Lucide Icons |
+| **Banco de Dados** | PostgreSQL 16 + pgvector (via Docker) |
+| **ORM** | Prisma ORM |
+| **Autenticação** | NextAuth.js v5 (Auth.js) com Roles (STUDENT/TEACHER) |
+| **IA Primária** | Google Gemini 2.5 Flash (`@google/genai`) |
+| **IA Fallback** | Groq (Llama 3.3 70B) |
+| **Embeddings** | Google `gemini-embedding-001` (768d) |
+| **Validação** | Zod |
+| **Notificações** | Sonner |
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+src/
+├── app/
+│   ├── (public)/        # Landing page e autenticação (login/registro)
+│   ├── (admin)/         # Dashboard do professor (protegido por middleware)
+│   ├── (student)/       # Módulos de estudo e quizzes adaptativos
+│   └── api/             # Route Handlers (auth, modules, quiz, generate, explain)
+├── components/
+│   ├── admin/           # Componentes do dashboard do professor
+│   ├── ui/              # Design system (shadcn/ui)
+│   ├── layout/          # Navbar, Sidebar
+│   └── providers/       # Context providers (Session, Theme)
+├── services/
+│   ├── ai.service.ts    # Orquestrador Gemini + Groq com timeout e fallback
+│   ├── explain.service.ts
+│   ├── quiz.service.ts
+│   └── llm/             # Services de domínio (content, quiz, batch)
+├── lib/
+│   ├── rag/             # Pipeline RAG completo
+│   │   ├── document-parser.ts
+│   │   ├── chunking-service.ts
+│   │   ├── embedding-service.ts
+│   │   ├── vector-store.ts
+│   │   ├── rag-ingestion-service.ts
+│   │   └── module-content-generation-service.ts
+│   ├── prisma.ts
+│   ├── markdown.ts
+│   └── logger.ts
+└── types/
+prisma/
+├── schema.prisma        # Modelos: User, Module, Question, QuizSession,
+│                        #   QuestionInstance, ModuleSourceFile, ModuleSourceChunk
+docker-compose.yml       # PostgreSQL 16 + pgvector
+```
+
+---
+
+## 🚀 Como Executar
+
+### Pré-requisitos
+- **Node.js** v18+
 - **Docker** & **Docker Compose**
-- Chaves de API (Gemini e Groq)
+- Chaves de API: **Google Gemini** e **Groq** (opcional, para fallback)
 
-### 2. Variáveis de Ambiente
-Crie um arquivo `.env` na raiz do projeto seguindo o modelo:
+### 1. Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-# Database (PostgreSQL no Docker)
+# Banco de Dados
 DATABASE_URL="postgresql://admin:password123@localhost:5432/lumina_lms?schema=public"
+DB_USER="admin"
+DB_PASSWORD="password123"
+DB_NAME="lumina_lms"
 
 # Autenticação
 AUTH_SECRET="sua_chave_secreta_aqui"
 
-# Chave de Registro de Professores (Segurança)
+# Chave de Registro de Professores
 TEACHER_REGISTRATION_KEY="chave_secreta_para_registro"
 
-# AI Engines
+# IA — Provedores
 GEMINI_API_KEY="sua_chave_gemini"
 GROQ_API_KEY="sua_chave_groq"
 ```
 
-### 3. Instalação e Execução
+### 2. Instalação e Execução
 
 ```bash
-# Sobe o banco de dados
-docker-compose up -d
-
 # Instala as dependências
 npm install
 
-# Sincroniza o banco de dados
+# Sobe o banco de dados PostgreSQL com pgvector
+docker-compose up -d
+
+# Sincroniza o schema do Prisma com o banco
 npx prisma generate
 npx prisma db push
 
@@ -88,15 +146,42 @@ npx prisma db push
 npm run dev
 ```
 
-Acesse `http://localhost:3000` para começar!
+Acesse **http://localhost:3000** para começar.
+
+### Comandos Úteis
+
+| Comando | Descrição |
+| :--- | :--- |
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run db:up` | Sobe o PostgreSQL (Docker) |
+| `npm run db:down` | Para o PostgreSQL |
+| `npx prisma studio` | Interface visual do banco de dados |
 
 ---
 
-## 🎨 Design System
-O Lumina LMS segue uma estética utilitarista e moderna ("Linear/Vercel vibes"):
-- **Contraste**: Foco no `Light Mode` primário com acentos em `#2563EB`.
-- **Tipografia**: Uso de fontes modernas e legíveis para conteúdo acadêmico.
-- **Feedback**: Micro-interações e transições suaves para uma sensação de aplicação nativa.
+## 🔒 Segurança
 
-> Built with ☕ and Code by Gabrielz11 - 2026.
+- **Zod**: Validação rigorosa de todas as entradas de API.
+- **bcrypt**: Senhas hasheadas no banco de dados.
+- **NextAuth v5**: Controle de sessão e proteção de rotas por Role.
+- **Teacher Gatekeeper**: Registro de professores protegido por `TEACHER_REGISTRATION_KEY`.
+- **Storage Seguro**: Arquivos salvos fora da pasta pública (`./storage/uploads`), acessíveis somente via backend autenticado.
 
+---
+
+## 📊 Modelo de Dados
+
+| Modelo | Responsabilidade |
+| :--- | :--- |
+| `User` | Perfis com roles (STUDENT/TEACHER) e senhas hasheadas |
+| `Module` | Módulos de estudo com conteúdo gerado por IA |
+| `Question` | Banco de questões vinculado a módulos |
+| `QuizSession` | Estado do quiz: nível atual, score, progresso |
+| `QuestionInstance` | Snapshot de cada questão respondida com explicação da IA |
+| `ModuleSourceFile` | Arquivos enviados pelo professor (PDF/TXT) com status de processamento |
+| `ModuleSourceChunk` | Fragmentos vetorizados dos documentos (embeddings 768d) |
+
+---
+
+> Built with ☕ and Code by **Gabrielz11** — 2026.
