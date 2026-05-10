@@ -23,6 +23,13 @@ enum QuizStatus {
   COMPLETED
 }
 
+enum SourceFileStatus {
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -47,6 +54,8 @@ model Module {
   author      User       @relation(fields: [authorId], references: [id])
   questions   Question[]
   quizSessions QuizSession[]
+  sourceFiles   ModuleSourceFile[]
+  sourceChunks  ModuleSourceChunk[]
 }
 
 model Question {
@@ -89,4 +98,38 @@ model QuestionInstance {
   studentAnswer      Int?
   isCorrect          Boolean?
   createdAt          DateTime    @default(now())
+}
+
+model ModuleSourceFile {
+  id           String           @id @default(cuid())
+  moduleId     String
+  module       Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  fileName     String
+  originalName String
+  mimeType     String
+  size         Int
+  storagePath  String
+  status       SourceFileStatus @default(UPLOADED)
+  errorMessage String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  chunks       ModuleSourceChunk[]
+
+  @@index([moduleId])
+}
+
+model ModuleSourceChunk {
+  id         String           @id @default(cuid())
+  fileId     String
+  file       ModuleSourceFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  moduleId   String
+  module     Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  content    String           @db.Text
+  chunkIndex Int
+  tokenCount Int?
+  embedding  Unsupported("vector")?
+  createdAt  DateTime         @default(now())
+
+  @@index([moduleId])
+  @@index([fileId])
 }
