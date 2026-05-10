@@ -49,7 +49,17 @@ export async function generateModuleContentWithRag(input: { moduleId: string }) 
     // Reutiliza o AiService centralizado (Gemini + fallback Groq)
     const generatedData = await AiService.generateJson<{ content: string; description: string }>(
         prompt,
-        { timeoutMs: CONTENT_TIMEOUT_MS }
+        { 
+            timeoutMs: CONTENT_TIMEOUT_MS,
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    content: { type: "STRING" },
+                    description: { type: "STRING" }
+                },
+                required: ["content", "description"]
+            }
+        }
     );
 
     const updatedModule = await prisma.module.update({

@@ -35,6 +35,8 @@ interface ModulesPageHeaderProps {
     handleGenerateContent: () => void;
     handleSave: (e: React.FormEvent) => void;
     openCreateDialog: () => void;
+    currentStep: 1 | 2;
+    setCurrentStep: (step: 1 | 2) => void;
 }
 
 export function ModulesPageHeader({
@@ -52,6 +54,8 @@ export function ModulesPageHeader({
     handleGenerateContent,
     handleSave,
     openCreateDialog,
+    currentStep,
+    setCurrentStep,
 }: ModulesPageHeaderProps) {
     const [fileRefreshKey, setFileRefreshKey] = useState(0);
     const [hasProcessedFiles, setHasProcessedFiles] = useState(false);
@@ -89,154 +93,183 @@ export function ModulesPageHeader({
                                 {editingId ? "Editar Módulo" : "Novo Módulo"}
                             </DialogTitle>
                             <p className="text-blue-100 text-sm mt-1 relative z-10">Configure o conteúdo técnico e o resumo acadêmico.</p>
+
+                            {/* Step Indicator */}
+                            <div className="flex items-center gap-2 mt-4 relative z-10">
+                                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${currentStep === 1 ? 'bg-white text-blue-600' : 'bg-blue-800 text-blue-200'}`}>1</div>
+                                <div className={`h-1 w-8 rounded ${currentStep === 2 ? 'bg-white' : 'bg-blue-800'}`}></div>
+                                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${currentStep === 2 ? 'bg-white text-blue-600' : 'bg-blue-800 text-blue-200'}`}>2</div>
+                                <span className="ml-2 font-medium text-sm text-blue-50">
+                                    {currentStep === 1 ? 'Identificação' : 'Material e IA'}
+                                </span>
+                            </div>
                         </div>
 
                         <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden bg-white">
                             <div className="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                                 <div className="space-y-6">
-                                    {/* Título do Módulo */}
-                                    <div className="space-y-3">
-                                        <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Título do Módulo</Label>
-                                        <Input
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            placeholder="Ex: Introdução ao IPv6"
-                                            required
-                                            className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2 text-lg font-medium"
-                                        />
-                                    </div>
-
-                                    {/* Resumo Curto */}
-                                    <div className="space-y-3">
-                                        <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Resumo Curto (Descrição)</Label>
-                                        <Input
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            placeholder="Descreve brevemente o objetivo do módulo..."
-                                            className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2"
-                                        />
-                                    </div>
-
-                                    {/* Material de Estudo */}
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-start ml-1 gap-4 flex-wrap">
-                                            <div>
-                                                <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">Material de Estudo</Label>
-                                                <p className="text-gray-400 text-xs mt-1 font-medium">
-                                                    {canGenerate
-                                                        ? "Clique em \"Assistente IA\" para gerar o conteúdo com base no que foi preenchido."
-                                                        : "Preencha o Título, o Resumo ou escreva algum tópico abaixo para ativar o Assistente IA."}
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-2 flex-shrink-0">
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    onClick={handleGenerateContent}
-                                                    disabled={isGenerating || !canGenerate}
-                                                    title={!canGenerate ? "Preencha algum campo para usar o Assistente IA" : "Gerar conteúdo com IA"}
-                                                    className={`border-none font-bold h-9 px-4 flex gap-2 active:scale-95 transition-all shadow-sm
-                                                        ${canGenerate
-                                                            ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                                                            : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
-                                                        }`}
-                                                >
-                                                    {isGenerating
-                                                        ? <Sparkles className="w-4 h-4 animate-spin" />
-                                                        : <Wand2 className="w-4 h-4" />
-                                                    }
-                                                    {isGenerating ? "Gerando..." : "Assistente IA"}
-                                                </Button>
-                                                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none font-black h-9 px-4 uppercase text-[10px]">Texto Livre</Badge>
-                                            </div>
-                                        </div>
-
-                                        <div className={`relative group transition-all duration-300 ${isGenerating ? "opacity-70" : ""}`}>
-                                            {isGenerating && (
-                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-3xl opacity-75 animate-pulse blur-sm pointer-events-none z-10" />
-                                            )}
-                                            <Textarea
-                                                rows={15}
-                                                value={content}
-                                                onChange={(e) => setContent(e.target.value)}
-                                                placeholder={`Escreva tópicos ou conteúdo de base aqui...\n\nExemplo:\n- Conceitos de endereçamento IPv6\n- Diferenças em relação ao IPv4\n- Tipos de endereços: unicast, multicast, anycast\n\nA IA irá expandir e estruturar o conteúdo automaticamente.`}
-                                                disabled={isGenerating}
-                                                className={`relative rounded-3xl border-2 bg-gray-50 focus:bg-white resize-none font-sans text-base p-8 leading-relaxed min-h-[380px] shadow-inner transition-all z-0
-                                                    ${isGenerating
-                                                        ? "border-purple-200 cursor-wait"
-                                                        : "border-gray-100 focus:ring-blue-600"
-                                                    }`}
-                                            />
-                                            {!content && !isGenerating && (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
-                                                    <BookOpen className="w-14 h-14 mb-3 text-gray-400" />
-                                                    <span className="text-sm font-bold text-gray-400">Conteúdo do Professor + IA = Módulo Completo</span>
-                                                </div>
-                                            )}
-                                            {isGenerating && (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
-                                                    <div className="flex items-center gap-3 bg-white/90 px-6 py-3 rounded-2xl shadow-lg">
-                                                        <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
-                                                        <span className="text-sm font-bold text-purple-700">A IA está gerando o conteúdo...</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* ===== SEÇÃO RAG: Materiais de Apoio ===== */}
-                                    {editingId && (
-                                        <div className="space-y-4 pt-2 border-t border-gray-100">
-                                            <div className="flex items-center justify-between pt-2">
-                                                <div className="flex items-center gap-2 ml-1">
-                                                    <Paperclip className="w-4 h-4 text-emerald-600" />
-                                                    <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">
-                                                        Materiais de Apoio para Geração por IA
-                                                    </Label>
-                                                </div>
-                                                <GenerateContentWithRagButton
-                                                    moduleId={editingId}
-                                                    hasProcessedFiles={hasProcessedFiles}
-                                                    onContentGenerated={(newContent, newDescription) => {
-                                                        setContent(newContent);
-                                                        if (newDescription && !description) setDescription(newDescription);
-                                                    }}
+                                    {/* ==== PASSO 1: IDENTIFICAÇÃO ==== */}
+                                    {currentStep === 1 && (
+                                        <>
+                                            {/* Título do Módulo */}
+                                            <div className="space-y-3">
+                                                <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Título do Módulo</Label>
+                                                <Input
+                                                    value={title}
+                                                    onChange={(e) => setTitle(e.target.value)}
+                                                    placeholder="Ex: Introdução ao IPv6"
+                                                    required
+                                                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2 text-lg font-medium"
                                                 />
                                             </div>
-                                            <p className="text-xs text-gray-400 ml-1">
-                                                Envie PDFs ou TXTs. Após processar, clique em <strong>Gerar com Materiais</strong> para criar conteúdo baseado nos seus arquivos.
-                                            </p>
 
-                                            <ModuleSourceUploader
-                                                moduleId={editingId}
-                                                onUploadSuccess={() => setFileRefreshKey((k) => k + 1)}
-                                            />
-
-                                            <ModuleSourceFilesList
-                                                moduleId={editingId}
-                                                refreshKey={fileRefreshKey}
-                                                onFilesChange={handleFilesChange}
-                                            />
-                                        </div>
+                                            {/* Resumo Curto */}
+                                            <div className="space-y-3">
+                                                <Label className="text-gray-900 font-black text-xs uppercase tracking-widest ml-1">Resumo Curto (Descrição)</Label>
+                                                <Input
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    placeholder="Descreve brevemente o objetivo do módulo..."
+                                                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white focus:ring-blue-500 transition-all border-2"
+                                                />
+                                            </div>
+                                        </>
                                     )}
 
-                                    {!editingId && (
-                                        <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center">
-                                            <p className="text-xs text-gray-400">
-                                                💡 <strong>Dica:</strong> Salve o módulo primeiro e depois edite-o para adicionar materiais de apoio (PDFs/TXTs) para geração com IA.
-                                            </p>
-                                        </div>
+                                    {/* ==== PASSO 2: MATERIAL E RAG ==== */}
+                                    {currentStep === 2 && (
+                                        <>
+                                            {/* ===== SEÇÃO RAG: Materiais de Apoio ===== */}
+                                            {editingId && (
+                                                <div className="space-y-4 pt-2 border-t border-gray-100">
+                                                    <div className="flex items-center justify-between pt-2">
+                                                        <div className="flex items-center gap-2 ml-1">
+                                                            <Paperclip className="w-4 h-4 text-emerald-600" />
+                                                            <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">
+                                                                Materiais de Apoio para Geração por IA
+                                                            </Label>
+                                                        </div>
+                                                        <GenerateContentWithRagButton
+                                                            moduleId={editingId}
+                                                            hasProcessedFiles={hasProcessedFiles}
+                                                            onContentGenerated={(newContent, newDescription) => {
+                                                                setContent(newContent);
+                                                                if (newDescription && !description) setDescription(newDescription);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 ml-1">
+                                                        Envie PDFs ou TXTs. Após processar, clique em <strong>Gerar com Materiais</strong> para criar conteúdo baseado nos seus arquivos.
+                                                    </p>
+
+                                                    <ModuleSourceUploader
+                                                        moduleId={editingId}
+                                                        onUploadSuccess={() => setFileRefreshKey((k) => k + 1)}
+                                                    />
+
+                                                    <ModuleSourceFilesList
+                                                        moduleId={editingId}
+                                                        refreshKey={fileRefreshKey}
+                                                        onFilesChange={handleFilesChange}
+                                                    />
+                                                </div>
+                                            )}
+                                            {/* Material de Estudo */}
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-start ml-1 gap-4 flex-wrap">
+                                                    <div>
+                                                        <Label className="text-gray-900 font-black text-xs uppercase tracking-widest">Material de Estudo</Label>
+                                                        <p className="text-gray-400 text-xs mt-1 font-medium">
+                                                            {canGenerate
+                                                                ? "Clique em \"Assistente IA\" para gerar o conteúdo com base no que foi preenchido."
+                                                                : "Preencha o Título, o Resumo ou escreva algum tópico abaixo para ativar o Assistente IA."}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-2 flex-shrink-0">
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            onClick={handleGenerateContent}
+                                                            disabled={isGenerating || !canGenerate}
+                                                            title={!canGenerate ? "Preencha algum campo para usar o Assistente IA" : "Gerar conteúdo com IA"}
+                                                            className={`border-none font-bold h-9 px-4 flex gap-2 active:scale-95 transition-all shadow-sm
+                                                        ${canGenerate
+                                                                    ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                                                                    : "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+                                                                }`}
+                                                        >
+                                                            {isGenerating
+                                                                ? <Sparkles className="w-4 h-4 animate-spin" />
+                                                                : <Wand2 className="w-4 h-4" />
+                                                            }
+                                                            {isGenerating ? "Gerando..." : "Assistente IA"}
+                                                        </Button>
+                                                        <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none font-black h-9 px-4 uppercase text-[10px]">Texto Livre</Badge>
+                                                    </div>
+                                                </div>
+
+                                                <div className={`relative group transition-all duration-300 ${isGenerating ? "opacity-70" : ""}`}>
+                                                    {isGenerating && (
+                                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 rounded-3xl opacity-75 animate-pulse blur-sm pointer-events-none z-10" />
+                                                    )}
+                                                    <Textarea
+                                                        rows={15}
+                                                        value={content}
+                                                        onChange={(e) => setContent(e.target.value)}
+                                                        placeholder={`Escreva tópicos ou conteúdo de base aqui...\n\nExemplo:\n- Conceitos de endereçamento IPv6\n- Diferenças em relação ao IPv4\n- Tipos de endereços: unicast, multicast, anycast\n\nA IA irá expandir e estruturar o conteúdo automaticamente.`}
+                                                        disabled={isGenerating}
+                                                        className={`relative rounded-3xl border-2 bg-gray-50 focus:bg-white resize-none font-sans text-base p-8 leading-relaxed min-h-[380px] shadow-inner transition-all z-0
+                                                    ${isGenerating
+                                                                ? "border-purple-200 cursor-wait"
+                                                                : "border-gray-100 focus:ring-blue-600"
+                                                            }`}
+                                                    />
+                                                    {!content && !isGenerating && (
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
+                                                            <BookOpen className="w-14 h-14 mb-3 text-gray-400" />
+                                                            <span className="text-sm font-bold text-gray-400">Conteúdo do Professor + IA = Módulo Completo</span>
+                                                        </div>
+                                                    )}
+                                                    {isGenerating && (
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
+                                                            <div className="flex items-center gap-3 bg-white/90 px-6 py-3 rounded-2xl shadow-lg">
+                                                                <Sparkles className="w-5 h-5 text-purple-600 animate-spin" />
+                                                                <span className="text-sm font-bold text-purple-700">A IA está gerando o conteúdo...</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {!editingId && (
+                                                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center">
+                                                    <p className="text-xs text-gray-400">
+                                                        💡 <strong>Dica:</strong> Salve o módulo primeiro e depois edite-o para adicionar materiais de apoio (PDFs/TXTs) para geração com IA.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="p-6 md:p-8 border-t bg-gray-50/50 flex justify-end gap-4 flex-shrink-0">
-                                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-2xl h-14 px-8 font-bold text-gray-500 hover:bg-gray-100 transition-all">Cancelar</Button>
-                                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 rounded-2xl h-14 px-12 font-black text-white shadow-xl shadow-blue-100 transition-all active:scale-95 group">
-                                    Gravar Alterações
-                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                </Button>
+                            <div className="p-6 md:p-8 border-t bg-gray-50/50 flex justify-between gap-4 flex-shrink-0 items-center">
+                                <div>
+                                    {currentStep === 2 && (
+                                        <Button type="button" variant="ghost" onClick={() => setCurrentStep(1)} className="rounded-2xl h-14 px-6 font-bold text-gray-500 hover:bg-gray-100 transition-all">
+                                            <ChevronLeft className="w-4 h-4 mr-2" />
+                                            Voltar
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="flex gap-4">
+                                    <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-2xl h-14 px-8 font-bold text-gray-500 hover:bg-gray-100 transition-all">Cancelar</Button>
+                                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 rounded-2xl h-14 px-8 font-black text-white shadow-xl shadow-blue-100 transition-all active:scale-95 group">
+                                        {currentStep === 1 ? (editingId ? 'Salvar e Avançar' : 'Criar Módulo e ir para Arquivos') : 'Finalizar e Salvar'}
+                                        {currentStep === 1 && <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />}
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </DialogContent>

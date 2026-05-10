@@ -18,6 +18,7 @@ export default function ModulesManager() {
     const [description, setDescription] = useState("");
     const [content, setContent] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     const fetchModules = async () => {
         setLoading(true);
@@ -40,6 +41,7 @@ export default function ModulesManager() {
         setTitle(mod.title);
         setDescription(mod.description || "");
         setContent(mod.content);
+        setCurrentStep(1);
         setIsDialogOpen(true);
     };
 
@@ -48,6 +50,7 @@ export default function ModulesManager() {
         setTitle("");
         setDescription("");
         setContent("");
+        setCurrentStep(1);
         setIsDialogOpen(true);
     };
 
@@ -56,14 +59,17 @@ export default function ModulesManager() {
         setLoading(true);
         if (editingId) {
             await updateModule(editingId, { title, description, content });
-            setIsDialogOpen(false);
+            if (currentStep === 1) {
+                setCurrentStep(2);
+            } else {
+                setIsDialogOpen(false);
+            }
         } else {
-            // Cria o módulo e já fica em modo edição para o professor
-            // adicionar materiais RAG sem precisar reabrir o dialog
+            // Cria o módulo e avança para a etapa de arquivos
             const created = await createModule({ title, description, content });
             setEditingId(created.id);
+            setCurrentStep(2);
             toast.success("Módulo criado! Agora você pode adicionar materiais de apoio para geração com IA.");
-            // Não fecha o dialog — apenas atualiza para modo edição
         }
         fetchModules();
         setLoading(false);
@@ -150,6 +156,8 @@ export default function ModulesManager() {
                 handleGenerateContent={handleGenerateContent}
                 handleSave={handleSave}
                 openCreateDialog={openCreateDialog}
+                currentStep={currentStep}
+                setCurrentStep={setCurrentStep}
             />
 
             <ModulesGrid
