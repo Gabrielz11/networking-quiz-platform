@@ -2,38 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, LogOut, User } from "lucide-react";
+import { BookOpen, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { signOut, useSession } from "next-auth/react";
 
 export function Navbar() {
     const pathname = usePathname();
-    const [session, setSession] = useState<unknown>(null);
+    const { data: session } = useSession();
 
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-        });
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+    const role = (session?.user as any)?.role;
+    const dashboardLink = role === "TEACHER" ? "/dashboard" : "/student";
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        window.location.href = "/";
+        await signOut({ callbackUrl: "/" });
     };
 
     return (
-        <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
+                <Link href={session ? dashboardLink : "/"} className="flex items-center gap-2 transition-transform hover:scale-105">
                     <div className="bg-blue-600 p-2 rounded-lg">
                         <BookOpen className="w-5 h-5 text-white" />
                     </div>
@@ -45,24 +32,25 @@ export function Navbar() {
                 <div className="flex items-center gap-4">
                     {session ? (
                         <>
-                            {pathname !== "/dashboard" && pathname !== "/dashboard/modules" && pathname !== "/dashboard/questions" && (
-                                <Link href="/dashboard">
-                                    <Button variant="ghost" className="hidden sm:flex items-center gap-2">
-                                        <User className="w-4 h-4" />
-                                        Dashboard
+                            {pathname !== dashboardLink && !pathname.startsWith("/dashboard") && (
+                                <Link href={dashboardLink}>
+                                    <Button variant="ghost" className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors">
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Painel
                                     </Button>
                                 </Link>
                             )}
-                            <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+                            <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all">
                                 <LogOut className="w-4 h-4" />
-                                Sair
+                                <span className="hidden sm:inline">Sair</span>
+                                <span className="sm:hidden">Sair</span>
                             </Button>
                         </>
                     ) : (
                         <>
                             {pathname !== "/auth" && (
                                 <Link href="/auth">
-                                    <Button className="font-semibold bg-blue-600 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg">
+                                    <Button className="font-semibold bg-blue-600 hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg rounded-full px-6">
                                         Entrar
                                     </Button>
                                 </Link>

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: lumina_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '5432:5432'
+    volumes:
+      - lumina_postgres_data:/var/lib/postgresql/data
+    networks:
+      - lumina_network
+
+volumes:
+  lumina_postgres_data:
+
+networks:
+  lumina_network:
+    driver: bridge

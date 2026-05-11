@@ -5,83 +5,73 @@ Este documento detalha o funcionamento, a arquitetura e os componentes do **Lumi
 ---
 
 ## 1. Visão Geral
-O **Lumina LMS** é um Sistema de Gerenciamento de Aprendizagem (LMS) que prioriza a redução do ruído cognitivo. Ele permite que professores criem módulos de estudo em Markdown e quizzes interativos. O grande diferencial é o **Tutor IA Pedagógico**, que oferece explicações personalizadas e gera diagramas técnicos em tempo real quando um aluno erra uma questão.
+O **Lumina LMS** evoluiu para um ecossistema de aprendizado adaptativo que prioriza a redução do ruído cognitivo. Ele permite que professores criem módulos de estudo e que alunos passem por trilhas personalizadas baseadas em desempenho em tempo real. O diferencial é o **Motor Adaptativo v3.0**, que ajusta a dificuldade das questões dinamicamente.
 
 ---
 
 ## 2. Arquitetura do Sistema
-O projeto segue uma arquitetura moderna de **Full-Stack Web App** utilizando o framework **Next.js 16**.
+O projeto utiliza um stack **Full-Stack Cutting-Edge** com foco em performance e tipagem rigorosa.
 
-- **Frontend**: Desenvolvido com **React 19** e **Tailwind CSS V4**, utilizando o **App Router** do Next.js.
-- **Backend (API)**: Implementado através de **Route Handlers** e **Server Actions**.
-- **Banco de Dados**: Gerenciado via **Prisma ORM** conectando a um banco **PostgreSQL** rodando localmente em um contêiner **Docker**.
-- **Autenticação**: Gerenciada pelo **NextAuth.js v5**, garantindo sessões seguras e proteção de rotas.
-- **Motor de IA**: 
-    - **Texto**: Google Gemini (API via `@google/generative-ai`).
-    - **Imagens**: OpenAI DALL-E 3 (API via `openai`).
-
----
-
-## 3. Funcionamento do Fluxo de Dados
-
-### 3.1. Fluxo do Professor
-1. O professor autentica-se via NextAuth.
-2. Através do **Dashboard**, gerencia módulos e questões através de **Server Actions** com Prisma.
-3. O professor pode usar a IA para **gerar automaticamente questões** baseadas no conteúdo do módulo.
-4. Para cada questão, existe uma **"Explicação Base"**, que serve de guia para a IA nas correções.
-
-### 3.2. Fluxo do Aluno
-1. O aluno acessa os módulos e realiza os quizzes.
-2. Ao errar uma questão, o sistema dispara uma chamada para a rota `/api/explain`.
-3. A API combina o erro do aluno com a "Explicação Base" e envia ao **Gemini**, que gera um feedback pedagógico.
-4. Paralelamente, o **DALL-E 3** gera um diagrama técnico para ilustrar o conceito correto.
+- **Frontend**: **Next.js 16 (App Router)** com **React 19**.
+- **Estilização**: **Tailwind CSS V4** para um design ultra-moderno e performático.
+- **Backend**: Server Actions e Route Handlers tipados com **Zod**.
+- **Banco de Dados**: **PostgreSQL** via **Prisma ORM**, hospedado em infraestrutura Docker.
+- **Autenticação**: **NextAuth.js v5 (Beta)** com suporte a Roles (Admin/Teacher/Student).
+- **Notificações**: **Sonner** para feedback de interface premium.
 
 ---
 
-## 4. Classes e Componentes Principais
+## 3. Motor de Inteligência Artificial e Redundância
+O sistema implementa uma camada de abstração para IA que garante alta disponibilidade e resiliência:
 
-### 4.1. Componentes de Interface (UI)
-- **`QuizPage`**: Gerencia o estado do simulado e a interação com as APIs de IA.
-- **`ModulesManager` & `QuestionsManager`**: Interfaces de CRUD para os professores gerenciarem o conteúdo via Prisma Server Actions.
-- **`Auth Components`**: Telas de login e registro integradas ao NextAuth.
-
-### 4.2. Módulos de Lógica e Serviços
-- **`prisma.ts`**: Instância única do Prisma Client para comunicação com o PostgreSQL local.
-- **`Explain API`**: Orquestra o prompt do Gemini e a geração de imagem com o DALL-E.
-- **`Server Actions`**: Funções como `createModule`, `createQuestion`, etc., que executam lógica de banco diretamente no servidor.
+- **Provedor Primário**: **Google Gemini 1.5/2.0** (Texto e Raciocínio Pedagógico).
+- **Fallback (Redundância)**: **Groq (Llama 3)** para garantir que o sistema continue gerando feedbacks mesmo em falhas de cota do Gemini.
+- **Prompt Engineering**: System instructions que forçam a IA a agir como um tutor socrático, encorajando o erro como parte do aprendizado.
 
 ---
 
-## 5. Integração com IA
+## 4. O Ciclo Adaptativo (v3.0)
+Diferente de quizzes lineares, o Lumina LMS utiliza lógica de progressão baseada em proficiência:
 
-A plataforma utiliza **Prompt Engineering** para garantir a qualidade pedagógica:
-- **System Instruction**: Define o Gemini como um professor especialista, calmo e encorajador.
-- **RAG Simplificado**: A "Explicação Base" funciona como uma fonte de verdade para a IA, minimizando alucinações.
-- **Multi-Modalidade**: Enquanto o Gemini cuida da parte textual, o DALL-E provê a parte visual, atacando diferentes estilos de aprendizagem.
+1.  **Dificuldade Dinâmica**: As questões são classificadas em `EASY`, `MEDIUM` e `HARD`.
+2.  **Regra de Progressão**:
+    *   **Acertou 1 questão**: O sistema sobe o nível de dificuldade (ex: Easy -> Medium).
+    *   **Errou 2 questões no mesmo nível**: O sistema desce o nível de dificuldade (ex: Hard -> Medium) para reforçar a base.
+3.  **Persistência de Sessão**: Cada quiz (limite de 10 questões) gera uma `QuizSession` que permite ao aluno parar e continuar de onde parou sem perder o progresso ou o nível de dificuldade alcançado.
 
 ---
 
-## 6. Modelo de Dados e Segurança
+## 5. Fluxos de Trabalho e Segurança
 
-O esquema do banco de dados (Prisma) é composto por:
-- **User**: Gerenciamento de perfis (Teacher/Student).
-- **Module**: Título, conteúdo (Markdown) e relacionamento com autor.
-- **Question**: Enunciado, opções (JSON), resposta correta e base de explicação.
-- **Attempt**: Registro de desempenho dos alunos.
+### 5.1. Segurança e Validação
+- **Zod Enforcement**: Todas as entradas de API (Registro, Login, Respostas, Criação de Módulos) são validadas via Zod, prevenindo injeções e dados malformados.
+- **Teacher Gatekeeper**: O registro de professores exige uma `TEACHER_REGISTRATION_KEY` configurada em variáveis de ambiente, impedindo que usuários comuns acessem o dashboard administrativo.
 
-**Segurança**: Middleware do NextAuth protege as rotas de dashboard, garantindo que apenas professores acessem funções administrativas. O PostgreSQL é executado localmente via Docker para garantir privacidade dos dados durante o desenvolvimento.
+### 5.2. Gestão de Conteúdo (Teacher)
+- **Dashboard Multimodal**: Dashboards com viewport fixo (Navbar e Sidebar estáticas e conteúdo scrollável) para experiência de aplicação desktop.
+- **CRUD com Server Actions**: Manipulação instantânea de módulos e questões com feedback visual via `sonner`.
+
+---
+
+## 6. Modelo de Dados e Métricas
+
+O banco de dados foi otimizado para rastrear o crescimento do aluno:
+- **`User`**: Perfis com senhas hasheadas via `bcrypt`.
+- **`QuizSession`**: Armazena o estado atual, score acumulado e nível de dificuldade presente.
+- **`QuestionInstance`**: Um snapshot único de cada questão apresentada, salvando a resposta do aluno e a explicação gerada pela IA para consulta histórica.
 
 ---
 
 ## 7. Design e Experiência do Usuário (UX)
-
-- **Shadcn/UI**: Componentes consistentes e acessíveis.
-- **Tailwind V4**: Estilização moderna e performática.
-- **Foco Atencional**: Interface limpa, sem elementos que distraiam do objetivo educacional.
+- **Aesthetics First**: Uso de cores harmônicas (HSL), glassmorphism e micro-animações.
+- **Foco Atencional**: Interface de quiz limpa, centrada na questão, eliminando distrações laterais.
+- **Feedback Imediato**: O aluno sabe instantaneamente se acertou, recebendo o tutor IA e o diagrama visual em frações de segundo.
 
 ---
 
 ## 8. Conclusão
-O **Lumina LMS** evoluiu para uma solução robusta utilizando Prisma e Docker, garantindo independência de serviços proprietários enquanto utiliza o que há de melhor em IA generativa (Gemini e DALL-E).
+O **Lumina LMS** não é apenas um portal de conteúdo; é um professor particular de IPv6 que se adapta à velocidade do aluno. Com a integração de Prisma, Next.js e IA multi-provedor (Gemini/Groq), o sistema está pronto para produção com escalabilidade e robustez.
 
-> **Status do Projeto**: Em desenvolvimento ativo (2026).
+> **Versão Atual**: 3.0 (Alpha Experimental)
+> **Data de Atualização**: Abril de 2026
+

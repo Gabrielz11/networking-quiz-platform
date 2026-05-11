@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuizStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SourceFileStatus {
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modules   Module[]
+  quizSessions QuizSession[]
+}
+
+model Module {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  content     String     @db.Text
+  imageUrl    String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id])
+  questions   Question[]
+  quizSessions QuizSession[]
+  sourceFiles   ModuleSourceFile[]
+  sourceChunks  ModuleSourceChunk[]
+}
+
+model Question {
+  id                  String   @id @default(cuid())
+  moduleId            String
+  module              Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  prompt              String   @db.Text
+  options             String[]
+  correctOptionIndex  Int
+  explanationBase     String?  @db.Text
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model QuizSession {
+  id                   String             @id @default(cuid())
+  userId               String
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId             String
+  module               Module             @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status               QuizStatus         @default(IN_PROGRESS)
+  currentLevel         Difficulty         @default(EASY)
+  errorsInCurrentLevel Int                @default(0)
+  currentQuestionIndex Int                @default(0)
+  score                Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  questions            QuestionInstance[]
+}
+
+model QuestionInstance {
+  id                 String      @id @default(cuid())
+  sessionId          String
+  session            QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  difficulty         Difficulty
+  prompt             String      @db.Text
+  options            String[]
+  correctOptionIndex Int
+  explanation        String?     @db.Text
+  studentAnswer      Int?
+  isCorrect          Boolean?
+  createdAt          DateTime    @default(now())
+}
+
+model ModuleSourceFile {
+  id           String           @id @default(cuid())
+  moduleId     String
+  module       Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  fileName     String
+  originalName String
+  mimeType     String
+  size         Int
+  storagePath  String
+  status       SourceFileStatus @default(UPLOADED)
+  errorMessage String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  chunks       ModuleSourceChunk[]
+
+  @@index([moduleId])
+}
+
+model ModuleSourceChunk {
+  id         String           @id @default(cuid())
+  fileId     String
+  file       ModuleSourceFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  moduleId   String
+  module     Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  content    String           @db.Text
+  chunkIndex Int
+  tokenCount Int?
+  embedding  Unsupported("vector")?
+  createdAt  DateTime         @default(now())
+
+  @@index([moduleId])
+  @@index([fileId])
+}
