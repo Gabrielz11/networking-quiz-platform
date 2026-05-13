@@ -4,15 +4,20 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { fileRepository } from "@/repositories/file.repository";
+import { moduleRepository } from "@/repositories/module.repository";
+import { StorageService } from "@/lib/storage";
 import { Logger } from "@/lib/logger";
+import { z } from "zod";
 
 const logger = new Logger("SourcesRoute");
 
 const ALLOWED_TYPES = ["application/pdf", "text/plain"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+const paramsSchema = z.object({
+    moduleId: z.string().cuid(),
+});
 
 export async function GET(
     _request: Request,
@@ -25,19 +30,7 @@ export async function GET(
 
     const { moduleId } = await context.params;
 
-    const files = await prisma.moduleSourceFile.findMany({
-        where: { moduleId },
-        orderBy: { createdAt: "desc" },
-        select: {
-            id: true,
-            originalName: true,
-            mimeType: true,
-            size: true,
-            status: true,
-            errorMessage: true,
-            createdAt: true,
-        },
-    });
+    const files = await fileRepository.findByModuleId(moduleId);
 
     return NextResponse.json(files);
 }
@@ -47,16 +40,25 @@ export async function POST(
     context: { params: Promise<{ moduleId: string }> }
 ) {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
         return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 
-    const { moduleId } = await context.params;
+    const params = paramsSchema.safeParse(await context.params);
+    if (!params.success) {
+        return NextResponse.json({ error: "ID do módulo inválido." }, { status: 400 });
+    }
 
-    // Validar se o módulo existe
-    const module = await prisma.module.findUnique({ where: { id: moduleId } });
+    const { moduleId } = params.data;
+
+    // Verificar se o módulo existe e se o usuário é o autor
+    const module = await moduleRepository.findById(moduleId);
     if (!module) {
         return NextResponse.json({ error: "Módulo não encontrado." }, { status: 404 });
+    }
+
+    if (module.authorId !== session.user.id) {
+        return NextResponse.json({ error: "Acesso negado. Você não é o autor deste módulo." }, { status: 403 });
     }
 
     try {
@@ -64,65 +66,35 @@ export async function POST(
         const file = formData.get("file") as File | null;
 
         if (!file) {
-            return NextResponse.json({ error: "Nenhum arquivo enviado para este módulo." }, { status: 400 });
+            return NextResponse.json({ error: "Nenhum arquivo enviado." }, { status: 400 });
         }
 
-        // Validar tipo
         if (!ALLOWED_TYPES.includes(file.type)) {
-            return NextResponse.json(
-                { error: `Este tipo de arquivo ainda não é suportado. Use PDF ou TXT.` },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Tipo de arquivo não suportado. Use PDF ou TXT." }, { status: 400 });
         }
 
-        // Validar tamanho
         if (file.size > MAX_SIZE_BYTES) {
-            return NextResponse.json(
-                { error: "O arquivo excede o limite de 10MB." },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "O arquivo excede o limite de 10MB." }, { status: 400 });
         }
 
-        // Criar diretório de upload
-        const uploadBase = process.env.UPLOAD_DIR ?? "./storage/uploads";
-        const uploadDir = join(process.cwd(), uploadBase, "modules", moduleId);
-        await mkdir(uploadDir, { recursive: true });
+        // Salvar arquivo via StorageService
+        const { storagePath, fileName } = await StorageService.saveFile(moduleId, file);
 
-        // Nome seguro (nunca usa o nome original do usuário como path)
-        const timestamp = Date.now();
-        const extension = file.type === "application/pdf" ? ".pdf" : ".txt";
-        const safeFileName = `${timestamp}${extension}`;
-        const storagePath = join(uploadDir, safeFileName);
-
-        // Salvar arquivo
-        const arrayBuffer = await file.arrayBuffer();
-        await writeFile(storagePath, Buffer.from(arrayBuffer));
-
-        // Criar registro no banco
-        const sourceFile = await prisma.moduleSourceFile.create({
-            data: {
-                moduleId,
-                fileName: safeFileName,
-                originalName: file.name,
-                mimeType: file.type,
-                size: file.size,
-                storagePath,
-                status: "UPLOADED",
-            },
-        });
-
-        logger.info("POST", "Arquivo enviado com sucesso", {
-            fileId: sourceFile.id,
-            moduleId,
+        const sourceFile = await fileRepository.create({
+            module: { connect: { id: moduleId } },
+            fileName,
             originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            storagePath,
+            status: "UPLOADED",
         });
+
+        logger.info("POST", "Arquivo enviado com sucesso", { fileId: sourceFile.id, moduleId });
 
         return NextResponse.json(sourceFile, { status: 201 });
     } catch (error: any) {
         logger.error("POST", `Erro ao salvar arquivo: ${error.message}`);
-        return NextResponse.json(
-            { error: "Falha ao fazer upload do arquivo." },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Falha ao fazer upload." }, { status: 500 });
     }
 }

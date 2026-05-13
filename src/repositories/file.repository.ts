@@ -19,7 +19,7 @@ export class FileRepository {
         return prisma.moduleSourceFile.create({ data });
     }
 
-    async updateStatus(id: string, status: "PROCESSING" | "COMPLETED" | "FAILED", errorMessage?: string) {
+    async updateStatus(id: string, status: "UPLOADED" | "PROCESSING" | "PROCESSED" | "FAILED", errorMessage?: string) {
         return prisma.moduleSourceFile.update({
             where: { id },
             data: { 

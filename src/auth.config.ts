@@ -1,4 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
+import type { Role } from "@prisma/client";
+
+// Garante que os tipos estendidos em src/types/next-auth.d.ts sejam carregados
+import "@/types/next-auth";
 
 export const authConfig = {
   pages: {
@@ -7,15 +11,13 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const user = auth?.user as any;
-      const role = user?.role;
-      
+      const role = auth?.user?.role as Role | undefined;
+
       const isAuthPage = nextUrl.pathname.startsWith("/auth");
       const isDashboardPage = nextUrl.pathname.startsWith("/dashboard");
-      const isStudentPage = nextUrl.pathname.startsWith("/student");
       const isApiRoute = nextUrl.pathname.startsWith("/api");
 
-      // Se estiver logado e tentar acessar a página de login/registro, redireciona para o local correto
+      // Usuário logado tentando acessar página de login → redireciona para área correta
       if (isAuthPage) {
         if (isLoggedIn) {
           return Response.redirect(new URL(role === "TEACHER" ? "/dashboard" : "/student", nextUrl));
@@ -23,42 +25,32 @@ export const authConfig = {
         return true;
       }
 
-      // Proteger rotas que exigem login
+      // Rotas protegidas exigem login
       if (!isLoggedIn && !isApiRoute && nextUrl.pathname !== "/") {
-        return false; // Redireciona para login
+        return false;
       }
 
-      // Verificação de Roles (RBAC)
-      if (isLoggedIn) {
-        // Aluno tentando acessar dashboard de professor
-        if (isDashboardPage && role !== "TEACHER") {
-          return Response.redirect(new URL("/student", nextUrl));
-        }
-        // Professor tentando acessar área de aluno (opcional - depende se professor pode ver conteúdo)
-        // if (isStudentPage && role !== "STUDENT") {
-        //   return Response.redirect(new URL("/dashboard", nextUrl));
-        // }
+      // RBAC: aluno tentando acessar dashboard de professor
+      if (isLoggedIn && isDashboardPage && role !== "TEACHER") {
+        return Response.redirect(new URL("/student", nextUrl));
       }
 
       return true;
     },
+
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
+        token.id = user.id!;
+        token.role = user.role;
       }
       return token;
     },
+
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = token.role as string;
-      }
+      session.user.id = token.id;
+      session.user.role = token.role;
       return session;
     },
   },
-  providers: [], // Configurado no auth.ts
+  providers: [], // Configurado em auth.ts
 } satisfies NextAuthConfig;
-// tipar user
-// tipar session
-// criar util de authorization - requireTeacher() por exemplo.

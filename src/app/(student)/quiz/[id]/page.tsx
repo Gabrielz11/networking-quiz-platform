@@ -40,6 +40,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [generatingQuestion, setGeneratingQuestion] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const isFetchingRef = useRef(false);
 
     // AI feedback state
@@ -113,11 +114,16 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 setSelectedOption(null);
                 setShowingFeedback(false);
                 setAiFeedback(null);
+                setError(null);
             } else {
-                toast.error(data.error || "Erro ao gerar questão.");
+                const errMsg = data.error || "Erro ao gerar questão.";
+                toast.error(errMsg);
+                setError(errMsg);
             }
         } catch (err) {
-            toast.error("Falha na comunicação com a IA.");
+            const errMsg = "Falha na comunicação com a IA.";
+            toast.error(errMsg);
+            setError(errMsg);
         } finally {
             setGeneratingQuestion(false);
             isFetchingRef.current = false;
@@ -229,7 +235,20 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 currentDifficulty={currentDifficulty.toLowerCase() as any}
             />
 
-            {(generatingQuestion || !currentQuestion) ? (
+            {error ? (
+                <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                    <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
+                        <h3 className="text-base font-semibold text-red-700">Ops! Algo deu errado</h3>
+                        <p className="text-red-500 mt-1 text-sm">{error}</p>
+                    </div>
+                    <Button 
+                        onClick={() => sessionId && fetchNextQuestion(sessionId)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                    >
+                        Tentar Novamente
+                    </Button>
+                </div>
+            ) : (generatingQuestion || !currentQuestion) ? (
                 <div className="py-12 flex flex-col items-center justify-center space-y-4">
                     <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     <div className="text-center">

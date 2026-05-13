@@ -119,7 +119,7 @@ ${sanitizedModuleContent}`;
         });
 
         try {
-            const qData = await AiService.generateJson<unknown>(prompt, { 
+            const qData = await AiService.generateJson<GeneratedQuestion>(prompt, { 
                 temperature: 0.6,
                 responseSchema: {
                     type: "object",
@@ -139,13 +139,33 @@ ${sanitizedModuleContent}`;
             });
             const validatedData = validateAIQuestionResponse(qData);
 
-            logger.info("generate", "Questão gerada com sucesso", {
+            // Shuffling logic to ensure randomization
+            const originalOptions = [...validatedData.options];
+            const correctOptionText = originalOptions[validatedData.correct_option_index];
+            
+            // Fisher-Yates shuffle
+            const shuffledOptions = [...originalOptions];
+            for (let i = shuffledOptions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+            }
+
+            const newCorrectIndex = shuffledOptions.indexOf(correctOptionText);
+
+            logger.info("generate", "Questão gerada e embaralhada com sucesso", {
                 difficulty,
                 promptLength: validatedData.prompt.length,
+                originalIndex: validatedData.correct_option_index,
+                newIndex: newCorrectIndex
             });
 
-            return validatedData;
+            return {
+                ...validatedData,
+                options: shuffledOptions,
+                correct_option_index: newCorrectIndex
+            };
         } catch (error: unknown) {
+
             if (error instanceof Error) {
                 logger.error("generate", "Erro ao gerar questão adaptativa", {
                     difficulty,
