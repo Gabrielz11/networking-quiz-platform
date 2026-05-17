@@ -1,8 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import type { Role } from "@prisma/client";
 
-// Garante que os tipos estendidos em src/types/next-auth.d.ts sejam carregados
-import "@/types/next-auth";
 
 export const authConfig = {
   pages: {

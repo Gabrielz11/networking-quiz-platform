@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="scroll-smooth">
-      <body className={`${inter.className} h-screen bg-gray-50/50 flex flex-col overflow-hidden antialiased`}>
+    <html lang="pt-BR" className="scroll-smooth" suppressHydrationWarning>
+      <body className={`${inter.className} h-screen bg-gray-50/50 flex flex-col overflow-hidden antialiased`} suppressHydrationWarning>
         <AuthProvider>
           <Navbar />
           <main className="flex-1 flex flex-col overflow-y-auto">
