@@ -58,6 +58,18 @@ export function ModuleSourceFilesList({ moduleId, refreshKey, onFilesChange }: M
         fetchFiles();
     }, [fetchFiles, refreshKey]);
 
+    // Polling automático: se houver algum arquivo "PROCESSING", pergunta ao servidor a cada 2 segundos
+    useEffect(() => {
+        const hasProcessing = files.some(f => f.status === "PROCESSING");
+        if (!hasProcessing) return;
+
+        const intervalId = setInterval(() => {
+            fetchFiles();
+        }, 2000);
+
+        return () => clearInterval(intervalId);
+    }, [files, fetchFiles]);
+
     const handleProcess = async (fileId: string, fileName: string) => {
         setProcessingIds((prev) => new Set(prev).add(fileId));
         // Otimistic UI: atualizar status local
@@ -72,10 +84,10 @@ export function ModuleSourceFilesList({ moduleId, refreshKey, onFilesChange }: M
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
 
-            toast.success(`"${fileName}" processado! ${data.chunks} chunks gerados.`);
+            toast.success(`"${fileName}" enfileirado para processamento com IA...`);
             fetchFiles();
         } catch (err: any) {
-            toast.error("Erro ao processar: " + err.message);
+            toast.error("Erro ao enfileirar: " + err.message);
             fetchFiles();
         } finally {
             setProcessingIds((prev) => {

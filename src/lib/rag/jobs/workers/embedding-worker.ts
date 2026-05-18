@@ -13,90 +13,120 @@ const connection = new Redis(env.REDIS_URL, {
 });
 const logger = new Logger("EmbeddingWorker");
 
-export const embeddingWorker = new Worker("embedding-processing", async (job: Job) => {
-    const { fileId, moduleId } = job.data;
-    
-    logger.info("Worker", `Processing job ${job.id} for file ${fileId}`);
-    
-    const sourceFile = await prisma.moduleSourceFile.findFirst({
-        where: { id: fileId, moduleId },
+const globalForWorker = global as unknown as { embeddingWorker: Worker };
+
+let workerInstance = globalForWorker.embeddingWorker;
+
+if (!workerInstance) {
+    workerInstance = new Worker("embedding-processing", async (job: Job) => {
+        const { fileId, moduleId } = job.data;
+        
+        logger.info("Worker", `Processing job ${job.id} for file ${fileId}`);
+        
+        const sourceFile = await prisma.moduleSourceFile.findFirst({
+            where: { id: fileId, moduleId },
+        });
+
+        if (!sourceFile) {
+            logger.warn("Worker", `Job ${job.id} skipped: Source file ${fileId} not found (deleted)`);
+            return { skipped: true, reason: "Source file deleted" };
+        }
+
+        try {
+            await prisma.moduleSourceFile.update({
+                where: { id: sourceFile.id },
+                data: { status: "PROCESSING", errorMessage: null },
+            });
+
+            const parsed = await parseDocument({
+                filePath: sourceFile.storagePath,
+                fileName: sourceFile.originalName,
+                mimeType: sourceFile.mimeType,
+            });
+
+            const chunker = new RecursiveChunker({
+                maxTokens: 500,
+                overlapTokens: 80
+            });
+
+            const chunks = chunker.createChunks(parsed.text, {
+                moduleId,
+                sourceFile: sourceFile.id,
+                sourceType: sourceFile.mimeType,
+                embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small"
+            });
+
+            if (chunks.length === 0) {
+                throw new Error("No content extracted");
+            }
+
+            const provider = getEmbeddingProvider();
+            
+            // Chunk requests to avoid payload too large
+            const BATCH_SIZE = 100;
+            const embeddings: number[][] = [];
+            
+            for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+                const batch = chunks.slice(i, i + BATCH_SIZE);
+                const batchEmbeddings = await provider.embedMany(
+                    batch.map(c => c.content)
+                );
+                embeddings.push(...batchEmbeddings);
+            }
+
+            await prisma.moduleSourceChunk.deleteMany({
+                where: { fileId: sourceFile.id },
+            });
+
+            const vectorStore = getVectorStore();
+            await vectorStore.addChunks({
+                moduleId,
+                fileId: sourceFile.id,
+                chunks,
+                embeddings,
+            });
+
+            await prisma.moduleSourceFile.update({
+                where: { id: sourceFile.id },
+                data: { status: "PROCESSED", errorMessage: null },
+            });
+
+            logger.info("Worker", `Completed job ${job.id}`);
+            
+            return { chunks: chunks.length };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            
+            await prisma.moduleSourceFile.update({
+                where: { id: sourceFile.id },
+                data: { status: "FAILED", errorMessage: message },
+            });
+            
+            logger.error("Worker", `Failed job ${job.id}: ${message}`);
+            throw error;
+        }
+    }, { connection });
+
+    // Register event listeners
+    workerInstance.on("ready", () => {
+        logger.info("Worker", "Embedding worker is ready and waiting for jobs");
     });
 
-    if (!sourceFile) {
-        throw new Error("Source file not found");
-    }
+    workerInstance.on("active", (job) => {
+        logger.info("Worker", `Started processing job ${job.id}`);
+    });
 
-    try {
-        await prisma.moduleSourceFile.update({
-            where: { id: sourceFile.id },
-            data: { status: "PROCESSING", errorMessage: null },
-        });
-
-        const parsed = await parseDocument({
-            filePath: sourceFile.storagePath,
-            fileName: sourceFile.originalName,
-            mimeType: sourceFile.mimeType,
-        });
-
-        const chunker = new RecursiveChunker({
-            maxTokens: 500,
-            overlapTokens: 80
-        });
-
-        const chunks = chunker.createChunks(parsed.text, {
-            moduleId,
-            sourceFile: sourceFile.id,
-            sourceType: sourceFile.mimeType,
-            embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small"
-        });
-
-        if (chunks.length === 0) {
-            throw new Error("No content extracted");
-        }
-
-        const provider = getEmbeddingProvider();
-        
-        // Chunk requests to avoid payload too large
-        const BATCH_SIZE = 100;
-        const embeddings: number[][] = [];
-        
-        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-            const batch = chunks.slice(i, i + BATCH_SIZE);
-            const batchEmbeddings = await provider.embedMany(
-                batch.map(c => c.content)
-            );
-            embeddings.push(...batchEmbeddings);
-        }
-
-        await prisma.moduleSourceChunk.deleteMany({
-            where: { fileId: sourceFile.id },
-        });
-
-        const vectorStore = getVectorStore();
-        await vectorStore.addChunks({
-            moduleId,
-            fileId: sourceFile.id,
-            chunks,
-            embeddings,
-        });
-
-        await prisma.moduleSourceFile.update({
-            where: { id: sourceFile.id },
-            data: { status: "PROCESSED", errorMessage: null },
-        });
-
+    workerInstance.on("completed", (job) => {
         logger.info("Worker", `Completed job ${job.id}`);
-        
-        return { chunks: chunks.length };
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        
-        await prisma.moduleSourceFile.update({
-            where: { id: sourceFile.id },
-            data: { status: "FAILED", errorMessage: message },
-        });
-        
-        logger.error("Worker", `Failed job ${job.id}: ${message}`);
-        throw error;
+    });
+
+    workerInstance.on("failed", (job, err) => {
+        logger.error("Worker", `Job ${job?.id} failed: ${err.message}`);
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+        globalForWorker.embeddingWorker = workerInstance;
     }
-}, { connection });
+}
+
+export const embeddingWorker = workerInstance;

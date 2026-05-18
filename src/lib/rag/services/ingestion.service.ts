@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { enqueueDocumentProcessing } from "../jobs/queues/embedding-queue";
 import { Logger } from "@/lib/logger";
+import { embeddingWorker } from "../jobs/workers/embedding-worker";
 
 const logger = new Logger("RagIngestionService");
 
@@ -32,6 +33,10 @@ export async function processSourceFile(input: {
             fileId: sourceFile.id,
             mimeType: sourceFile.mimeType,
         });
+
+        // Força a compilação ativa do Worker para que o Webpack não elimine o import por Tree-Shaking
+        const workerActiveName = embeddingWorker.name;
+        logger.info("processSourceFile", `Garantindo que o worker de embeddings (${workerActiveName}) está escutando no mesmo processo.`);
 
         // 2. Enfileirar trabalho no BullMQ
         await enqueueDocumentProcessing(sourceFile.id, sourceFile.moduleId);
