@@ -1,8 +1,8 @@
-// src/lib/rag/vector-store.ts
+// src/lib/rag/core/vector-store.ts
 
 import { prisma } from "@/lib/prisma";
 import type { AddChunksInput, RetrievedChunk, SearchSimilarInput } from "../types";
-import { OpenAIEmbeddingProvider } from "./providers/openai-provider";
+import { getEmbeddingProvider } from "./providers/embedding-provider";
 import { env } from "@/lib/env";
 
 function toPgVector(values: number[]): string {
@@ -39,8 +39,8 @@ export class PgVectorStore {
     }
 
     async searchSimilar(input: SearchSimilarInput): Promise<RetrievedChunk[]> {
-        const provider = new OpenAIEmbeddingProvider();
-        const queryEmbedding = await provider.generateEmbedding(input.query);
+        const provider = getEmbeddingProvider();
+        const queryEmbedding = await provider.embedText(input.query);
         const limit = input.limit ?? env.RAG_RETRIEVAL_LIMIT;
 
         const rows = await prisma.$queryRawUnsafe<

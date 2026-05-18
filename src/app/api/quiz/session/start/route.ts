@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { z } from "zod";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("QuizSessionStartRoute");
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -62,7 +65,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, quizSession: newSession });
 
     } catch (error: any) {
-        console.error("Start Quiz Session Error:", error);
+        logger.error("POST", "Falha ao iniciar ou retomar a sessão de quiz", {
+            message: error.message || error
+        });
         return NextResponse.json(
             { error: "Falha ao iniciar ou retomar a sessão de quiz.", details: error.message },
             { status: 500 }

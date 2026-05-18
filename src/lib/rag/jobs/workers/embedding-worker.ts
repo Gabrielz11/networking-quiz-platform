@@ -3,7 +3,7 @@ import Redis from "ioredis";
 import { prisma } from "@/lib/prisma";
 import { parseDocument } from "../../core/document-parser";
 import { RecursiveChunker } from "../../core/chunking/recursive-chunker";
-import { OpenAIEmbeddingProvider } from "../../core/providers/openai-provider";
+import { getEmbeddingProvider } from "../../core/providers/embedding-provider";
 import { getVectorStore } from "../../core/vector-store";
 import { Logger } from "@/lib/logger";
 import { env } from "@/lib/env";
@@ -47,22 +47,22 @@ export const embeddingWorker = new Worker("embedding-processing", async (job: Jo
             moduleId,
             sourceFile: sourceFile.id,
             sourceType: sourceFile.mimeType,
-            embeddingModel: "text-embedding-3-small"
+            embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small"
         });
 
         if (chunks.length === 0) {
             throw new Error("No content extracted");
         }
 
-        const provider = new OpenAIEmbeddingProvider();
+        const provider = getEmbeddingProvider();
         
-        // Chunk requests to avoid payload too large (OpenAI accepts up to 2048 typically, but chunks can be many)
+        // Chunk requests to avoid payload too large
         const BATCH_SIZE = 100;
         const embeddings: number[][] = [];
         
         for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
             const batch = chunks.slice(i, i + BATCH_SIZE);
-            const batchEmbeddings = await provider.generateEmbeddings(
+            const batchEmbeddings = await provider.embedMany(
                 batch.map(c => c.content)
             );
             embeddings.push(...batchEmbeddings);

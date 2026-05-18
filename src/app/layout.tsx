@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="pt-BR" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${inter.className} h-screen bg-gray-50/50 flex flex-col overflow-hidden antialiased`} suppressHydrationWarning>
         <AuthProvider>
           <Navbar />

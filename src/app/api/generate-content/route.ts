@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { ContentLlmService } from "@/services/llm/content-llm.service";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("GenerateContentRoute");
 
 export async function POST(req: Request) {
     try {
@@ -18,7 +21,9 @@ export async function POST(req: Request) {
 
         return NextResponse.json(parsedData);
     } catch (error: any) {
-        console.error("Erro na geração de conteúdo:", error);
+        logger.error("POST", "Erro na geração rápida de conteúdo via IA", {
+            message: error.message || error
+        });
         return NextResponse.json({ error: "Falha ao gerar conteúdo via IA" }, { status: 500 });
     }
 }

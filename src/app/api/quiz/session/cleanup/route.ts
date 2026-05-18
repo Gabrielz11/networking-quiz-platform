@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("QuizSessionCleanupRoute");
 
 export async function POST(req: Request) {
     try {
@@ -36,7 +39,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, message: "Sessão finalizada e removida com sucesso." });
 
     } catch (error: any) {
-        console.error("Cleanup Session Error:", error);
+        logger.error("POST", "Falha ao finalizar e limpar a sessão de quiz", {
+            message: error.message || error
+        });
         return NextResponse.json(
             { error: "Falha ao finalizar e limpar a sessão." },
             { status: 500 }

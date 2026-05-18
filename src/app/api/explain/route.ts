@@ -1,5 +1,8 @@
-import { NextResponse } from 'next/server';
-import { ExplainService } from '@/services/explain.service';
+import { NextResponse } from "next/server";
+import { ExplainService } from "@/services/explain.service";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("ExplainRoute");
 
 export async function POST(req: Request) {
     try {
@@ -13,16 +16,14 @@ export async function POST(req: Request) {
             correct_answer
         );
 
-        // Gera imagem de diagrama via ExplainService (DALL-E)
-        const imageUrl = await ExplainService.generateDiagramImage(correct_answer);
-
         return NextResponse.json({
-            explanation: explanationResponse,
-            imageUrl: imageUrl
+            explanation: explanationResponse
         }, { status: 200 });
 
     } catch (error: any) {
-        console.error("AI Generation Error:", error);
+        logger.error("POST", "Falha na geração da explicação personalizada", {
+            message: error.message || error
+        });
 
         return NextResponse.json({
             explanation: "Não foi possível gerar a resposta personalizada. Abaixo a explicação base:",

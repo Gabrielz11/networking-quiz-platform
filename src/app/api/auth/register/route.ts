@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("AuthRegisterRoute");
 
 // Schema de validação para registro
 const RegisterSchema = z.object({
@@ -61,8 +64,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ message: "Usuário criado com sucesso!" }, { status: 201 });
-  } catch (error) {
-    console.error("REGISTRATION ERROR:", error);
+  } catch (error: any) {
+    logger.error("POST", "Erro interno ao cadastrar usuário", {
+      message: error.message || error
+    });
     return NextResponse.json({ error: "Erro interno no servidor ao cadastrar usuário" }, { status: 500 });
   }
 }

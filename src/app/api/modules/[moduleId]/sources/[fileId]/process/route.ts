@@ -1,9 +1,9 @@
 // src/app/api/modules/[moduleId]/sources/[fileId]/process/route.ts
-// POST: Dispara o processamento RAG de um arquivo (extração, chunking, embeddings, pgvector)
+// POST: Dispara o processamento RAG assíncrono de um arquivo via BullMQ/Redis
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { processSourceFile } from "@/lib/rag/rag-ingestion-service";
+import { processSourceFile } from "@/lib/rag/services/ingestion.service";
 
 export async function POST(
     _request: Request,
@@ -24,7 +24,7 @@ export async function POST(
             {
                 error: error instanceof Error
                     ? error.message
-                    : "Falha ao processar o arquivo.",
+                    : "Falha ao enfileirar o processamento do arquivo.",
             },
             { status: 500 }
         );

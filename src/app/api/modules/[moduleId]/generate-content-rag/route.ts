@@ -1,9 +1,9 @@
 // src/app/api/modules/[moduleId]/generate-content-rag/route.ts
-// POST: Gera conteúdo do módulo com base nos materiais RAG processados
+// POST: Gera conteúdo do módulo com base nos materiais RAG usando o GenerationService
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { generateModuleContentWithRag } from "@/lib/rag/module-content-generation-service";
+import { generationService } from "@/lib/rag/services/generation.service";
 
 export async function POST(
     _request: Request,
@@ -17,7 +17,7 @@ export async function POST(
     const { moduleId } = await context.params;
 
     try {
-        const result = await generateModuleContentWithRag({ moduleId });
+        const result = await generationService.generateModuleContentWithRag({ moduleId });
 
         return NextResponse.json({
             content: result.module.content,

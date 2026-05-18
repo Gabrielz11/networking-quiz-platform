@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { QuizService } from "@/services/quiz.service";
-
 import { z } from "zod";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("QuizAnswerRoute");
 
 const AnswerSchema = z.object({
     sessionId: z.string().min(1, "ID da sessão é obrigatório"),
@@ -104,7 +106,9 @@ export async function POST(req: Request) {
         });
 
     } catch (error: any) {
-        console.error("Answer Question Error:", error);
+        logger.error("POST", "Falha ao processar e salvar a resposta do estudante", {
+            message: error.message || error
+        });
         return NextResponse.json(
             { error: "Falha ao analisar resposta da questão." },
             { status: 500 }

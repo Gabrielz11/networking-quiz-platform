@@ -1,14 +1,13 @@
-// src/lib/rag/embedding-service.ts
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 
-export interface EmbeddingService {
+export interface EmbeddingProvider {
     embedText(text: string): Promise<number[]>;
     embedMany(texts: string[]): Promise<number[][]>;
 }
 
 // 1. Provedor Google Gemini (768 dimensões)
-export class GeminiEmbeddingService implements EmbeddingService {
+export class GeminiEmbeddingProvider implements EmbeddingProvider {
     private client: GoogleGenAI;
 
     constructor() {
@@ -56,7 +55,7 @@ export class GeminiEmbeddingService implements EmbeddingService {
 }
 
 // 2. Provedor OpenAI (Configurado dinamicamente para 768 dimensões)
-export class OpenAIEmbeddingService implements EmbeddingService {
+export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     private client: OpenAI;
 
     constructor() {
@@ -101,10 +100,10 @@ export class OpenAIEmbeddingService implements EmbeddingService {
 }
 
 // 3. Fábrica inteligente que escolhe o provedor dinamicamente
-export function getEmbeddingService(): EmbeddingService {
+export function getEmbeddingProvider(): EmbeddingProvider {
     const provider = process.env.EMBEDDING_PROVIDER?.toLowerCase() ?? "google";
     if (provider === "openai") {
-        return new OpenAIEmbeddingService();
+        return new OpenAIEmbeddingProvider();
     }
-    return new GeminiEmbeddingService();
+    return new GeminiEmbeddingProvider();
 }

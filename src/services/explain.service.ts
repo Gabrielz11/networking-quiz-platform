@@ -1,6 +1,5 @@
 import { AiService } from "@/services/ai.service";
 import { Logger } from "@/lib/logger";
-import OpenAI from "openai";
 
 const logger = new Logger("ExplainService");
 
@@ -40,53 +39,5 @@ export class ExplainService {
             systemInstruction: systemPrompt,
             temperature: 0.7
         });
-    }
-
-    /**
-     * Gera uma imagem de diagrama educacional usando DALL-E 3.
-     * Retorna null se a API key não estiver configurada ou se houver falha.
-     */
-    static async generateDiagramImage(correctAnswer: string): Promise<string | null> {
-        if (!process.env.OPENAI_API_KEY) {
-            logger.warn("generateDiagramImage", "OpenAI API Key not found. Skipping image generation.");
-            return null;
-        }
-
-        try {
-            const openai = new OpenAI({
-                apiKey: (process.env.OPENAI_API_KEY || "").trim(),
-            });
-
-            const imagePrompt = `Educational computer networking diagram explaining the concept: ${correctAnswer}.
-
-            Requirements:
-            - clear technical diagram
-            - show network devices and connections
-            - labels for protocols (IPv6, TCP if relevant)
-            - flat design style
-            - minimal icons
-            - white background
-            - readable labels
-            - educational style used in textbooks
-            - simple topology diagram`;
-
-            logger.info("generateDiagramImage", "Gerando imagem via DALL-E 3");
-
-            const imageResponse = await openai.images.generate({
-                model: "dall-e-3",
-                prompt: imagePrompt,
-                n: 1,
-                size: "1024x1024",
-                quality: "standard",
-            });
-
-            return imageResponse.data?.[0]?.url || null;
-        } catch (imageError: any) {
-            logger.error("generateDiagramImage", `DALL-E error (non-critical): ${imageError.message || imageError}`);
-            if (imageError.status === 401) {
-                logger.warn("generateDiagramImage", "TIP: Verify your OPENAI_API_KEY in .env.local.");
-            }
-            return null;
-        }
     }
 }

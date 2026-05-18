@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { QuizLlmService } from "@/services/llm/quiz-llm.service";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("QuizGenerateQuestionRoute");
 
 export async function POST(req: Request) {
     try {
@@ -81,7 +84,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, question: safeQuestion });
 
     } catch (error: any) {
-        console.error("Generate Question Error:");
+        logger.error("POST", "Falha na geração dinâmica da questão", {
+            message: error.message || error
+        });
         return NextResponse.json(
             { error: "Falha na geração da questão." },
             { status: 500 }
