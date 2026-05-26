@@ -161,18 +161,30 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 border-r border-slate-100 bg-white flex flex-col h-screen sticky top-0 shrink-0 z-30 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.03)]">
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-50 flex items-center gap-2.5">
-        <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl shadow-md shadow-blue-500/10">
-          <BookOpen className="w-5 h-5 text-white" />
+      <div className="p-6 border-b border-slate-50 flex flex-col gap-4">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl shadow-md shadow-blue-500/10">
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg tracking-tight text-slate-900 leading-none">
+              Lumina<span className="text-blue-600">LMS</span>
+            </h1>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mt-1">
+              Painel do Professor
+            </span>
+          </div>
         </div>
-        <div>
-          <h1 className="font-bold text-lg tracking-tight text-slate-900 leading-none">
-            Lumina<span className="text-blue-600">LMS</span>
-          </h1>
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mt-1">
-            Painel do Professor
-          </span>
-        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className="group w-full justify-start gap-2.5 text-xs font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-xl py-2.5 px-3 transition-all cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-600 transition-colors" />
+          Sair do Painel
+        </Button>
       </div>
 
       {/* Navigation Scroll */}
@@ -232,7 +244,7 @@ export function AdminSidebar() {
         ))}
       </div>
 
-      {/* User Session & Logout Footer */}
+      {/* User Session & Footer */}
       <div className="p-4 border-t border-slate-50 bg-slate-50/50 space-y-2">
         {session?.user && (
           <div className="flex items-center gap-3 px-3 py-2 rounded-xl">
@@ -250,27 +262,17 @@ export function AdminSidebar() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="pt-1">
           <Link href="/student" className="w-full">
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-center gap-1.5 text-[11px] font-semibold border-slate-200 text-slate-600 hover:bg-white hover:text-blue-600 hover:border-blue-200 rounded-lg py-1 px-2 shadow-sm transition-all"
+              className="w-full justify-center gap-1.5 text-xs font-semibold border-slate-200 text-slate-600 hover:bg-white hover:text-blue-600 hover:border-blue-200 rounded-xl py-2 px-3 shadow-sm transition-all cursor-pointer"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Estudante
+              <ArrowLeft className="w-4 h-4" />
+              Área do Estudante
             </Button>
           </Link>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="w-full justify-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-lg py-1 px-2 transition-all"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Sair
-          </Button>
         </div>
       </div>
     </aside>
