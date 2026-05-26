@@ -40,7 +40,7 @@ export class ModuleRepository {
         return prisma.module.findUnique({
             where: { id },
             include: {
-                sources: true
+                sourceFiles: true
             }
         });
     }

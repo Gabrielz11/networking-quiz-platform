@@ -6,18 +6,21 @@ import { ModuleTopNav } from "./_components/ModuleTopNav";
 import { ModuleHero } from "./_components/ModuleHero";
 import { ModuleArticleBody } from "./_components/ModuleArticleBody";
 import { ModuleArticleFooter } from "./_components/ModuleArticleFooter";
+import { auth } from "@/auth";
+import { ActivityService } from "@/services/activity.service";
 
 export const revalidate = 0;
 
 export default async function ModulePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
-    const moduleData = await prisma.module.findUnique({
-        where: { id },
-        include: {
-            author: true, // Inclui o autor do módulo
-        }
-    });
+    const [session, moduleData] = await Promise.all([
+        auth(),
+        prisma.module.findUnique({
+            where: { id },
+            include: { author: true },
+        }),
+    ]);
 
     if (!moduleData) {
         return (
@@ -33,6 +36,11 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
     }
 
     const htmlContent = renderModuleMarkdown(moduleData.content || "");
+
+    // Registra o acesso ao módulo — não-bloqueante
+    if (session?.user?.id) {
+        ActivityService.logModuleAccess(session.user.id, moduleData.id, moduleData.title);
+    }
     const formattedDate = new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: 'long',

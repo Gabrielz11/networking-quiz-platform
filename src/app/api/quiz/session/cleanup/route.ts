@@ -6,6 +6,7 @@ import { Logger } from "@/lib/logger";
 const logger = new Logger("QuizSessionCleanupRoute");
 
 export async function POST(req: Request) {
+    const start = Date.now();
     try {
         const authSession = await auth();
         if (!authSession?.user) {
@@ -17,6 +18,11 @@ export async function POST(req: Request) {
         if (!sessionId || typeof sessionId !== "string") {
             return NextResponse.json({ error: "sessionId é obrigatório." }, { status: 400 });
         }
+
+        logger.info("POST", "Iniciando limpeza de sessão de quiz", {
+            userId: authSession.user.id,
+            sessionId,
+        });
 
         //aqui podemos ter um problema se o usuario não for o dono da sessão
         //mas vamos deixar assim por enquanto, pois o usuario só pode acessar a sua sessão 
@@ -34,6 +40,12 @@ export async function POST(req: Request) {
 
         await prisma.quizSession.delete({
             where: { id: sessionId }
+        });
+
+        logger.info("POST", "Sessão de quiz removida com sucesso", {
+            userId: authSession.user.id,
+            sessionId,
+            durationMs: Date.now() - start,
         });
 
         return NextResponse.json({ success: true, message: "Sessão finalizada e removida com sucesso." });

@@ -140,32 +140,34 @@ export default function ModulesManager() {
     if (loading && modules.length === 0) return <ModulesLoadingSpinner />;
 
     return (
-        <div className="container mx-auto py-6 px-6 max-w-7xl">
-            <ModulesPageHeader
-                isDialogOpen={isDialogOpen}
-                setIsDialogOpen={setIsDialogOpen}
-                editingId={editingId}
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-                content={content}
-                setContent={setContent}
-                canGenerate={canGenerate}
-                isGenerating={isGenerating}
-                handleGenerateContent={handleGenerateContent}
-                handleSave={handleSave}
-                openCreateDialog={openCreateDialog}
-                currentStep={currentStep}
-                setCurrentStep={setCurrentStep}
-            />
+        <div className="flex-1 overflow-y-auto">
+            <div className="container mx-auto py-6 px-6 max-w-7xl">
+                <ModulesPageHeader
+                    isDialogOpen={isDialogOpen}
+                    setIsDialogOpen={setIsDialogOpen}
+                    editingId={editingId}
+                    title={title}
+                    setTitle={setTitle}
+                    description={description}
+                    setDescription={setDescription}
+                    content={content}
+                    setContent={setContent}
+                    canGenerate={canGenerate}
+                    isGenerating={isGenerating}
+                    handleGenerateContent={handleGenerateContent}
+                    handleSave={handleSave}
+                    openCreateDialog={openCreateDialog}
+                    currentStep={currentStep}
+                    setCurrentStep={setCurrentStep}
+                />
 
-            <ModulesGrid
-                modules={modules}
-                loading={loading}
-                onEdit={openEditDialog}
-                onDelete={handleDelete}
-            />
+                <ModulesGrid
+                    modules={modules}
+                    loading={loading}
+                    onEdit={openEditDialog}
+                    onDelete={handleDelete}
+                />
+            </div>
         </div>
     );
 }

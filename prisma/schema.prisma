@@ -18,6 +18,14 @@ enum Difficulty {
   HARD
 }
 
+enum ActivityEventType {
+  LOGIN
+  MODULE_ACCESS
+  QUIZ_START
+  QUIZ_COMPLETE
+  SCORE_RECORDED
+}
+
 enum QuizStatus {
   IN_PROGRESS
   COMPLETED
@@ -31,31 +39,34 @@ enum SourceFileStatus {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  modules   Module[]
+  id           String               @id @default(cuid())
+  email        String               @unique
+  password     String
+  name         String?
+  role         Role                 @default(STUDENT)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  modules      Module[]
   quizSessions QuizSession[]
+  scores       StudentModuleScore[]
+  activityLogs ActivityLog[]
 }
 
 model Module {
-  id          String     @id @default(cuid())
-  title       String
-  description String?    @db.Text
-  content     String     @db.Text
-  imageUrl    String?    @db.Text
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  authorId    String
-  author      User       @relation(fields: [authorId], references: [id])
-  questions   Question[]
+  id           String               @id @default(cuid())
+  title        String
+  description  String?              @db.Text
+  content      String               @db.Text
+  imageUrl     String?              @db.Text
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  authorId     String
+  author       User                 @relation(fields: [authorId], references: [id])
+  questions    Question[]
   quizSessions QuizSession[]
-  sourceFiles   ModuleSourceFile[]
-  sourceChunks  ModuleSourceChunk[]
+  sourceFiles  ModuleSourceFile[]
+  sourceChunks ModuleSourceChunk[]
+  scores       StudentModuleScore[]
 }
 
 model Question {
@@ -132,4 +143,39 @@ model ModuleSourceChunk {
 
   @@index([moduleId])
   @@index([fileId])
+}
+
+// ── Nota consolidada por aluno × módulo (janela deslizante de 4 sessões) ────
+// sessionId é String simples (sem FK) para evitar deleção em cascata
+// quando a QuizSession for removida pela cleanup route.
+model StudentModuleScore {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  sessionId   String   // referência não-vinculada — sem Prisma relation
+  score       Int      // 0–10 (1 ponto por acerto nas 10 questões)
+  completedAt DateTime @default(now())
+
+  @@index([userId, moduleId])
+  @@index([moduleId, completedAt])
+  @@index([userId, completedAt])
+}
+
+// ── Log de comportamento do aluno para análise futura ────────────────────────
+model ActivityLog {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType ActivityEventType
+  moduleId  String?           // opcional — ligado a eventos de módulo/quiz
+  sessionId String?           // opcional — ligado a eventos de sessão
+  metadata  Json?             // dados extras: score, moduleTitle, difficulty, etc.
+  createdAt DateTime          @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([userId, createdAt])
+  @@index([moduleId, eventType])
 }

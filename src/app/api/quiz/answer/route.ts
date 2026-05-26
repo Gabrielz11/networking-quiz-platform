@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { QuizService } from "@/services/quiz.service";
+import { ScoreService } from "@/services/score.service";
+import { ActivityService } from "@/services/activity.service";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
 
@@ -14,6 +16,7 @@ const AnswerSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    const start = Date.now();
     try {
         const sessionReq = await auth();
         if (!sessionReq?.user) {
@@ -31,6 +34,12 @@ export async function POST(req: Request) {
         }
 
         const { sessionId, questionId, studentAnswerIndex } = parsed.data;
+
+        logger.info("POST", "Processando resposta do aluno", {
+            userId: sessionReq.user.id,
+            sessionId,
+            questionId,
+        });
 
         const session = await prisma.quizSession.findUnique({
             where: { id: sessionId },
@@ -94,6 +103,26 @@ export async function POST(req: Request) {
                 }
             })
         ]);
+
+        logger.info("POST", "Resposta processada com sucesso", {
+            userId: sessionReq.user.id,
+            sessionId,
+            isCorrect,
+            updatedScore,
+            isCompleted,
+            durationMs: Date.now() - start,
+        });
+
+        // Se o quiz foi concluído, registra nota e eventos de comportamento
+        if (isCompleted) {
+            const userId = sessionReq.user.id!;
+            const moduleId = session.moduleId;
+
+            // Todas as chamadas abaixo são não-bloqueantes
+            ScoreService.registerCompletedSession(userId, moduleId, sessionId, updatedScore);
+            ActivityService.logQuizComplete(userId, moduleId, sessionId, updatedScore);
+            ActivityService.logScoreRecorded(userId, moduleId, sessionId, updatedScore);
+        }
 
         return NextResponse.json({
             success: true,

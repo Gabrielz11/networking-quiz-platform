@@ -1,14 +1,9 @@
 // src/lib/rag/document-parser.ts
 
 import fs from "node:fs/promises";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { PDFParse } from "pdf-parse";
 import type { ParsedDocument } from "../types";
 
-// No Node.js com Next.js, desabilitar o worker costuma ser mais estável
-// para evitar que o Turbopack tente resolver caminhos dinâmicos incorretamente.
-// O PDFParse suporta passar disableWorker nas opções do construtor.
 
 export async function parseDocument(input: {
     filePath: string;
@@ -52,7 +47,7 @@ async function parsePdf(input: {
         data: buffer,
         disableWorker: true,
         useSystemFonts: true
-    });
+    } as any);
     const result = await parser.getText();
     await parser.destroy();
 

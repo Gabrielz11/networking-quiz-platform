@@ -3,15 +3,21 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
+import { ActivityService } from "@/services/activity.service";
 
 const logger = new Logger("QuizSessionStartRoute");
 export async function POST(req: Request) {
+    const start = Date.now();
     try {
         const session = await auth();
         //aqui define que só o aluno logado pode iniciar o quiz
         if (!session?.user) {
             return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
         }
+
+        logger.info("POST", "Iniciando ou retomando sessão de quiz", {
+            userId: session.user.id,
+        });
 
         const schema = z.object({
             moduleId: z.string().min(1),
@@ -41,6 +47,12 @@ export async function POST(req: Request) {
         });
         //se existir uma sessão em andamento, retorna ela
         if (existingSession) {
+            logger.info("POST", "Sessão em andamento retomada", {
+                userId: session.user.id,
+                moduleId: body.moduleId,
+                sessionId: existingSession.id,
+                durationMs: Date.now() - start,
+            });
             return NextResponse.json({ success: true, quizSession: existingSession });
         }
 
@@ -62,6 +74,16 @@ export async function POST(req: Request) {
             }
         });
         //retorna a nova sessão
+        logger.info("POST", "Nova sessão de quiz criada", {
+            userId: session.user.id,
+            moduleId: body.moduleId,
+            sessionId: newSession.id,
+            durationMs: Date.now() - start,
+        });
+
+        // Registra o evento de início de quiz — não-bloqueante
+        ActivityService.logQuizStart(session.user.id!, body.moduleId, newSession.id);
+
         return NextResponse.json({ success: true, quizSession: newSession });
 
     } catch (error: any) {

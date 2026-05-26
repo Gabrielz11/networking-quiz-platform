@@ -7,6 +7,7 @@ import { Logger } from "@/lib/logger";
 const logger = new Logger("QuizGenerateQuestionRoute");
 
 export async function POST(req: Request) {
+    const start = Date.now();
     try {
         const sessionReq = await auth();
         if (!sessionReq?.user) {
@@ -22,6 +23,11 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
+
+        logger.info("POST", "Gerando próxima questão adaptativa", {
+            userId: sessionReq.user.id,
+            sessionId,
+        });
 
         // Fetch session with questions to check if we need to generate one
         const session = await prisma.quizSession.findUnique({
@@ -80,6 +86,14 @@ export async function POST(req: Request) {
 
         // Omit sensitive data to prevent cheating
         const { correctOptionIndex, explanation, ...safeQuestion } = newQuestion;
+
+        logger.info("POST", "Questão gerada pela IA e salva", {
+            userId: sessionReq.user.id,
+            sessionId,
+            questionId: newQuestion.id,
+            difficulty: session.currentLevel,
+            durationMs: Date.now() - start,
+        });
 
         return NextResponse.json({ success: true, question: safeQuestion });
 

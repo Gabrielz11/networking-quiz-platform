@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"; // provider de autent
 import bcrypt from "bcryptjs"; // biblioteca para criptografar senhas
 import { prisma } from "@/lib/prisma"; // cliente do banco de dados
 import { authConfig } from "@/auth.config"; // configuração do sistema de autenticacao
+import { ActivityService } from "@/services/activity.service";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({ //handlers - api routes de autenticacao, signIn - funcao para fazer login, signOut - funcao para fazer logout, auth - funcao para verificar se o usuario esta logado
   ...authConfig,
@@ -23,6 +24,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({ //handlers - api r
         ); // compara a senha digitada com a senha criptografada no banco de dados
 
         if (passwordsMatch) { // se a senha estiver correta, retorna o usuario
+          // Registra o evento de login — não-bloqueante, nunca falha o auth
+          ActivityService.logLogin(user.id);
+
           return {
             id: user.id,
             email: user.email,

@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -24,6 +25,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Configuração explícita do workspace root do Turbopack
+  turbopack: {
+    root: __dirname,
+  },
+
   // pdfjs-dist (usado por pdf-parse v2) usa um worker separado que não pode ser
   // bundlado pelo Turbopack — externalizar resolve o caminho pelo node_modules real
   serverExternalPackages: ["pdf-parse", "pdfjs-dist", "tiktoken"],

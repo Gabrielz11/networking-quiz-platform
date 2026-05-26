@@ -123,6 +123,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  a, button, select, option, label, [role="button"], .cursor-pointer {
+    cursor: pointer;
+  }
 }
 
 /* Estilos para o conteúdo formatado dos módulos (Artigo Técnico) */
