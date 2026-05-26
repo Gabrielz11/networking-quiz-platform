@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
 import { ActivityService } from "@/services/activity.service";
+import { redis } from "@/lib/redis";
 
 const logger = new Logger("QuizSessionStartRoute");
 export async function POST(req: Request) {
@@ -33,58 +34,77 @@ export async function POST(req: Request) {
         }
 
         const body = parsed.data;
+        const lockKey = `lock:quiz:start:${session.user.id}:${body.moduleId}`;
 
-        // aqui ele verifica se o usuario já tem uma sessão em andamento se tiver ele traz a questão de onde ele parou
-        const existingSession = await prisma.quizSession.findFirst({
-            where: {
+        // Tenta adquirir o lock no Redis por 5 segundos (NX = set se não existe, PX = tempo limite em ms)
+        const acquired = await redis.set(lockKey, "locked", "PX", 5000, "NX");
+        if (!acquired) {
+            logger.warn("POST", "Bloqueando requisição de início de quiz paralela", {
                 userId: session.user.id,
                 moduleId: body.moduleId,
-                status: "IN_PROGRESS"
-            },
-            include: {
-                questions: true
-            }
-        });
-        //se existir uma sessão em andamento, retorna ela
-        if (existingSession) {
-            logger.info("POST", "Sessão em andamento retomada", {
-                userId: session.user.id,
-                moduleId: body.moduleId,
-                sessionId: existingSession.id,
-                durationMs: Date.now() - start,
             });
-            return NextResponse.json({ success: true, quizSession: existingSession });
+            return NextResponse.json(
+                { error: "Uma requisição idêntica já está em processamento." },
+                { status: 409 }
+            );
         }
 
-        // Create a new session
-        //aqui ele cria uma nova sessão
-        //E já é possível ver as questões do módulo que o usuário vai responder.
-        const newSession = await prisma.quizSession.create({
-            data: {
-                userId: session.user.id!,
-                moduleId: body.moduleId,
-                status: "IN_PROGRESS",
-                currentLevel: "EASY",
-                errorsInCurrentLevel: 0,
-                currentQuestionIndex: 0,
-                score: 0
-            },
-            include: {
-                questions: true
+        try {
+            // aqui ele verifica se o usuario já tem uma sessão em andamento se tiver ele traz a questão de onde ele parou
+            const existingSession = await prisma.quizSession.findFirst({
+                where: {
+                    userId: session.user.id,
+                    moduleId: body.moduleId,
+                    status: "IN_PROGRESS"
+                },
+                include: {
+                    questions: true
+                }
+            });
+            //se existir uma sessão em andamento, retorna ela
+            if (existingSession) {
+                logger.info("POST", "Sessão em andamento retomada", {
+                    userId: session.user.id,
+                    moduleId: body.moduleId,
+                    sessionId: existingSession.id,
+                    durationMs: Date.now() - start,
+                });
+                return NextResponse.json({ success: true, quizSession: existingSession });
             }
-        });
-        //retorna a nova sessão
-        logger.info("POST", "Nova sessão de quiz criada", {
-            userId: session.user.id,
-            moduleId: body.moduleId,
-            sessionId: newSession.id,
-            durationMs: Date.now() - start,
-        });
 
-        // Registra o evento de início de quiz — não-bloqueante
-        ActivityService.logQuizStart(session.user.id!, body.moduleId, newSession.id);
+            // Create a new session
+            //aqui ele cria uma nova sessão
+            //E já é possível ver as questões do módulo que o usuário vai responder.
+            const newSession = await prisma.quizSession.create({
+                data: {
+                    userId: session.user.id!,
+                    moduleId: body.moduleId,
+                    status: "IN_PROGRESS",
+                    currentLevel: "EASY",
+                    errorsInCurrentLevel: 0,
+                    currentQuestionIndex: 0,
+                    score: 0
+                },
+                include: {
+                    questions: true
+                }
+            });
+            //retorna a nova sessão
+            logger.info("POST", "Nova sessão de quiz criada", {
+                userId: session.user.id,
+                moduleId: body.moduleId,
+                sessionId: newSession.id,
+                durationMs: Date.now() - start,
+            });
 
-        return NextResponse.json({ success: true, quizSession: newSession });
+            // Registra o evento de início de quiz — não-bloqueante
+            ActivityService.logQuizStart(session.user.id!, body.moduleId, newSession.id);
+
+            return NextResponse.json({ success: true, quizSession: newSession });
+        } finally {
+            // Libera o lock no Redis assim que a operação é concluída
+            await redis.del(lockKey);
+        }
 
     } catch (error: any) {
         logger.error("POST", "Falha ao iniciar ou retomar a sessão de quiz", {
