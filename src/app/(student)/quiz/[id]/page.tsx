@@ -8,6 +8,7 @@ import { QuizProgressBar } from "./_components/QuizProgressBar";
 import { QuizQuestionCard } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useStreamingExplanation } from "@/hooks/useStreamingExplanation";
 
 interface Question {
     id: string;
@@ -43,17 +44,26 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [error, setError] = useState<string | null>(null);
     const isFetchingRef = useRef(false);
 
-    // AI feedback state
-    const [aiFeedback, setAiFeedback] = useState<{ explanationAi: string | null, correctIndex: number | null } | null>(null);
+    // AI feedback state (correctIndex vem do servidor após a resposta)
+    const [correctIndex, setCorrectIndex] = useState<number | null>(null);
     const [showingFeedback, setShowingFeedback] = useState(false);
 
-    // Results
+    // Dados para a tela de resultados finais
     const [results, setResults] = useState<AttemptResult[]>([]);
     const [finished, setFinished] = useState(false);
+    const [idempotencyKey, setIdempotencyKey] = useState<string>("");
+
+    // Hook de streaming de explicação
+    const { streamedText, streamingState, startStream, reset: resetStream } = useStreamingExplanation();
+    const isStreaming = streamingState === "streaming";
+
+    const initQuizRef = useRef(false);
 
     // 1. Initial Load: Start or Resume Session
     useEffect(() => {
         let isMounted = true;
+        if (initQuizRef.current) return;
+        initQuizRef.current = true;
 
         const initQuiz = async () => {
             try {
@@ -71,11 +81,10 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     setQuestionsAnswered(data.quizSession.currentQuestionIndex);
                     setScore(data.quizSession.score);
                     setCurrentDifficulty(data.quizSession.currentLevel);
-                    
+
                     if (data.quizSession.status === "COMPLETED") {
                         setFinished(true);
                     } else {
-                        // Load current question for this session
                         fetchNextQuestion(data.quizSession.id);
                     }
                 } else {
@@ -101,6 +110,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         if (isFetchingRef.current) return;
         isFetchingRef.current = true;
         setGeneratingQuestion(true);
+        resetStream();
         try {
             const res = await fetch("/api/quiz/generate-question", {
                 method: "POST",
@@ -111,9 +121,13 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
             if (data.success) {
                 setCurrentQuestion(data.question);
+                const newKey = typeof window !== "undefined" && window.crypto?.randomUUID
+                    ? window.crypto.randomUUID()
+                    : (Math.random().toString(36).substring(2) + Date.now().toString(36));
+                setIdempotencyKey(newKey);
                 setSelectedOption(null);
                 setShowingFeedback(false);
-                setAiFeedback(null);
+                setCorrectIndex(null);
                 setError(null);
             } else {
                 const errMsg = data.error || "Erro ao gerar questão.";
@@ -134,11 +148,16 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const handleAnswer = async () => {
         if (selectedOption === null || !currentQuestion || !sessionId) return;
 
-        setLoading(true); // Small overlay for logic
+        setLoading(true);
         try {
+            const headers: Record<string, string> = { "Content-Type": "application/json" };
+            if (idempotencyKey) {
+                headers["Idempotency-Key"] = idempotencyKey;
+            }
+
             const res = await fetch("/api/quiz/answer", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers,
                 body: JSON.stringify({
                     sessionId,
                     questionId: currentQuestion.id,
@@ -148,7 +167,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
             const data = await res.json();
 
             if (data.success) {
-                // Add to results list for the final screen
                 const newRes: AttemptResult = {
                     questionId: currentQuestion.id,
                     prompt: currentQuestion.prompt,
@@ -160,17 +178,22 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     difficulty: currentDifficulty
                 };
                 setResults(prev => [...prev, newRes]);
-                setAiFeedback({
-                    explanationAi: data.explanation,
-                    correctIndex: data.correctOptionIndex
-                });
-                
+                setCorrectIndex(data.correctOptionIndex);
                 setScore(data.newScore);
-                setCurrentDifficulty(data.nextLevel); // SYNC UI BADGE
+                setCurrentDifficulty(data.nextLevel);
                 setShowingFeedback(true);
-                
-                if (data.completed) {
-                    // We'll show feedback first, then finish
+
+                // Iniciar stream de explicação apenas se o aluno errou
+                // (acerto recebe uma mensagem curta; erro merece explicação pedagógica completa)
+                if (!data.isCorrect && currentQuestion) {
+                    startStream({
+                        prompt: currentQuestion.prompt,
+                        base_explanation: data.explanation || "",
+                        student_answer: currentQuestion.options[selectedOption] ?? "",
+                        correct_answer: currentQuestion.options[data.correctOptionIndex] ?? "",
+                        moduleId,
+                        sessionId,
+                    });
                 }
             } else {
                 toast.error("Erro ao processar resposta.");
@@ -183,14 +206,13 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     };
 
     const handleProceedAfterFeedback = async () => {
+        if (isStreaming) return; // aguarda o stream terminar
         const isCompleted = (questionsAnswered + 1) >= 10;
-        
+
         if (isCompleted) {
             setFinished(true);
         } else {
             setQuestionsAnswered(prev => prev + 1);
-            // Refresh session status/difficulty from last result or let next fetch handle it
-            // For simplicity, we just fetch the next one which will use the updated session state
             if (sessionId) fetchNextQuestion(sessionId);
         }
     };
@@ -241,7 +263,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                         <h3 className="text-base font-semibold text-red-700">Ops! Algo deu errado</h3>
                         <p className="text-red-500 mt-1 text-sm">{error}</p>
                     </div>
-                    <Button 
+                    <Button
                         onClick={() => sessionId && fetchNextQuestion(sessionId)}
                         className="bg-blue-600 hover:bg-blue-700"
                     >
@@ -261,12 +283,14 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     currentQuestion={currentQuestion as any}
                     selectedOption={selectedOption}
                     showingFeedback={showingFeedback}
-                    fetchingAi={false} 
-                    aiFeedback={aiFeedback}
+                    fetchingAi={loading}
+                    aiFeedback={correctIndex !== null ? { explanationAi: null, correctIndex } : null}
+                    streamedText={showingFeedback ? streamedText : undefined}
+                    isStreaming={isStreaming}
                     onSelectOption={setSelectedOption}
                     onAnswer={handleAnswer}
                     onProceed={handleProceedAfterFeedback}
-                    correctOptionIndexFromServer={aiFeedback?.correctIndex ?? undefined}
+                    correctOptionIndexFromServer={correctIndex ?? undefined}
                     isLastQuestion={questionsAnswered + 1 >= 10}
                 />
             )}

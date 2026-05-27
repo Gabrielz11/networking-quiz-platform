@@ -2,7 +2,8 @@
 
 import { ModuleRepository, moduleRepository as defaultModuleRepo } from "@/repositories/module.repository";
 import { getVectorStore } from "../core/vector-store";
-import { AiService, CONTENT_TIMEOUT_MS } from "@/services/ai.service";
+import { AIOrchestrator } from "@/services/ai/orchestrator.service";
+import { CONTENT_TIMEOUT_MS } from "@/services/ai.service";
 import { Logger } from "@/lib/logger";
 import { RAG_CONTENT_PROMPT } from "@/lib/prompts/rag-content.prompt";
 
@@ -19,11 +20,19 @@ export class GenerationService {
 
         logger.info("generate", "Iniciando geração RAG", { moduleId });
 
-        // 1. Recuperar contexto do vetor (Top-K)
+        // 1. Recuperar metadados do módulo para enriquecer a query e o prompt
+        const module = await this.moduleRepo.findById(moduleId);
+        if (!module) {
+            throw new Error("Módulo não encontrado.");
+        }
+
+        const searchQuery = `${module.title} ${module.description ?? ""}`.trim() || "conceitos principais e detalhes técnicos";
+
+        // 2. Recuperar contexto do vetor
         const contextChunks = await vectorStore.searchSimilar({
             moduleId,
-            query: "conceitos principais e detalhes técnicos do módulo",
-            limit: 12, 
+            query: searchQuery,
+            limit: Number(process.env.RAG_FINAL_CONTEXT_LIMIT || 5),
         });
 
         if (contextChunks.length === 0) {
@@ -31,28 +40,54 @@ export class GenerationService {
         }
 
         const contextText = contextChunks
-            .map((c) => `[Fonte: ${c.fileName}]\n${c.content}`)
+            .map((c) => {
+                // Injeta metadados de origem para orientar a IA sobre a proveniência do contexto
+                const sectionLabel = c.sectionTitle
+                    ? ` | Seção: ${c.sectionTitle.replace(/^#{1,4}\s*/, "")}`
+                    : "";
+                const header = `[Fonte: ${c.fileName}${sectionLabel} | Relevância: ${(c.score * 100).toFixed(0)}%]`;
+                return `${header}\n${c.content}`;
+            })
             .join("\n\n---\n\n");
 
-        // 2. Preparar prompt com proteção contra injeção
+        // 3. Preparar prompt com proteção contra injeção e substituição dos metadados do módulo
         const prompt = RAG_CONTENT_PROMPT
+            .replace("{{MODULE_TITLE}}", module.title)
+            .replace("{{MODULE_DESCRIPTION}}", module.description ?? "Não fornecida")
             .replace("{{CONTEXT_TEXT}}", contextText);
-
-        // 3. Chamar IA via orchestrator
-        const result = await AiService.generateJson<any>(
+        // 4. Chamar IA via orchestrator com critic loop (Usando TEXTO puro para evitar quebras de JSON)
+        const resultText = await AIOrchestrator.runText(
             prompt,
             {
-                temperature: 0.4,
+                pipeline: "CONTENT_GEN",
+                modelName: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+                fallbackModelName: process.env.REASONING_FALLBACK_MODEL || "llama-3.3-70b-versatile",
+                temperature: 0.6,
                 timeoutMs: CONTENT_TIMEOUT_MS,
+                moduleId,
+                useCritic: false, // Desativado para extrema velocidade
+                maxRetries: 0,
+                retrievedChunks: contextChunks.map((c) => ({
+                    id: c.id,
+                    score: c.score,
+                    fileName: c.fileName,
+                })),
             }
         );
 
-        // Extração resiliente (ajuda se a IA mudar o nome das chaves)
-        const content = result.content || result.conteudo || result.material || "";
-        const description = result.description || result.resumo || result.descricao || "";
+        // Extração resiliente da descrição e conteúdo via Regex
+        let content = resultText;
+        let description = "Resumo detalhado gerado pelo assistente pedagógico.";
+
+        const descMatch = resultText.match(/<description>([\s\S]*?)<\/description>/i);
+        if (descMatch) {
+            description = descMatch[1].trim();
+            // Remove a tag description do conteúdo final
+            content = resultText.replace(descMatch[0], "").trim();
+        }
 
         if (!content) {
-            logger.error("generate", "IA retornou JSON sem o campo de conteúdo", { result });
+            logger.error("generate", "IA retornou vazio", { resultText });
             throw new Error("A IA gerou a resposta, mas o conteúdo veio vazio. Tente novamente.");
         }
 

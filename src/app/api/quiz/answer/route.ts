@@ -6,6 +6,12 @@ import { ScoreService } from "@/services/score.service";
 import { ActivityService } from "@/services/activity.service";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
+import {
+    getCachedIdempotentResponse,
+    cacheIdempotentResponse,
+    acquireIdempotencyLock,
+    releaseIdempotencyLock
+} from "@/lib/idempotency";
 
 const logger = new Logger("QuizAnswerRoute");
 
@@ -21,6 +27,27 @@ export async function POST(req: Request) {
         const sessionReq = await auth();
         if (!sessionReq?.user) {
             return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+        }
+
+        const idempotencyKey = req.headers.get("Idempotency-Key");
+
+        if (idempotencyKey) {
+            const cachedResponse = await getCachedIdempotentResponse(idempotencyKey);
+            if (cachedResponse) {
+                logger.info("POST", "Retornando resposta idempotente cacheada", {
+                    userId: sessionReq.user.id,
+                    idempotencyKey
+                });
+                return NextResponse.json(cachedResponse.body, { status: cachedResponse.status });
+            }
+
+            const locked = await acquireIdempotencyLock(idempotencyKey);
+            if (!locked) {
+                return NextResponse.json(
+                    { error: "Uma requisição idêntica já está em processamento." },
+                    { status: 409 }
+                );
+            }
         }
 
         const body = await req.json();
@@ -83,6 +110,9 @@ export async function POST(req: Request) {
         const nextIndex = session.currentQuestionIndex + 1;
         const isCompleted = nextIndex >= 10;
 
+        // Calcula tempo de resposta baseado em quando a questão foi instanciada
+        const responseTimeMs = Date.now() - question.createdAt.getTime();
+
         // Transaction to ensure atomicity
         await prisma.$transaction([
             prisma.questionInstance.update({
@@ -100,6 +130,18 @@ export async function POST(req: Request) {
                     score: updatedScore,
                     currentQuestionIndex: nextIndex,
                     status: isCompleted ? "COMPLETED" : "IN_PROGRESS"
+                }
+            }),
+            prisma.studentQuizTelemetry.create({
+                data: {
+                    userId: sessionReq.user.id!,
+                    moduleId: session.moduleId,
+                    sessionId: session.id,
+                    questionId: question.id,
+                    responseTimeMs: Math.max(0, responseTimeMs),
+                    isCorrect: isCorrect,
+                    chosenOptionIndex: studentAnswerIndex,
+                    difficultyLevel: question.difficulty
                 }
             })
         ]);
@@ -124,7 +166,7 @@ export async function POST(req: Request) {
             ActivityService.logScoreRecorded(userId, moduleId, sessionId, updatedScore);
         }
 
-        return NextResponse.json({
+        const responseJson = {
             success: true,
             isCorrect: isCorrect,
             correctOptionIndex: question.correctOptionIndex,
@@ -132,12 +174,25 @@ export async function POST(req: Request) {
             nextLevel,
             completed: isCompleted,
             newScore: updatedScore
-        });
+        };
+
+        if (idempotencyKey) {
+            await cacheIdempotentResponse(idempotencyKey, 200, responseJson);
+            await releaseIdempotencyLock(idempotencyKey);
+        }
+
+        return NextResponse.json(responseJson);
 
     } catch (error: any) {
         logger.error("POST", "Falha ao processar e salvar a resposta do estudante", {
             message: error.message || error
         });
+
+        const idempotencyKey = req.headers.get("Idempotency-Key");
+        if (idempotencyKey) {
+            await releaseIdempotencyLock(idempotencyKey);
+        }
+
         return NextResponse.json(
             { error: "Falha ao analisar resposta da questão." },
             { status: 500 }

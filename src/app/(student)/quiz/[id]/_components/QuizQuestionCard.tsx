@@ -17,6 +17,10 @@ interface QuizQuestionCardProps {
     onProceed: () => void;
     correctOptionIndexFromServer?: number;
     isLastQuestion?: boolean;
+    /** Texto acumulado do stream SSE (substitui explanationAi quando presente) */
+    streamedText?: string;
+    /** Se o stream ainda está em andamento (exibe cursor piscante) */
+    isStreaming?: boolean;
 }
 
 export function QuizQuestionCard({
@@ -30,9 +34,15 @@ export function QuizQuestionCard({
     onProceed,
     correctOptionIndexFromServer,
     isLastQuestion,
+    streamedText,
+    isStreaming,
 }: QuizQuestionCardProps) {
     const correctIdx = correctOptionIndexFromServer ?? (currentQuestion as any).correctOptionIndex;
     const isCorrect = showingFeedback && selectedOption === correctIdx;
+
+    // Usa o texto streamado se disponível, senão cai no campo estático
+    const displayText = streamedText !== undefined ? streamedText : (aiFeedback?.explanationAi ?? "");
+    const hasContent = displayText.length > 0;
 
     return (
         <div className="flex flex-col gap-4">
@@ -96,8 +106,8 @@ export function QuizQuestionCard({
                 })}
             </div>
 
-            {/* Feedback da IA */}
-            {showingFeedback && aiFeedback && (
+            {/* Feedback da IA — streaming ou estático */}
+            {showingFeedback && (hasContent || isStreaming) && (
                 <div className={`
                     p-4 rounded-xl border animate-in slide-in-from-bottom-2 fade-in duration-500
                     ${isCorrect ? "bg-green-50/70 border-green-200" : "bg-blue-50/70 border-blue-200"}
@@ -107,10 +117,27 @@ export function QuizQuestionCard({
                         <h3 className={`font-bold text-sm ${isCorrect ? "text-green-700" : "text-blue-700"}`}>
                             {isCorrect ? "Excelente!" : "Tutor IA"}
                         </h3>
+                        {isStreaming && (
+                            <span className="ml-1 text-xs text-slate-400 font-normal animate-pulse">
+                                gerando...
+                            </span>
+                        )}
                     </div>
-                    <p className="text-slate-700 text-sm leading-relaxed">
-                        {aiFeedback.explanationAi}
+                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
+                        {displayText}
+                        {/* Cursor piscante enquanto o stream está ativo */}
+                        {isStreaming && (
+                            <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-[blink_1s_step-end_infinite] align-middle" />
+                        )}
                     </p>
+                </div>
+            )}
+
+            {/* Spinner enquanto aguarda o início do stream */}
+            {showingFeedback && !hasContent && !isStreaming && fetchingAi && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="text-slate-500 text-sm">Tutor IA analisando sua resposta...</span>
                 </div>
             )}
 
@@ -126,16 +153,19 @@ export function QuizQuestionCard({
                     </Button>
                 ) : (
                     <Button
+                        disabled={isStreaming}
                         onClick={onProceed}
                         className={`
                             px-8 py-5 text-sm font-bold rounded-xl shadow-md transition-all active:scale-95
+                            ${isStreaming ? "opacity-50 cursor-not-allowed" : ""}
                             ${isCorrect ? "bg-green-600 hover:bg-green-700" : "bg-slate-800 hover:bg-slate-900 text-white"}
                         `}
                     >
-                        {isLastQuestion ? "Finalizar Questionário" : (isCorrect ? "Continuar" : "Próxima Questão")}
+                        {isStreaming ? "Aguarde..." : isLastQuestion ? "Finalizar Questionário" : (isCorrect ? "Continuar" : "Próxima Questão")}
                     </Button>
                 )}
             </div>
         </div>
     );
 }
+

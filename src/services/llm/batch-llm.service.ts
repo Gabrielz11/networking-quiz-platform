@@ -21,7 +21,8 @@ export class BatchLlmService {
      */
     static async generate(
         title: string,
-        content: string
+        content: string,
+        moduleId?: string
     ): Promise<GeneratedBatchQuestion[]> {
         const prompt = `Você é um professor acadêmico de Redes de Computadores especialista em IPv6.
     O usuário fornecerá o título e o conteúdo de um módulo de estudo.
@@ -48,6 +49,8 @@ export class BatchLlmService {
         logger.info("generate", "Gerando lote de questões", { title });
 
         const data = await AiService.generateJson<BatchResponse>(prompt, {
+            pipeline: "QUIZ_GEN",
+            moduleId,
             responseSchema: {
                 type: "object",
                 properties: {

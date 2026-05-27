@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookMarked, Layers, Award } from "lucide-react";
+import { BookMarked, Layers, Award, Activity, TrendingUp } from "lucide-react";
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -80,6 +80,56 @@ export default function Dashboard() {
                                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-md pointer-events-none">
                                     <Award className="w-4 h-4 mr-2" />
                                     Visualizar Desempenho
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                    <Link href="/dashboard/ai-metrics" className="block group">
+                        <Card className="hover:shadow-xl hover:border-emerald-200 transition-all duration-300 border-t-4 border-t-emerald-500 flex flex-col justify-between h-full bg-white">
+                            <div>
+                                <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                                    <div className="bg-emerald-100 p-3 rounded-xl group-hover:bg-emerald-200 transition-colors">
+                                        <Activity className="w-6 h-6 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-xl group-hover:text-emerald-600 transition-colors">Métricas da IA</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Monitoramento em tempo real de custos, velocidade, taxas de cache e qualidade pedagógica das IAs.
+                                    </p>
+                                </CardContent>
+                            </div>
+                            <CardContent className="pt-0">
+                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-md pointer-events-none">
+                                    <Activity className="w-4 h-4 mr-2" />
+                                    Visualizar Métricas
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                    <Link href="/dashboard/analytics" className="block group">
+                        <Card className="hover:shadow-xl hover:border-purple-200 transition-all duration-300 border-t-4 border-t-purple-500 flex flex-col justify-between h-full bg-white">
+                            <div>
+                                <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                                    <div className="bg-purple-100 p-3 rounded-xl group-hover:bg-purple-200 transition-colors">
+                                        <TrendingUp className="w-6 h-6 text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-xl group-hover:text-purple-600 transition-colors">Analytics Educacional</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Identifique padrões de aprendizagem, fragilidades da turma por tópico e engajamento dos alunos.
+                                    </p>
+                                </CardContent>
+                            </div>
+                            <CardContent className="pt-0">
+                                <Button className="w-full bg-purple-600 hover:bg-purple-700 shadow-md pointer-events-none">
+                                    <TrendingUp className="w-4 h-4 mr-2" />
+                                    Ver Analytics
                                 </Button>
                             </CardContent>
                         </Card>

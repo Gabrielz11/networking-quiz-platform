@@ -143,3 +143,9 @@
 .article-body article h2 {
   letter-spacing: -0.02em;
 }
+
+/* Animação de cursor piscante para o streaming de explicação do Tutor IA */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

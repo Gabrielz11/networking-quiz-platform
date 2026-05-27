@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { QuizLlmService } from "@/services/llm/quiz-llm.service";
 import { Logger } from "@/lib/logger";
+import { isRateLimited } from "@/lib/rate-limit";
 
 const logger = new Logger("QuizGenerateQuestionRoute");
 
@@ -12,6 +13,16 @@ export async function POST(req: Request) {
         const sessionReq = await auth();
         if (!sessionReq?.user) {
             return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+        }
+
+        // Limite de 10 requisições de geração de questão a cada 5 minutos por usuário
+        const isLimited = await isRateLimited(sessionReq.user.id!, "generate-question", { limit: 10, windowSeconds: 300 });
+        if (isLimited) {
+            logger.warn("POST", "Rate limit atingido para geração de questão", { userId: sessionReq.user.id });
+            return NextResponse.json(
+                { error: "Limite de solicitações atingido. Por favor, aguarde alguns minutos antes de solicitar outra questão." },
+                { status: 429 }
+            );
         }
 
         const body = await req.json();
@@ -69,7 +80,9 @@ export async function POST(req: Request) {
         const qData = await QuizLlmService.generate(
             difficulty,
             moduleContent,
-            previousPrompts
+            previousPrompts,
+            session.moduleId,
+            session.id
         );
 
         // Save the QuestionInstance

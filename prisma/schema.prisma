@@ -50,6 +50,7 @@ model User {
   quizSessions QuizSession[]
   scores       StudentModuleScore[]
   activityLogs ActivityLog[]
+  telemetries  StudentQuizTelemetry[]
 }
 
 model Module {
@@ -67,6 +68,8 @@ model Module {
   sourceFiles  ModuleSourceFile[]
   sourceChunks ModuleSourceChunk[]
   scores       StudentModuleScore[]
+  aiGenerations AiGenerationMetadata[]
+  telemetries   StudentQuizTelemetry[]
 }
 
 model Question {
@@ -95,6 +98,8 @@ model QuizSession {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   questions            QuestionInstance[]
+  aiGenerations        AiGenerationMetadata[]
+  telemetries          StudentQuizTelemetry[]
 }
 
 model QuestionInstance {
@@ -130,16 +135,23 @@ model ModuleSourceFile {
 }
 
 model ModuleSourceChunk {
-  id         String           @id @default(cuid())
-  fileId     String
-  file       ModuleSourceFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  moduleId   String
-  module     Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  content    String           @db.Text
-  chunkIndex Int
-  tokenCount Int?
-  embedding  Unsupported("vector")?
-  createdAt  DateTime         @default(now())
+  id             String              @id @default(cuid())
+  fileId         String
+  file           ModuleSourceFile    @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  moduleId       String
+  module         Module              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  content        String              @db.Text
+  chunkIndex     Int
+  tokenCount     Int?
+  embedding      Unsupported("vector")?
+  sourceType     String?
+  page           Int?
+  sectionTitle   String?
+  embeddingModel String?
+  parentChunkId  String?
+  parentChunk    ModuleSourceChunk?  @relation("ParentChild", fields: [parentChunkId], references: [id], onDelete: Cascade)
+  childChunks    ModuleSourceChunk[] @relation("ParentChild")
+  createdAt      DateTime            @default(now())
 
   @@index([moduleId])
   @@index([fileId])
@@ -178,4 +190,71 @@ model ActivityLog {
   @@index([eventType])
   @@index([userId, createdAt])
   @@index([moduleId, eventType])
+}
+
+// ── Metadados detalhados de cada geração realizada pela IA ──────────────────────
+model AiGenerationMetadata {
+  id                String       @id @default(cuid())
+  pipeline          String       // CONTENT_GEN, QUIZ_GEN, EXPLANATION, VALIDATION
+  promptUsed        String       @db.Text
+  modelName         String       // ex: gemini-2.5-pro, deepseek-r1
+  temperature       Float
+  generationTimeMs  Int
+  promptTokens      Int?
+  completionTokens  Int?
+  costUsd           Float?       // cálculo estimado de custo baseado nos tokens
+  criticScore       Float        // pontuação geral final do Scorer (0.0 a 1.0)
+  criticMetrics     Json         // detalhes de cada um dos 7 pilares de qualidade
+  retrievedChunks   Json         // IDs e relevância dos chunks de RAG utilizados
+  contentVersion    Int          @default(1)
+  createdAt         DateTime     @default(now())
+
+  // Relações opcionais conforme o contexto da geração
+  moduleId          String?
+  module            Module?      @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  sessionId         String?
+  session           QuizSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+}
+
+// ── Telemetria avançada de performance dos alunos no Quiz ──────────────────────
+model StudentQuizTelemetry {
+  id                  String       @id @default(cuid())
+  userId              String
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId            String
+  module              Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  sessionId           String
+  session             QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId          String       // referência a QuestionInstance
+  
+  // Métricas capturadas
+  responseTimeMs      Int          // tempo total que o aluno levou para responder a questão
+  isCorrect           Boolean
+  chosenOptionIndex   Int
+  difficultyLevel     Difficulty   // EASY, MEDIUM, HARD
+  perceivedDifficulty Float?       // feedback direto do aluno sobre a dificuldade da questão (1-5)
+  retentionScore      Float?       // avaliação de retenção (calculada em testes de revisão futuros)
+  createdAt           DateTime     @default(now())
+
+  @@index([userId, moduleId])
+  @@index([questionId])
+}
+
+// ── Cache semântico de respostas da IA (Two-Tier: Redis + pgvector) ─────────
+// Tier 1: Redis (hash exato por SHA-256 do prompt) — gerido em código
+// Tier 2: Esta tabela (busca vetorial por similaridade cosine ≥ 0.92)
+model SemanticCacheEntry {
+  id            String   @id @default(cuid())
+  pipeline      String   // CONTENT_GEN, QUIZ_GEN, EXPLANATION, VALIDATION
+  promptHash    String   // SHA-256(pipeline+normalizedPrompt+temperature)
+  promptText    String   @db.Text
+  responseJson  String   @db.Text // Resposta serializada (JSON.stringify ou texto puro)
+  // embedding vector(768) — gerenciado via SQL raw (pgvector não é suportado pelo Prisma natively)
+  hitCount      Int      @default(0)
+  ttlExpiresAt  DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([pipeline])
+  @@index([promptHash])
+  @@index([ttlExpiresAt])
 }

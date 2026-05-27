@@ -7,8 +7,12 @@ const envSchema = z.object({
     // Obrigatória apenas quando EMBEDDING_PROVIDER=openai (padrão)
     OPENAI_API_KEY: z.string().min(1).optional(),
     GROQ_API_KEY: z.string().min(1),
+    COHERE_API_KEY: z.string().optional(),
     REDIS_URL: z.string().default("redis://localhost:6379"),
-    RAG_RETRIEVAL_LIMIT: z.string().default("6").transform(Number),
+    RAG_RETRIEVAL_LIMIT: z.string().default("20").transform(Number),
+    RAG_FINAL_CONTEXT_LIMIT: z.string().default("5").transform(Number),
+    RAG_CHUNK_SIZE: z.string().default("1200").transform(Number),
+    RAG_CHUNK_OVERLAP: z.string().default("200").transform(Number),
     UPLOAD_DIR: z.string().default("./storage/uploads"),
     EMBEDDING_PROVIDER: z.enum(["openai", "gemini"]).default("openai"),
     EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),

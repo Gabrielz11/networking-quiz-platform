@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         }
 
         // Gera questões via BatchLlmService (AiService → Gemini + fallback Groq)
-        const questions = await BatchLlmService.generate(title, content);
+        const questions = await BatchLlmService.generate(title, content, moduleId);
 
         // Limpar questões antigas via Prisma
         await prisma.question.deleteMany({

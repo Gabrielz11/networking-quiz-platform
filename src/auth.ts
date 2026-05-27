@@ -7,6 +7,7 @@ import { ActivityService } from "@/services/activity.service";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({ //handlers - api routes de autenticacao, signIn - funcao para fazer login, signOut - funcao para fazer logout, auth - funcao para verificar se o usuario esta logado
   ...authConfig,
+  trustHost: true,
   providers: [
     Credentials({
       async authorize(credentials) {

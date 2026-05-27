@@ -12,6 +12,6 @@ export async function getQuizContextFromRag(input: {
     return vectorStore.searchSimilar({
         moduleId: input.moduleId,
         query: input.topic ?? "principais conceitos do módulo",
-        limit: 8,
+        limit: Number(process.env.RAG_FINAL_CONTEXT_LIMIT || 5),
     });
 }

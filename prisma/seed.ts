@@ -329,6 +329,79 @@ Permite a comunicação direta entre dispositivos que possuem apenas pilha IPv6 
     });
   }
 
+  // 7. Populando Telemetria Educacional (StudentQuizTelemetry) para o Analytics Dashboard
+  console.log("📈 Gerando telemetria de aprendizado para o Analytics...");
+  
+  for (let i = 0; i < 200; i++) {
+    const student = students[Math.floor(Math.random() * students.length)];
+    const module = Math.random() > 0.6 ? module2 : module1;
+    const randomDaysAgo = Math.floor(Math.random() * 14);
+    const createdAt = new Date(now.getTime() - randomDaysAgo * 24 * 60 * 60 * 1000 - Math.random() * 8 * 60 * 60 * 1000);
+    
+    const diffRoll = Math.random();
+    const difficultyLevel = diffRoll > 0.7 ? "HARD" : (diffRoll > 0.4 ? "MEDIUM" : "EASY");
+    
+    let isCorrect = true;
+    let responseTimeMs = 0;
+
+    if (difficultyLevel === "EASY") {
+      isCorrect = Math.random() > 0.15;
+      responseTimeMs = Math.floor(Math.random() * 10000) + 5000;
+    } else if (difficultyLevel === "MEDIUM") {
+      isCorrect = Math.random() > 0.4;
+      responseTimeMs = Math.floor(Math.random() * 25000) + 15000;
+    } else {
+      isCorrect = Math.random() > 0.65;
+      responseTimeMs = Math.floor(Math.random() * 45000) + 30000;
+    }
+
+    if (module.id === module2.id) {
+      if (Math.random() > 0.5) isCorrect = false; 
+    }
+
+    // Cria a sessão mock
+    const session = await prisma.quizSession.create({
+      data: {
+        userId: student.id,
+        moduleId: module.id,
+        status: "COMPLETED",
+        score: isCorrect ? 1 : 0,
+        createdAt,
+        updatedAt: createdAt
+      }
+    });
+
+    // Cria uma mock question instance
+    const question = await prisma.questionInstance.create({
+      data: {
+        sessionId: session.id,
+        difficulty: difficultyLevel,
+        prompt: `Mock question ${i}`,
+        options: ["A", "B", "C", "D"],
+        correctOptionIndex: 0,
+        studentAnswer: isCorrect ? 0 : 1,
+        isCorrect,
+        createdAt
+      }
+    });
+
+    // Cria a telemetria associada
+    await prisma.studentQuizTelemetry.create({
+      data: {
+        userId: student.id,
+        moduleId: module.id,
+        sessionId: session.id,
+        questionId: question.id,
+        responseTimeMs,
+        isCorrect,
+        chosenOptionIndex: isCorrect ? 0 : 1,
+        difficultyLevel,
+        perceivedDifficulty: Math.floor(Math.random() * 5) + 1,
+        createdAt,
+      }
+    });
+  }
+
   console.log("✅ Banco de dados populado com sucesso!");
 }
 

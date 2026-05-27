@@ -22,6 +22,8 @@ export interface DocumentChunk {
     moduleId?: string;
     embeddingModel?: string;
     parentChunkId?: string;
+    /** "parent" = chunk grande para contexto (sem embedding) | "child" = chunk pequeno para busca vetorial */
+    chunkType?: "parent" | "child";
 }
 
 export interface RetrievedChunk {
@@ -29,6 +31,8 @@ export interface RetrievedChunk {
     content: string;
     fileName: string;
     score: number;
+    /** Título da seção Markdown de origem (ex: "## 3.2 Neighbor Discovery Protocol") */
+    sectionTitle?: string;
 }
 
 export interface AddChunksInput {

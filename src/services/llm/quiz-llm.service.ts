@@ -1,4 +1,4 @@
-import { AiService } from "@/services/ai.service";
+import { AIOrchestrator } from "@/services/ai/orchestrator.service";
 import { Logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -66,7 +66,9 @@ export class QuizLlmService {
     static async generate(
         difficulty: QuestionDifficulty,
         moduleContent: string,
-        previousPrompts: string[]
+        previousPrompts: string[],
+        moduleId?: string,
+        sessionId?: string
     ): Promise<GeneratedQuestion> {
         const sanitizedModuleContent = moduleContent.trim();
 
@@ -119,8 +121,14 @@ ${sanitizedModuleContent}`;
         });
 
         try {
-            const qData = await AiService.generateJson<GeneratedQuestion>(prompt, { 
+            const qData = await AIOrchestrator.runJson<GeneratedQuestion>(prompt, { 
+                pipeline: "QUIZ_GEN",
                 temperature: 0.6,
+                moduleId,
+                sessionId,
+                useCritic: true,
+                maxRetries: 1,
+                skipCache: true, // Questões precisam de variedade — nunca cachear
                 responseSchema: {
                     type: "object",
                     properties: {

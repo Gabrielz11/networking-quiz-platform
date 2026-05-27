@@ -2,7 +2,7 @@ import { Worker, Job } from "bullmq";
 import Redis from "ioredis";
 import { prisma } from "@/lib/prisma";
 import { parseDocument } from "../../core/document-parser";
-import { RecursiveChunker } from "../../core/chunking/recursive-chunker";
+import { SemanticChunker } from "../../core/chunking/semantic-chunker";
 import { getEmbeddingProvider } from "../../core/providers/embedding-provider";
 import { getVectorStore } from "../../core/vector-store";
 import { Logger } from "@/lib/logger";
@@ -20,9 +20,9 @@ let workerInstance = globalForWorker.embeddingWorker;
 if (!workerInstance) {
     workerInstance = new Worker("embedding-processing", async (job: Job) => {
         const { fileId, moduleId } = job.data;
-        
+
         logger.info("Worker", `Processing job ${job.id} for file ${fileId}`);
-        
+
         const sourceFile = await prisma.moduleSourceFile.findFirst({
             where: { id: fileId, moduleId },
         });
@@ -38,52 +38,75 @@ if (!workerInstance) {
                 data: { status: "PROCESSING", errorMessage: null },
             });
 
+            // 1. Parsear documento
             const parsed = await parseDocument({
                 filePath: sourceFile.storagePath,
                 fileName: sourceFile.originalName,
                 mimeType: sourceFile.mimeType,
             });
 
-            const chunker = new RecursiveChunker({
-                maxTokens: 500,
-                overlapTokens: 80
+            // 2. Chunking semântico hierárquico (header-aware + parent-child)
+            const chunker = new SemanticChunker({
+                parentMaxTokens: env.RAG_CHUNK_SIZE + 300,
+                childMaxTokens: env.RAG_CHUNK_SIZE,
+                childOverlapTokens: env.RAG_CHUNK_OVERLAP,
             });
 
-            const chunks = chunker.createChunks(parsed.text, {
+            const sharedMetadata = {
                 moduleId,
                 sourceFile: sourceFile.id,
                 sourceType: sourceFile.mimeType,
-                embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small"
-            });
+                embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
+            };
 
-            if (chunks.length === 0) {
-                throw new Error("No content extracted");
+            const allChunks = chunker.createChunks(parsed.text, sharedMetadata);
+
+            if (allChunks.length === 0) {
+                throw new Error("No content extracted from document");
             }
 
+            // 3. Separar PARETs (sem embedding) e CHILDs (com embedding)
+            const parentChunks = allChunks.filter(c => c.chunkType === "parent");
+            const childChunks  = allChunks.filter(c => c.chunkType === "child");
+
+            logger.info("Worker", "Chunks gerados pelo SemanticChunker", {
+                totalChunks: allChunks.length,
+                parents: parentChunks.length,
+                children: childChunks.length,
+            });
+
+            if (childChunks.length === 0) {
+                throw new Error("Nenhum child chunk gerado — verifique o documento.");
+            }
+
+            // 4. Gerar embeddings apenas para CHILDs (em batches)
             const provider = getEmbeddingProvider();
-            
-            // Chunk requests to avoid payload too large
-            const BATCH_SIZE = 100;
-            const embeddings: number[][] = [];
-            
-            for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-                const batch = chunks.slice(i, i + BATCH_SIZE);
+            const BATCH_SIZE = 50;
+            const childEmbeddings: number[][] = [];
+
+            for (let i = 0; i < childChunks.length; i += BATCH_SIZE) {
+                const batch = childChunks.slice(i, i + BATCH_SIZE);
                 const batchEmbeddings = await provider.embedMany(
                     batch.map(c => c.content)
                 );
-                embeddings.push(...batchEmbeddings);
+                childEmbeddings.push(...batchEmbeddings);
+                logger.info("Worker", `Embeddings batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(childChunks.length / BATCH_SIZE)} concluído`);
             }
 
+            // 5. Limpar chunks antigos do arquivo
             await prisma.moduleSourceChunk.deleteMany({
                 where: { fileId: sourceFile.id },
             });
 
+            // 6. Persistir: PARETs primeiro (FK constraint), depois CHILDs com embedding
             const vectorStore = getVectorStore();
             await vectorStore.addChunks({
                 moduleId,
                 fileId: sourceFile.id,
-                chunks,
-                embeddings,
+                // Passa todos os chunks; addChunks separa internamente por chunkType
+                chunks: [...parentChunks, ...childChunks],
+                // Embeddings alinhados apenas com os childChunks (PARETs não têm embedding)
+                embeddings: childEmbeddings,
             });
 
             await prisma.moduleSourceFile.update({
@@ -91,23 +114,30 @@ if (!workerInstance) {
                 data: { status: "PROCESSED", errorMessage: null },
             });
 
-            logger.info("Worker", `Completed job ${job.id}`);
-            
-            return { chunks: chunks.length };
+            logger.info("Worker", `Job ${job.id} concluído com sucesso`, {
+                parents: parentChunks.length,
+                children: childChunks.length,
+            });
+
+            return {
+                parents: parentChunks.length,
+                children: childChunks.length,
+                total: allChunks.length,
+            };
+
         } catch (error) {
             const message = error instanceof Error ? error.message : "Unknown error";
-            
+
             await prisma.moduleSourceFile.update({
                 where: { id: sourceFile.id },
                 data: { status: "FAILED", errorMessage: message },
             });
-            
+
             logger.error("Worker", `Failed job ${job.id}: ${message}`);
             throw error;
         }
     }, { connection });
 
-    // Register event listeners
     workerInstance.on("ready", () => {
         logger.info("Worker", "Embedding worker is ready and waiting for jobs");
     });

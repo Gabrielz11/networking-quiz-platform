@@ -1,64 +1,42 @@
-import { env } from "./env";
+import { redis } from "@/lib/redis";
 
-interface RateLimitInfo {
-    count: number;
-    resetTime: number;
+interface RateLimitConfig {
+    limit: number;
+    windowSeconds: number;
 }
-
-const memoryStore = new Map<string, RateLimitInfo>();
 
 /**
- * Simple Memory-based Rate Limiter.
- * In a real production environment with multiple server instances, 
- * you should use Redis (already configured in env.ts).
+ * Verifica se um identificador atingiu o limite de requisições em uma determinada rota.
+ * Implementação utilizando Sliding Window Log (Sorted Set) no Redis.
  */
-export class RateLimiter {
-    private limit: number;
-    private windowMs: number;
+export async function isRateLimited(
+    identifier: string,
+    route: string,
+    config: RateLimitConfig
+): Promise<boolean> {
+    const key = `rate:limit:${identifier}:${route}`;
+    const now = Date.now();
+    const clearBefore = now - config.windowSeconds * 1000;
 
-    constructor(limit: number, windowMs: number) {
-        this.limit = limit;
-        this.windowMs = windowMs;
+    const pipeline = redis.pipeline();
+    // 1. Remove timestamps fora da janela de tempo atual
+    pipeline.zremrangebyscore(key, 0, clearBefore);
+    // 2. Adiciona o timestamp atual
+    pipeline.zadd(key, now, now.toString());
+    // 3. Obtém o número de registros presentes na janela
+    pipeline.zcard(key);
+    // 4. Renova a expiração da chave para limpeza automática do Redis
+    pipeline.expire(key, config.windowSeconds * 2);
+
+    const results = await pipeline.exec();
+    if (!results) return false;
+
+    // O ZCARD está no índice 2 do pipeline
+    const cardResult = results[2];
+    if (cardResult && cardResult[1] !== null) {
+        const count = cardResult[1] as number;
+        return count > config.limit;
     }
 
-    async check(key: string): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {
-        const now = Date.now();
-        const info = memoryStore.get(key);
-
-        if (!info || now > info.resetTime) {
-            // New window
-            const newInfo = {
-                count: 1,
-                resetTime: now + this.windowMs
-            };
-            memoryStore.set(key, newInfo);
-            return {
-                success: true,
-                limit: this.limit,
-                remaining: this.limit - 1,
-                reset: newInfo.resetTime
-            };
-        }
-
-        if (info.count >= this.limit) {
-            return {
-                success: false,
-                limit: this.limit,
-                remaining: 0,
-                reset: info.resetTime
-            };
-        }
-
-        info.count += 1;
-        return {
-            success: true,
-            limit: this.limit,
-            remaining: this.limit - info.count,
-            reset: info.resetTime
-        };
-    }
+    return false;
 }
-
-// Pre-defined limiters
-export const aiContentLimiter = new RateLimiter(20, 60 * 60 * 1000); // 20 requisições por hora
-export const quizLimiter = new RateLimiter(50, 60 * 1000); // 50 questões por minuto
