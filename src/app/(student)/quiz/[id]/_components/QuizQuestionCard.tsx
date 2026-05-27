@@ -106,13 +106,52 @@ export function QuizQuestionCard({
                 })}
             </div>
 
+            {/* Botão de ação (apenas enviar resposta) */}
+            {!showingFeedback && (
+                <div className="flex justify-end pt-2 mt-4 shrink-0">
+                    <Button
+                        disabled={selectedOption === null || fetchingAi}
+                        onClick={onAnswer}
+                        className="px-8 py-5 text-sm font-bold rounded-xl bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95 w-full"
+                    >
+                        {fetchingAi ? "Analisando..." : "Enviar Resposta"}
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export function QuizFeedbackPanel({
+    showingFeedback,
+    fetchingAi,
+    isCorrect,
+    hasContent,
+    isStreaming,
+    displayText,
+    onProceed,
+    isLastQuestion
+}: {
+    showingFeedback: boolean;
+    fetchingAi: boolean;
+    isCorrect: boolean;
+    hasContent: boolean;
+    isStreaming: boolean;
+    displayText: string;
+    onProceed: () => void;
+    isLastQuestion?: boolean;
+}) {
+    if (!showingFeedback) return null;
+
+    return (
+        <div className="flex flex-col h-full gap-4">
             {/* Feedback da IA — streaming ou estático */}
-            {showingFeedback && (hasContent || isStreaming) && (
+            {(hasContent || isStreaming) && (
                 <div className={`
-                    p-4 rounded-xl border animate-in slide-in-from-bottom-2 fade-in duration-500
+                    p-4 rounded-xl border animate-in slide-in-from-bottom-2 fade-in duration-500 flex-1 overflow-y-auto scrollbar-thin
                     ${isCorrect ? "bg-green-50/70 border-green-200" : "bg-blue-50/70 border-blue-200"}
                 `}>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200/50 sticky top-0 bg-inherit z-10">
                         <span className="text-base">{isCorrect ? "🏅" : "🎓"}</span>
                         <h3 className={`font-bold text-sm ${isCorrect ? "text-green-700" : "text-blue-700"}`}>
                             {isCorrect ? "Excelente!" : "Tutor IA"}
@@ -134,36 +173,25 @@ export function QuizQuestionCard({
             )}
 
             {/* Spinner enquanto aguarda o início do stream */}
-            {showingFeedback && !hasContent && !isStreaming && fetchingAi && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+            {!hasContent && !isStreaming && fetchingAi && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100 flex-1">
                     <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     <span className="text-slate-500 text-sm">Tutor IA analisando sua resposta...</span>
                 </div>
             )}
 
-            {/* Botão de ação */}
-            <div className="flex justify-end pt-2">
-                {!showingFeedback ? (
-                    <Button
-                        disabled={selectedOption === null || fetchingAi}
-                        onClick={onAnswer}
-                        className="px-8 py-5 text-sm font-bold rounded-xl bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95"
-                    >
-                        {fetchingAi ? "Analisando..." : "Enviar Resposta"}
-                    </Button>
-                ) : (
-                    <Button
-                        disabled={isStreaming}
-                        onClick={onProceed}
-                        className={`
-                            px-8 py-5 text-sm font-bold rounded-xl shadow-md transition-all active:scale-95
-                            ${isStreaming ? "opacity-50 cursor-not-allowed" : ""}
-                            ${isCorrect ? "bg-green-600 hover:bg-green-700" : "bg-slate-800 hover:bg-slate-900 text-white"}
-                        `}
-                    >
-                        {isStreaming ? "Aguarde..." : isLastQuestion ? "Finalizar Questionário" : (isCorrect ? "Continuar" : "Próxima Questão")}
-                    </Button>
-                )}
+            <div className="flex justify-end pt-2 mt-auto shrink-0">
+                <Button
+                    disabled={isStreaming}
+                    onClick={onProceed}
+                    className={`
+                        w-full py-5 text-sm font-bold rounded-xl shadow-md transition-all active:scale-95
+                        ${isStreaming ? "opacity-50 cursor-not-allowed" : ""}
+                        ${isCorrect ? "bg-green-600 hover:bg-green-700 text-white" : "bg-slate-800 hover:bg-slate-900 text-white"}
+                    `}
+                >
+                    {isStreaming ? "Aguarde..." : isLastQuestion ? "Finalizar Questionário" : (isCorrect ? "Continuar" : "Próxima Questão")}
+                </Button>
             </div>
         </div>
     );

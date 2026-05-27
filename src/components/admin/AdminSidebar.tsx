@@ -19,7 +19,9 @@ import {
   Settings,
   ArrowLeft,
   LogOut,
-  FolderOpen
+  FolderOpen,
+  BarChart,
+  BrainCircuit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -105,6 +107,25 @@ export function AdminSidebar() {
       ],
     },
     {
+      title: "Métricas e Analytics",
+      items: [
+        {
+          name: "Analytics Educacional",
+          href: "/dashboard/analytics",
+          icon: BarChart,
+          active: pathname.startsWith("/dashboard/analytics"),
+          disabled: false,
+        },
+        {
+          name: "Métricas da IA",
+          href: "/dashboard/ai-metrics",
+          icon: BrainCircuit,
+          active: pathname.startsWith("/dashboard/ai-metrics"),
+          disabled: false,
+        },
+      ],
+    },
+    {
       title: "Relatórios",
       items: [
         {
@@ -130,6 +151,7 @@ export function AdminSidebar() {
         },
       ],
     },
+
     {
       title: "Configurações",
       items: [
@@ -220,16 +242,14 @@ export function AdminSidebar() {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/item ${
-                        item.active
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/item ${item.active
                           ? "bg-blue-50 text-blue-600 font-semibold shadow-sm shadow-blue-500/5"
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
+                        }`}
                     >
                       <Icon
-                        className={`w-4 h-4 transition-transform group-hover/item:scale-110 duration-200 ${
-                          item.active ? "text-blue-600" : "text-slate-400 group-hover/item:text-slate-600"
-                        }`}
+                        className={`w-4 h-4 transition-transform group-hover/item:scale-110 duration-200 ${item.active ? "text-blue-600" : "text-slate-400 group-hover/item:text-slate-600"
+                          }`}
                       />
                       <span className="text-sm font-medium">{item.name}</span>
                       {item.active && (

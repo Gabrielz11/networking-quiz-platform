@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { QuizLoadingState } from "./_components/QuizLoadingState";
 import { QuizResultsCard } from "./_components/QuizResultsCard";
 import { QuizProgressBar } from "./_components/QuizProgressBar";
-import { QuizQuestionCard } from "./_components/QuizQuestionCard";
+import { QuizQuestionCard, QuizFeedbackPanel } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useStreamingExplanation } from "@/hooks/useStreamingExplanation";
@@ -244,56 +244,98 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     }
 
     return (
-        <div className="container mx-auto py-4 px-4 max-w-xl">
-            <div className="mb-3">
-                <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-1 w-fit text-sm">
-                    &larr; Voltar para o Módulo
-                </Button>
+        <div className="container mx-auto py-4 px-4 h-[calc(100vh-120px)] max-w-6xl overflow-hidden flex flex-col">
+            <div className={`grid gap-8 h-full ${showingFeedback ? "md:grid-cols-2" : "max-w-xl mx-auto w-full"}`}>
+                
+                {/* Lado Esquerdo - Pergunta e Opções */}
+                <div className="flex flex-col h-full overflow-y-auto scrollbar-thin pr-2 pb-4">
+                    <div className="mb-3 shrink-0">
+                        <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-1 w-fit text-sm">
+                            &larr; Voltar para o Módulo
+                        </Button>
+                    </div>
+
+                    <div className="shrink-0">
+                        <QuizProgressBar
+                            questionsAnswered={questionsAnswered}
+                            totalQuestions={10}
+                            currentDifficulty={currentDifficulty.toLowerCase() as any}
+                        />
+                    </div>
+
+                    {error ? (
+                        <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                            <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
+                                <h3 className="text-base font-semibold text-red-700">Ops! Algo deu errado</h3>
+                                <p className="text-red-500 mt-1 text-sm">{error}</p>
+                            </div>
+                            <Button
+                                onClick={() => sessionId && fetchNextQuestion(sessionId)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                            >
+                                Tentar Novamente
+                            </Button>
+                        </div>
+                    ) : (generatingQuestion || !currentQuestion) ? (
+                        <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                            <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="text-center">
+                                <h3 className="text-base font-semibold text-slate-700">IA gerando questão adaptativa...</h3>
+                                <p className="text-slate-400 mt-1 text-sm">Personalizando o nível para você.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mt-4 flex-1">
+                            <QuizQuestionCard
+                                currentQuestion={currentQuestion as any}
+                                selectedOption={selectedOption}
+                                showingFeedback={showingFeedback}
+                                fetchingAi={loading}
+                                aiFeedback={correctIndex !== null ? { explanationAi: null, correctIndex } : null}
+                                streamedText={showingFeedback ? streamedText : undefined}
+                                isStreaming={isStreaming}
+                                onSelectOption={setSelectedOption}
+                                onAnswer={handleAnswer}
+                                onProceed={handleProceedAfterFeedback}
+                                correctOptionIndexFromServer={correctIndex ?? undefined}
+                                isLastQuestion={questionsAnswered + 1 >= 10}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Lado Direito - Feedback da IA (Só aparece quando houver resposta) */}
+                {showingFeedback && currentQuestion && (
+                    <div className="h-full overflow-hidden border-l border-slate-100 pl-4 hidden md:block">
+                        <QuizFeedbackPanel
+                            showingFeedback={showingFeedback}
+                            fetchingAi={loading}
+                            isCorrect={correctIndex === selectedOption}
+                            hasContent={(streamedText !== undefined ? streamedText : "").length > 0}
+                            isStreaming={isStreaming}
+                            displayText={streamedText !== undefined ? streamedText : ""}
+                            onProceed={handleProceedAfterFeedback}
+                            isLastQuestion={questionsAnswered + 1 >= 10}
+                        />
+                    </div>
+                )}
+                
+                {/* Mobile version for feedback */}
+                {showingFeedback && currentQuestion && (
+                    <div className="md:hidden mt-4 pb-4">
+                        <QuizFeedbackPanel
+                            showingFeedback={showingFeedback}
+                            fetchingAi={loading}
+                            isCorrect={correctIndex === selectedOption}
+                            hasContent={(streamedText !== undefined ? streamedText : "").length > 0}
+                            isStreaming={isStreaming}
+                            displayText={streamedText !== undefined ? streamedText : ""}
+                            onProceed={handleProceedAfterFeedback}
+                            isLastQuestion={questionsAnswered + 1 >= 10}
+                        />
+                    </div>
+                )}
             </div>
-
-            <QuizProgressBar
-                questionsAnswered={questionsAnswered}
-                totalQuestions={10}
-                currentDifficulty={currentDifficulty.toLowerCase() as any}
-            />
-
-            {error ? (
-                <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                    <div className="bg-red-50 p-4 rounded-lg border border-red-100 text-center">
-                        <h3 className="text-base font-semibold text-red-700">Ops! Algo deu errado</h3>
-                        <p className="text-red-500 mt-1 text-sm">{error}</p>
-                    </div>
-                    <Button
-                        onClick={() => sessionId && fetchNextQuestion(sessionId)}
-                        className="bg-blue-600 hover:bg-blue-700"
-                    >
-                        Tentar Novamente
-                    </Button>
-                </div>
-            ) : (generatingQuestion || !currentQuestion) ? (
-                <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                    <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <div className="text-center">
-                        <h3 className="text-base font-semibold text-slate-700">IA gerando questão adaptativa...</h3>
-                        <p className="text-slate-400 mt-1 text-sm">Personalizando o nível para você.</p>
-                    </div>
-                </div>
-            ) : (
-                <QuizQuestionCard
-                    currentQuestion={currentQuestion as any}
-                    selectedOption={selectedOption}
-                    showingFeedback={showingFeedback}
-                    fetchingAi={loading}
-                    aiFeedback={correctIndex !== null ? { explanationAi: null, correctIndex } : null}
-                    streamedText={showingFeedback ? streamedText : undefined}
-                    isStreaming={isStreaming}
-                    onSelectOption={setSelectedOption}
-                    onAnswer={handleAnswer}
-                    onProceed={handleProceedAfterFeedback}
-                    correctOptionIndexFromServer={correctIndex ?? undefined}
-                    isLastQuestion={questionsAnswered + 1 >= 10}
-                />
-            )}
         </div>
     );
 }

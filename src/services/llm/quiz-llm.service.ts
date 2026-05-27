@@ -126,7 +126,7 @@ ${sanitizedModuleContent}`;
                 temperature: 0.6,
                 moduleId,
                 sessionId,
-                useCritic: true,
+                useCritic: false,
                 maxRetries: 1,
                 skipCache: true, // Questões precisam de variedade — nunca cachear
                 responseSchema: {
