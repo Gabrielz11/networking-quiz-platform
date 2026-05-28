@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { QuizLlmService } from "@/services/llm/quiz-llm.service";
+import { QuizQuestionGenerationService } from "@/services/generation/quiz-question-generation.service";
 import { Logger } from "@/lib/logger";
 import { isRateLimited } from "@/lib/rate-limit";
 
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         //Ajuda porém não é 100% eficaz, pois a IA pode gerar perguntas similares mesmo com essa instrução.
         //Mas é melhor do que nada.
         const previousPrompts = session.questions.map(q => q.prompt);
-        const qData = await QuizLlmService.generate(
+        const qData = await QuizQuestionGenerationService.generate(
             difficulty,
             moduleContent,
             previousPrompts,

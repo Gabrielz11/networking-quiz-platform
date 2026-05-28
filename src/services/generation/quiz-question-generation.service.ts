@@ -1,75 +1,15 @@
 import { LlmRouter } from "@/services/ai/llm-router";
 import { Logger } from "@/lib/logger";
 import { env } from "@/lib/env";
-import { z } from "zod";
+import { QuestionSchema, GeneratedQuestion } from "./schemas/quiz-question.schema";
+import { buildQuizPrompt, QuestionDifficulty } from "./prompts/quiz-question.prompt";
+import { parseCorrectOptionIndex } from "./utils/parse-correct-option-index";
+import { shuffleQuestionOptions } from "./utils/shuffle-question-options";
+import { getSafeContent } from "./utils/safe-content";
 
-const logger = new Logger("QuizLlmService");
+const logger = new Logger("QuizQuestionGenerationService");
 
-type QuestionDifficulty = "EASY" | "MEDIUM" | "HARD";
-
-const QuestionSchema = z.object({
-    prompt: z
-        .string()
-        .trim()
-        .min(10, "O enunciado deve ter pelo menos 10 caracteres.")
-        .max(1000, "O enunciado não pode ultrapassar 1000 caracteres."),
-    options: z
-        .array(z.string().trim().min(1).max(500))
-        .length(4, "Devem ser exatamente 4 opções.")
-        .refine(
-            (opts) => new Set(opts.map((o) => o.trim().toLowerCase())).size === 4,
-            { message: "As opções devem ser únicas." }
-        ),
-    correct_option_index: z.number().int().min(0).max(3),
-    explanation: z.string().trim().min(10).max(2000),
-}).strict();
-
-export type GeneratedQuestion = z.infer<typeof QuestionSchema>;
-
-function buildQuizPrompt(
-    difficulty: QuestionDifficulty,
-    moduleContent: string,
-    previousPrompts: string[]
-): string {
-    const avoidSection = previousPrompts.length > 0
-        ? `\n A nova questão deve abordar um conceito, cenário ou aplicação diferente. 
-        Evite criar uma questão apenas reformulando perguntas anteriores.
-        As alternativas incorretas devem ser tecnicamente plausíveis, não absurdas.
-        NÃO repita os seguintes temas já abordados nesta sessão:\n- ${previousPrompts.join("\n- ")}\n`
-        : "";
-
-    return `Gere EXATAMENTE UMA questão de múltipla escolha sobre o conteúdo abaixo.
-
-Nível: ${difficulty}
-- EASY: conceito básico e definição direta.
-- MEDIUM: relação entre conceitos ou processo técnico.
-- HARD: crie um cenário prático com contexto técnico realista e alternativas plausíveis.
-${avoidSection}
-Retorne SOMENTE um JSON válido nesta estrutura (sem texto extra, sem markdown):
-{
-  "prompt": "Enunciado claro e objetivo",
-  "options": ["Opção A", "Opção B", "Opção C", "Opção D"],
-  "correct_option_index": 0,
-  "explanation": "Explicação técnica de 2 a 4 frases sobre por que a resposta está correta."
-}
-
-Conteúdo do módulo:
-${moduleContent.trim()}`;
-}
-
-function parseCorrectOptionIndex(raw: unknown): number {
-    if (typeof raw === "number") return raw;
-    if (typeof raw === "string") {
-        const str = raw.trim().toUpperCase();
-        if (str === "0" || str === "A") return 0;
-        if (str === "1" || str === "B") return 1;
-        if (str === "2" || str === "C") return 2;
-        if (str === "3" || str === "D") return 3;
-    }
-    return -1;
-}
-
-export class QuizLlmService {
+export class QuizQuestionGenerationService {
     /**
      * Gera uma questão adaptativa de quiz baseada no conteúdo do módulo.
      */
@@ -84,9 +24,7 @@ export class QuizLlmService {
             throw new Error("O conteúdo do módulo não pode estar vazio.");
         }
 
-        const MAX_MODULE_CONTENT_CHARS = 15000;
-        const safeModuleContent = moduleContent.trim().slice(0, MAX_MODULE_CONTENT_CHARS);
-
+        const safeModuleContent = getSafeContent(moduleContent);
         const prompt = buildQuizPrompt(difficulty, safeModuleContent, previousPrompts);
 
         logger.info("generate", "Gerando questão adaptativa", {
@@ -137,18 +75,10 @@ export class QuizLlmService {
 
                 const validated = parsed.data;
 
-                const optionsAsObjects = validated.options.map((text, index) => ({
-                    text,
-                    isCorrect: index === validated.correct_option_index
-                }));
-
-                for (let i = optionsAsObjects.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [optionsAsObjects[i], optionsAsObjects[j]] = [optionsAsObjects[j], optionsAsObjects[i]];
-                }
-
-                const newCorrectIndex = optionsAsObjects.findIndex(opt => opt.isCorrect);
-                const shuffledTexts = optionsAsObjects.map(opt => opt.text);
+                const { options: shuffledTexts, correct_option_index: newCorrectIndex } = shuffleQuestionOptions(
+                    validated.options,
+                    validated.correct_option_index
+                );
 
                 logger.info("generate", "Questão gerada e embaralhada com sucesso", {
                     difficulty,

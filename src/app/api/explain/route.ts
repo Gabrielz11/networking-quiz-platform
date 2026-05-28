@@ -1,4 +1,4 @@
-import { ExplainService } from "@/services/explain.service";
+import { ExplainService } from "@/services/generation/explanation-generation.service";
 import { Logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import { isRateLimited } from "@/lib/rate-limit";

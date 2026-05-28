@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { BatchLlmService } from "@/services/llm/batch-llm.service";
+import { BatchQuizGenerationService } from "@/services/generation/batch-quiz-generation.service";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("GenerateQuestionsRoute");
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
         }
 
         // Gera questões via BatchLlmService (AiService → Gemini + fallback Groq)
-        const questions = await BatchLlmService.generate(title, content, moduleId);
+        const questions = await BatchQuizGenerationService.generate(title, content, moduleId);
 
         // Limpar questões antigas via Prisma
         await prisma.question.deleteMany({
