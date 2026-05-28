@@ -5,7 +5,7 @@ export interface AdaptiveResult {
     nextErrors: number;
 }
 
-export class QuizService {
+export class QuizProgressionService {
     /**
      * Calcula a progressão adaptativa do quiz baseado nas regras do PDR v3.0.
      * - Acerto: Sobe de nível imediatamente (EASY → MEDIUM → HARD).

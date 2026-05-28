@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { renderModuleMarkdown } from "@/lib/markdown";
 import { Button } from "@/components/ui/button";
-import { ModuleTopNav } from "./_components/ModuleTopNav";
 import { ModuleHero } from "./_components/ModuleHero";
 import { ModuleArticleBody } from "./_components/ModuleArticleBody";
 import { ModuleArticleFooter } from "./_components/ModuleArticleFooter";
 import { auth } from "@/auth";
 import { ActivityService } from "@/services/activity.service";
+import { ChevronLeft } from "lucide-react";
+import { ScrollToTopButton } from "./_components/ScrollToTopButton";
 
 export const revalidate = 0;
 
@@ -54,15 +55,23 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
 
     return (
         <div className="min-h-screen bg-[#f3f6f9] pb-20">
-            <ModuleTopNav backHref="/student" />
+            <main className="container mx-auto mt-10 px-4 lg:px-20 max-w-[1280px] pb-24 flex gap-6 items-start">
+                {/* Botão de voltar flutuante e sticky lateral (Estilo Stripe Docs) */}
+                <div className="hidden lg:block sticky top-28 h-fit shrink-0 -ml-16 mr-6 z-20">
+                    <Link href="/student">
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full bg-white shadow-md border border-gray-100 hover:bg-gray-50 text-gray-400 hover:text-blue-600 active:scale-95 transition-all group">
+                            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                        </Button>
+                    </Link>
+                </div>
 
-            <main className="container mx-auto mt-10 px-4 md:px-10 max-w-[1440px] pb-24">
-                <div className="bg-white shadow-xl shadow-gray-200/50 border border-gray-100 rounded-3xl overflow-hidden min-h-[90vh]">
+                <div className="flex-1 bg-white shadow-xl shadow-gray-200/50 border border-gray-100 rounded-3xl overflow-hidden min-h-[90vh]">
                     <ModuleHero
                         title={moduleData.title}
                         formattedDate={formattedDate}
                         authorName={moduleData.author?.name || "Corpo Acadêmico"}
                         linkedinShareUrl={linkedinShareUrl}
+                        moduleId={moduleData.id}
                     />
 
                     <ModuleArticleBody
@@ -75,8 +84,9 @@ export default async function ModulePage({ params }: { params: Promise<{ id: str
                         <ModuleArticleFooter moduleId={moduleData.id} />
                     </div>
                 </div>
-            </main>
 
+                <ScrollToTopButton />
+            </main>
         </div>
     );
 }

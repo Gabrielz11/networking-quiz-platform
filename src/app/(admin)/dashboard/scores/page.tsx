@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { DashboardQueryService } from "@/services/dashboard-query.service";
+import { DashboardQueryService } from "@/services/analytics/dashboard-query.service";
 import { ScoresLayout } from "./_components/ScoresLayout";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";

@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { DashboardQueryService } from "@/services/dashboard-query.service";
+import { DashboardQueryService } from "@/services/analytics/dashboard-query.service";
 
 /**
  * Busca a lista de alunos com cache de 60 segundos.

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { prompt, base_explanation, student_answer, correct_answer, moduleId, sessionId } = await req.json();
+        const { questionId, prompt, base_explanation, student_answer, correct_answer, moduleId, sessionId } = await req.json();
 
         // Gera stream de explicação pedagógica
         const stream = await ExplainService.generateExplanationStream(
@@ -29,10 +29,11 @@ export async function POST(req: Request) {
             student_answer,
             correct_answer,
             moduleId,
-            sessionId
+            sessionId,
+            questionId
         );
 
-        logger.info("POST", "Streaming de explicação iniciado", { identifier });
+        logger.info("POST", "Streaming de explicação iniciado", { identifier, questionId });
 
         return new Response(stream, {
             status: 200,

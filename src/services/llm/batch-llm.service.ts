@@ -1,4 +1,4 @@
-import { AiService } from "@/services/ai.service";
+import { LlmRouter } from "@/services/ai/llm-router";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("BatchLlmService");
@@ -48,7 +48,7 @@ export class BatchLlmService {
 
         logger.info("generate", "Gerando lote de questões", { title });
 
-        const data = await AiService.generateJson<BatchResponse>(prompt, {
+        const data = await LlmRouter.generateJson<BatchResponse>(prompt, {
             pipeline: "QUIZ_GEN",
             moduleId,
             responseSchema: {
@@ -87,7 +87,7 @@ export class BatchLlmService {
         // Validação forte de cada item
         const validDifficulties = ["easy", "medium", "hard"];
 
-        data.questions.forEach((q, index) => {
+        data.questions.forEach((q: GeneratedBatchQuestion, index: number) => {
             if (
                 typeof q.prompt !== "string" ||
                 q.prompt.trim() === "" ||

@@ -19,9 +19,9 @@ export default async function StudentDashboard() {
     }),
     userId
       ? prisma.studentModuleScore.findMany({
-          where: { userId },
-          orderBy: { completedAt: "desc" },
-        })
+        where: { userId },
+        orderBy: { completedAt: "desc" },
+      })
       : Promise.resolve([]),
   ]);
 
@@ -75,15 +75,15 @@ export default async function StudentDashboard() {
               <Link key={mod.id} href={`/module/${mod.id}`} className="block group">
                 <Card className="hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col relative overflow-hidden bg-white h-full">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-                  
+
                   {/* Badge de Desempenho no canto superior direito */}
-                  <div className="absolute top-4 right-4 z-10">
+                  <div className="absolute top-0.5 right-2 z-8">
                     <Badge variant="outline" className={`text-[10px] font-bold border px-1.5 py-0.5 rounded-md ${badgeConfig.style}`}>
                       {badgeConfig.label}
                     </Badge>
                   </div>
 
-                  <CardHeader className="flex-1 pr-24">
+                  <CardHeader className="flex-1 pr-28">
                     <CardTitle className="text-xl font-bold group-hover:text-blue-600 transition-colors">
                       {mod.title}
                     </CardTitle>

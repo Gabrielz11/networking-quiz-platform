@@ -1,38 +1,130 @@
-import { AiService } from "@/services/ai.service";
+import { LlmRouter } from "@/services/ai/llm-router";
 import { Logger } from "@/lib/logger";
+import { env } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 
 const logger = new Logger("ExplainService");
 
-const EXPLAIN_SYSTEM_PROMPT = `Você é um professor universitário especializado em Redes de Computadores 
-com foco em IPv6. Um aluno respondeu incorretamente a uma questão de redes, e sua tarefa é explicar 
-o erro de forma clara, encorajadora e pedagógica, ajudando o aluno a compreender o conceito correto. 
-Comece reconhecendo o esforço do aluno com um tom motivador, depois explique de forma objetiva por que 
-a resposta está incorreta, apontando qual conceito foi confundido; em seguida apresente o conceito correto 
-de maneira simples e didática, utilizando exemplos quando possível; relacione esse conceito com situações 
-reais de redes IPv6 ou infraestrutura de rede para reforçar a compreensão prática; e finalize com um breve
-resumo que consolide o aprendizado, sempre usando linguagem acessível, evitando tom punitivo e incentivando 
-o aluno a continuar aprendendo.`;
+const EXPLAIN_SYSTEM_PROMPT = `Você é um professor universitário especializado em Redes de Computadores com foco em IPv6.
+Um aluno respondeu incorretamente a uma questão. Explique o erro de forma clara, pedagógica e encorajadora.
+Estruture a explicação em até 3 parágrafos curtos:
+1. Reconheça o esforço do aluno e indique onde ele errou.
+2. Explique o conceito correto de forma didática, usando exemplo prático quando possível.
+3. Consolide o aprendizado com uma frase motivadora.
+Use linguagem acessível. Não use asteriscos, travessões ou markdown.`;
 
-function buildExplainPrompt(
-    prompt: string,
+function buildPrompt(prompt: string,
     baseExplanation: string,
     studentAnswer: string,
-    correctAnswer: string,
+    correctAnswer: string
 ): string {
-    return `Questão: ${prompt}
-Resposta correta: ${correctAnswer}
-Resposta do aluno: ${studentAnswer}
+    return `Questão: 
+${prompt}
 
-[ESTRUTURA BASE PARA A EXPLICAÇÃO - USE ISTO COMO GUIA]
+Resposta correta: 
+${correctAnswer}
+
+Resposta do aluno: 
+${studentAnswer}
+
+Explicação-base:
 ${baseExplanation}
 
-Explique o erro do aluno baseando-se na estrutura acima. Seja claro, direto e limite-se a 1-3 parágrafos pequenos.`;
+Instruções:
+Use a explicação-base como fonte principal.
+Não contradiga a explicação-base.
+Caso a resposta do aluno esteja parcialmente correta, reconheça a parte correta antes de explicar o erro.
+Explique o erro de forma clara, direta e pedagógica.`;
+}
+
+function validateExplainInput(
+    prompt?: string,
+    baseExplanation?: string,
+    studentAnswer?: string,
+    correctAnswer?: string
+): void {
+    if (!prompt?.trim()) {
+        throw new Error("A questão não pode estar vazia.");
+    }
+
+    if (!baseExplanation?.trim()) {
+        throw new Error("A explicação-base não pode estar vazia.");
+    }
+
+    if (!studentAnswer?.trim()) {
+        throw new Error("A resposta do aluno não pode estar vazia.");
+    }
+
+    if (!correctAnswer?.trim()) {
+        throw new Error("A resposta correta não pode estar vazia.");
+    }
 }
 
 export class ExplainService {
     /**
-     * Gera uma explicação pedagógica personalizada (resposta completa, sem streaming).
-     * Mantido para compatibilidade e uso futuro.
+     * Gera explicação pedagógica personalizada em streaming.
+     * Usado pela rota /api/explain.
+     */
+    static async generateExplanationStream(
+        prompt: string,
+        baseExplanation: string,
+        studentAnswer: string,
+        correctAnswer: string,
+        moduleId?: string,
+        sessionId?: string,
+        questionId?: string
+    ): Promise<ReadableStream<Uint8Array>> {
+        validateExplainInput(prompt, baseExplanation, studentAnswer, correctAnswer);
+        const promptText = buildPrompt(prompt, baseExplanation, studentAnswer, correctAnswer);
+
+        logger.info("generateExplanationStream", "Gerando explicação em streaming");
+
+        const stream = await LlmRouter.generateTextStream(promptText, {
+            modelName: env.REASONING_FALLBACK_MODEL,
+            systemInstruction: EXPLAIN_SYSTEM_PROMPT,
+            temperature: 0.5,
+            pipeline: "EXPLANATION",
+            moduleId,
+            sessionId,
+        });
+
+        if (!questionId) {
+            return stream;
+        }
+
+        let accumulatedText = "";
+        const decoder = new TextDecoder();
+        
+        const transformStream = new TransformStream<Uint8Array, Uint8Array>({
+            transform(chunk, controller) {
+                accumulatedText += decoder.decode(chunk, { stream: true });
+                controller.enqueue(chunk);
+            },
+            async flush() {
+                accumulatedText += decoder.decode();
+                if (accumulatedText.trim()) {
+                    try {
+                        await prisma.questionInstance.update({
+                            where: { id: questionId },
+                            data: { explanation: accumulatedText.trim() }
+                        });
+                        logger.info("generateExplanationStream", "Explicação personalizada salva no banco de dados", { questionId });
+                    } catch (dbErr: any) {
+                        logger.error("generateExplanationStream", "Erro ao salvar explicação no banco", {
+                            questionId,
+                            error: dbErr.message
+                        });
+                    }
+                }
+            }
+        });
+
+        return stream.pipeThrough(transformStream);
+    }
+
+    /**
+     * Gera explicação pedagógica completa (sem streaming).
+     * Mantido para uso futuro.
      */
     static async generateExplanation(
         prompt: string,
@@ -42,41 +134,18 @@ export class ExplainService {
         moduleId?: string,
         sessionId?: string
     ): Promise<string> {
-        const promptText = buildExplainPrompt(prompt, baseExplanation, studentAnswer, correctAnswer);
+        validateExplainInput(prompt, baseExplanation, studentAnswer, correctAnswer);
+        const promptText = buildPrompt(prompt, baseExplanation, studentAnswer, correctAnswer);
 
         logger.info("generateExplanation", "Gerando explicação pedagógica");
 
-        return AiService.generateText(promptText, {
+        return LlmRouter.generateText(promptText, {
+            modelName: env.REASONING_FALLBACK_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
-            temperature: 0.7,
+            temperature: 0.6,
             pipeline: "EXPLANATION",
             moduleId,
-            sessionId
-        });
-    }
-
-    /**
-     * Gera uma explicação pedagógica em modo streaming (ReadableStream de texto puro).
-     * Usado pela route /api/explain para SSE em tempo real.
-     */
-    static async generateExplanationStream(
-        prompt: string,
-        baseExplanation: string,
-        studentAnswer: string,
-        correctAnswer: string,
-        moduleId?: string,
-        sessionId?: string
-    ): Promise<ReadableStream<Uint8Array>> {
-        const promptText = buildExplainPrompt(prompt, baseExplanation, studentAnswer, correctAnswer);
-
-        logger.info("generateExplanationStream", "Gerando explicação em streaming");
-
-        return AiService.generateTextStream(promptText, {
-            systemInstruction: EXPLAIN_SYSTEM_PROMPT,
-            temperature: 0.7,
-            pipeline: "EXPLANATION",
-            moduleId,
-            sessionId
+            sessionId,
         });
     }
 }

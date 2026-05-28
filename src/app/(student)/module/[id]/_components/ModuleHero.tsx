@@ -7,23 +7,34 @@ interface ModuleHeroProps {
     formattedDate: string;
     authorName: string;
     linkedinShareUrl: string;
+    moduleId: string;
 }
 
-export function ModuleHero({ title, formattedDate, authorName, linkedinShareUrl }: ModuleHeroProps) {
+export function ModuleHero({ title, formattedDate, authorName, linkedinShareUrl, moduleId }: ModuleHeroProps) {
     return (
         <div className="p-8 md:p-12 lg:p-8 border-b bg-gray-50/30">
-            {/* Breadcrumb sutil */}
-            <nav className="flex text-[12px] uppercase font-black tracking-[0.2em] text-gray-400 mb-3 gap-2 items-center">
-                <Link href="/student" className="hover:text-blue-700">Portal do Aluno</Link>
+            {/* Breadcrumb sutil com micro-interação de voltar */}
+            <nav className="flex text-[12px] uppercase font-black tracking-[0.2em] text-gray-400 mb-8 gap-2 items-center">
+                <Link href="/student" className="hover:text-blue-700 group flex items-center transition-all duration-200">
+                    <span className="inline-block transition-all duration-200 transform translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 w-0 group-hover:w-3.5 mr-0 group-hover:mr-1 text-sm font-normal">←</span>
+                    Portal do Aluno
+                </Link>
                 <span className="text-gray-300">/</span>
                 <span>Módulos Ativos</span>
                 <span className="text-gray-300">/</span>
                 <span className="text-blue-600">Panorama Técnico</span>
             </nav>
 
-            <h1 className="text-3xl md:text-5xl lg:text-5xl font-black text-[#003366] leading-[1.1] mb-10 tracking-tighter">
-                {title}
-            </h1>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+                <h1 className="text-3xl md:text-5xl lg:text-5xl font-black text-[#003366] leading-[1.1] tracking-tighter max-w-4xl">
+                    {title}
+                </h1>
+                <Link href={`/quiz/${moduleId}`} className="shrink-0 mt-2 md:mt-0">
+                    <Button className="bg-[#003366] hover:bg-[#002244] text-white px-5 py-2.5 rounded-full text-xs font-black transition-all shadow-md active:scale-95 flex items-center gap-1.5 h-9">
+                        Fazer Quiz
+                    </Button>
+                </Link>
+            </div>
 
             <div className="flex flex-wrap items-center justify-between gap-8 border-y-2 py-8 border-gray-100/50">
                 <div className="flex items-center gap-6 text-xs text-gray-500 font-medium">
@@ -49,6 +60,7 @@ export function ModuleHero({ title, formattedDate, authorName, linkedinShareUrl 
                         <LinkedinIcon className="w-4 h-4" />
                         LinkedIn
                     </a>
+
                     <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-gray-400 hover:bg-gray-50 border">
                         <Printer className="w-4 h-4" />
                     </Button>

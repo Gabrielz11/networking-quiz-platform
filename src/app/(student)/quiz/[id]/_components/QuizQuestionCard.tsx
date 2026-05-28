@@ -108,13 +108,25 @@ export function QuizQuestionCard({
 
             {/* Botão de ação (apenas enviar resposta) */}
             {!showingFeedback && (
-                <div className="flex justify-end pt-2 mt-4 shrink-0">
+                <div className="flex justify-center pt-2 mt-4 shrink-0">
                     <Button
                         disabled={selectedOption === null || fetchingAi}
                         onClick={onAnswer}
                         className="px-8 py-5 text-sm font-bold rounded-xl bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95 w-full"
                     >
                         {fetchingAi ? "Analisando..." : "Enviar Resposta"}
+                    </Button>
+                </div>
+            )}
+
+            {/* Botão de continuar (quando acertou a questão) */}
+            {showingFeedback && isCorrect && (
+                <div className="flex justify-center pt-2 mt-4 shrink-0">
+                    <Button
+                        onClick={onProceed}
+                        className="px-8 py-5 text-sm font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white shadow-md transition-all active:scale-95 w-full"
+                    >
+                        {isLastQuestion ? "Finalizar Questionário" : "Continuar"}
                     </Button>
                 </div>
             )}
@@ -180,7 +192,7 @@ export function QuizFeedbackPanel({
                 </div>
             )}
 
-            <div className="flex justify-end pt-2 mt-auto shrink-0">
+            <div className="flex justify-center pt-2 mt-auto shrink-0">
                 <Button
                     disabled={isStreaming}
                     onClick={onProceed}

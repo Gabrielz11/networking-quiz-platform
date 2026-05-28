@@ -1,6 +1,7 @@
-import { AIOrchestrator } from "@/services/ai/orchestrator.service";
-import { CONTENT_TIMEOUT_MS } from "@/services/ai.service";
+import { LlmRouter } from "@/services/ai/llm-router";
+import { CONTENT_TIMEOUT_MS } from "@/services/ai/types";
 import { Logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 
 const logger = new Logger("ContentLlmService");
 
@@ -72,14 +73,11 @@ export class ContentLlmService {
 
         logger.info("generate", "Gerando conteúdo de módulo", { title, hasStudyMaterial });
 
-        const data = await AIOrchestrator.runJson<GeneratedModuleContent>(prompt, {
+        const data = await LlmRouter.generateJson<GeneratedModuleContent>(prompt, {
             pipeline: "CONTENT_GEN",
-            modelName: process.env.GEMINI_PRO_MODEL || "gemini-2.5-pro",
-            fallbackModelName: process.env.REASONING_FALLBACK_MODEL || "llama-3.3-70b-versatile",
+            modelName: env.GEMINI_PRO_MODEL,
             temperature: 0.5,
             timeoutMs: 120_000,
-            useCritic: true,
-            maxRetries: 2,
             responseSchema: {
                 type: "object",
                 properties: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useRef } from "react";
+import { useEffect, useState, use, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { QuizLoadingState } from "./_components/QuizLoadingState";
 import { QuizResultsCard } from "./_components/QuizResultsCard";
@@ -8,7 +8,6 @@ import { QuizProgressBar } from "./_components/QuizProgressBar";
 import { QuizQuestionCard, QuizFeedbackPanel } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useStreamingExplanation } from "@/hooks/useStreamingExplanation";
 
 interface Question {
     id: string;
@@ -42,26 +41,23 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [loading, setLoading] = useState(true);
     const [generatingQuestion, setGeneratingQuestion] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const isFetchingRef = useRef(false);
 
-    // AI feedback state (correctIndex vem do servidor após a resposta)
     const [correctIndex, setCorrectIndex] = useState<number | null>(null);
     const [showingFeedback, setShowingFeedback] = useState(false);
 
-    // Dados para a tela de resultados finais
     const [results, setResults] = useState<AttemptResult[]>([]);
     const [finished, setFinished] = useState(false);
     const [idempotencyKey, setIdempotencyKey] = useState<string>("");
 
-    // Hook de streaming de explicação
-    const { streamedText, streamingState, startStream, reset: resetStream } = useStreamingExplanation();
-    const isStreaming = streamingState === "streaming";
+    const [streamedText, setStreamedText] = useState("");
+    const [isStreaming, setIsStreaming] = useState(false);
 
     const initQuizRef = useRef(false);
+    const isFetchingRef = useRef(false);
 
-    // 1. Initial Load: Start or Resume Session
+    // ── 1. Inicia ou retoma sessão ──────────────────────────────────────────
+
     useEffect(() => {
-        let isMounted = true;
         if (initQuizRef.current) return;
         initQuizRef.current = true;
 
@@ -70,28 +66,73 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 const res = await fetch("/api/quiz/session/start", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ moduleId })
+                    body: JSON.stringify({ moduleId }),
                 });
                 const data = await res.json();
 
-                if (!isMounted) return;
-
                 if (data.success) {
-                    setSessionId(data.quizSession.id);
-                    setQuestionsAnswered(data.quizSession.currentQuestionIndex);
-                    setScore(data.quizSession.score);
-                    setCurrentDifficulty(data.quizSession.currentLevel);
+                    const session = data.quizSession;
+                    setSessionId(session.id);
+                    setScore(session.score);
+                    setCurrentDifficulty(session.currentLevel);
 
-                    if (data.quizSession.status === "COMPLETED") {
+                    // Preenche os resultados anteriores
+                    const previousResults = (session.questions as any[])
+                        .filter((q) => q.studentAnswer !== null)
+                        .map((q) => ({
+                            questionId: q.id,
+                            prompt: q.prompt,
+                            chosenIndex: q.studentAnswer,
+                            correctIndex: q.correctOptionIndex,
+                            isCorrect: q.isCorrect ?? false,
+                            explanationAi: q.explanation ?? null,
+                            options: q.options,
+                            difficulty: q.difficulty,
+                        }));
+                    setResults(previousResults);
+
+                    if (session.status === "COMPLETED") {
                         setFinished(true);
                     } else {
-                        fetchNextQuestion(data.quizSession.id);
+                        const questionsList = session.questions as any[];
+                        if (questionsList.length > 0) {
+                            const lastQuestion = questionsList[questionsList.length - 1];
+                            if (lastQuestion.studentAnswer !== null) {
+                                // A última questão foi respondida, mas o usuário não avançou ainda
+                                setCurrentQuestion({
+                                    id: lastQuestion.id,
+                                    prompt: lastQuestion.prompt,
+                                    options: lastQuestion.options,
+                                    difficulty: lastQuestion.difficulty,
+                                });
+                                setSelectedOption(lastQuestion.studentAnswer);
+                                setCorrectIndex(lastQuestion.correctOptionIndex);
+                                setShowingFeedback(true);
+                                setStreamedText(lastQuestion.explanation || "");
+                                setQuestionsAnswered(Math.max(0, session.currentQuestionIndex - 1));
+                            } else {
+                                // A última questão ainda não foi respondida
+                                setCurrentQuestion({
+                                    id: lastQuestion.id,
+                                    prompt: lastQuestion.prompt,
+                                    options: lastQuestion.options,
+                                    difficulty: lastQuestion.difficulty,
+                                });
+                                setSelectedOption(null);
+                                setCorrectIndex(null);
+                                setShowingFeedback(false);
+                                setQuestionsAnswered(session.currentQuestionIndex);
+                            }
+                        } else {
+                            // Nenhuma questão gerada ainda
+                            setQuestionsAnswered(0);
+                            fetchNextQuestion(session.id);
+                        }
                     }
                 } else {
                     toast.error("Erro ao iniciar quiz.");
                 }
-            } catch (err) {
-                console.error(err);
+            } catch {
                 toast.error("Erro de conexão.");
             } finally {
                 setLoading(false);
@@ -99,61 +140,124 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         };
 
         initQuiz();
-
-        return () => {
-            isMounted = false;
-        };
     }, [moduleId]);
 
-    // 2. Fetch Question from IA
+    // ── 2. Busca próxima questão da IA ──────────────────────────────────────
+
     const fetchNextQuestion = async (sid: string) => {
         if (isFetchingRef.current) return;
         isFetchingRef.current = true;
         setGeneratingQuestion(true);
-        resetStream();
+        setStreamedText("");
+        setIsStreaming(false);
+
         try {
             const res = await fetch("/api/quiz/generate-question", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId: sid })
+                body: JSON.stringify({ sessionId: sid }),
             });
             const data = await res.json();
 
             if (data.success) {
                 setCurrentQuestion(data.question);
-                const newKey = typeof window !== "undefined" && window.crypto?.randomUUID
-                    ? window.crypto.randomUUID()
-                    : (Math.random().toString(36).substring(2) + Date.now().toString(36));
-                setIdempotencyKey(newKey);
+                setIdempotencyKey(crypto.randomUUID());
                 setSelectedOption(null);
                 setShowingFeedback(false);
                 setCorrectIndex(null);
                 setError(null);
             } else {
-                const errMsg = data.error || "Erro ao gerar questão.";
-                toast.error(errMsg);
-                setError(errMsg);
+                const msg = data.error || "Erro ao gerar questão.";
+                toast.error(msg);
+                setError(msg);
             }
-        } catch (err) {
-            const errMsg = "Falha na comunicação com a IA.";
-            toast.error(errMsg);
-            setError(errMsg);
+        } catch {
+            const msg = "Falha na comunicação com a IA.";
+            toast.error(msg);
+            setError(msg);
         } finally {
             setGeneratingQuestion(false);
             isFetchingRef.current = false;
         }
     };
 
-    // 3. Handle Answer Submission
+    // ── 3. Processa resultado da resposta (useCallback evita closure stale) ─
+
+    const processAnswerResult = useCallback(
+        (data: any, question: Question, chosen: number, difficulty: "EASY" | "MEDIUM" | "HARD") => {
+            const result: AttemptResult = {
+                questionId: question.id,
+                prompt: question.prompt,
+                chosenIndex: chosen,
+                correctIndex: data.correctOptionIndex,
+                isCorrect: data.isCorrect,
+                explanationAi: data.explanation ?? null,
+                options: question.options,
+                difficulty,
+            };
+            setResults((prev) => [...prev, result]);
+            setCorrectIndex(data.correctOptionIndex);
+            setScore(data.newScore);
+            setCurrentDifficulty(data.nextLevel);
+            setShowingFeedback(true);
+        },
+        []
+    );
+
+    // ── 4. Busca explicação personalizada via SSE (/api/explain) ────────────
+
+    const fetchExplanation = useCallback(
+        async (question: Question, baseExplanation: string, studentAnswer: string, correctAnswer: string) => {
+            setIsStreaming(true);
+            setStreamedText("");
+
+            try {
+                const res = await fetch("/api/explain", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        questionId: question.id,
+                        prompt: question.prompt,
+                        base_explanation: baseExplanation,
+                        student_answer: studentAnswer,
+                        correct_answer: correctAnswer,
+                        moduleId,
+                        sessionId,
+                    }),
+                });
+
+                if (!res.ok || !res.body) {
+                    setIsStreaming(false);
+                    return;
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    setStreamedText((prev) => prev + chunk);
+                }
+            } catch {
+                // Falha silenciosa — a explicação base já foi exibida pelo JSON
+            } finally {
+                setIsStreaming(false);
+            }
+        },
+        [moduleId, sessionId]
+    );
+
+    // ── 5. Envia resposta do aluno ──────────────────────────────────────────
+
     const handleAnswer = async () => {
         if (selectedOption === null || !currentQuestion || !sessionId) return;
 
         setLoading(true);
         try {
             const headers: Record<string, string> = { "Content-Type": "application/json" };
-            if (idempotencyKey) {
-                headers["Idempotency-Key"] = idempotencyKey;
-            }
+            if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
 
             const res = await fetch("/api/quiz/answer", {
                 method: "POST",
@@ -161,96 +265,84 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 body: JSON.stringify({
                     sessionId,
                     questionId: currentQuestion.id,
-                    studentAnswerIndex: selectedOption
-                })
+                    studentAnswerIndex: selectedOption,
+                }),
             });
+
             const data = await res.json();
 
-            if (data.success) {
-                const newRes: AttemptResult = {
-                    questionId: currentQuestion.id,
-                    prompt: currentQuestion.prompt,
-                    chosenIndex: selectedOption,
-                    correctIndex: data.correctOptionIndex,
-                    isCorrect: data.isCorrect,
-                    explanationAi: data.explanation,
-                    options: currentQuestion.options,
-                    difficulty: currentDifficulty
-                };
-                setResults(prev => [...prev, newRes]);
-                setCorrectIndex(data.correctOptionIndex);
-                setScore(data.newScore);
-                setCurrentDifficulty(data.nextLevel);
-                setShowingFeedback(true);
-
-                // Iniciar stream de explicação apenas se o aluno errou
-                // (acerto recebe uma mensagem curta; erro merece explicação pedagógica completa)
-                if (!data.isCorrect && currentQuestion) {
-                    startStream({
-                        prompt: currentQuestion.prompt,
-                        base_explanation: data.explanation || "",
-                        student_answer: currentQuestion.options[selectedOption] ?? "",
-                        correct_answer: currentQuestion.options[data.correctOptionIndex] ?? "",
-                        moduleId,
-                        sessionId,
-                    });
-                }
-            } else {
-                toast.error("Erro ao processar resposta.");
+            if (!res.ok || !data.success) {
+                toast.error(data.error || "Erro ao processar resposta.");
+                return;
             }
-        } catch (err) {
+
+            // Captura valores antes de qualquer setState para evitar closure stale
+            const snapshot = { question: currentQuestion, chosen: selectedOption, difficulty: currentDifficulty };
+            processAnswerResult(data, snapshot.question, snapshot.chosen, snapshot.difficulty);
+
+            // Se errou, dispara SSE de explicação personalizada em paralelo
+            if (!data.isCorrect) {
+                const studentAnswerText = currentQuestion.options[selectedOption] ?? "";
+                const correctAnswerText = currentQuestion.options[data.correctOptionIndex] ?? "";
+                const baseExplanationText = data.explanation || "Resposta incorreta.";
+                fetchExplanation(currentQuestion, baseExplanationText, studentAnswerText, correctAnswerText);
+            }
+        } catch {
             toast.error("Erro ao enviar resposta.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleProceedAfterFeedback = async () => {
-        if (isStreaming) return; // aguarda o stream terminar
-        const isCompleted = (questionsAnswered + 1) >= 10;
+    const handleProceedAfterFeedback = () => {
+        if (isStreaming) return;
+        const isCompleted = questionsAnswered + 1 >= 10;
 
         if (isCompleted) {
             setFinished(true);
         } else {
-            setQuestionsAnswered(prev => prev + 1);
+            setShowingFeedback(false);
+            setSelectedOption(null);
+            setCorrectIndex(null);
+            setStreamedText("");
+            setQuestionsAnswered((prev) => prev + 1);
             if (sessionId) fetchNextQuestion(sessionId);
         }
     };
 
     const handleFinish = async () => {
         if (sessionId) {
-            try {
-                await fetch("/api/quiz/session/cleanup", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sessionId })
-                });
-            } catch (err) {
-                console.error("Erro ao limpar sessão:", err);
-            }
+            await fetch("/api/quiz/session/cleanup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId }),
+            }).catch(() => {});
         }
         router.push("/student");
     };
 
+    // ── Render ───────────────────────────────────────────────────────────────
+
     if (loading && !sessionId) return <QuizLoadingState />;
 
     if (finished) {
-        return (
-            <QuizResultsCard
-                results={results}
-                onFinish={handleFinish}
-            />
-        );
+        return <QuizResultsCard results={results} onFinish={handleFinish} />;
     }
+
+    const isAnswerCorrect = correctIndex !== null && selectedOption !== null && correctIndex === selectedOption;
 
     return (
         <div className="container mx-auto py-4 px-4 h-[calc(100vh-120px)] max-w-6xl overflow-hidden flex flex-col">
-            <div className={`grid gap-8 h-full ${showingFeedback ? "md:grid-cols-2" : "max-w-xl mx-auto w-full"}`}>
-                
-                {/* Lado Esquerdo - Pergunta e Opções */}
+            <div className={`grid gap-8 h-full ${(showingFeedback && !isAnswerCorrect) ? "md:grid-cols-2" : "max-w-xl mx-auto w-full"}`}>
+
+                {/* Lado Esquerdo — Pergunta */}
                 <div className="flex flex-col h-full overflow-y-auto scrollbar-thin pr-2 pb-4">
                     <div className="mb-3 shrink-0">
-                        <Button variant="ghost" onClick={() => router.push(`/module/${moduleId}`)} className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-1 w-fit text-sm">
+                        <Button
+                            variant="ghost"
+                            onClick={() => router.push(`/module/${moduleId}`)}
+                            className="text-blue-600 hover:bg-blue-50 hover:underline p-2 h-auto -ml-2 mb-1 w-fit text-sm"
+                        >
                             &larr; Voltar para o Módulo
                         </Button>
                     </div>
@@ -269,16 +361,13 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                                 <h3 className="text-base font-semibold text-red-700">Ops! Algo deu errado</h3>
                                 <p className="text-red-500 mt-1 text-sm">{error}</p>
                             </div>
-                            <Button
-                                onClick={() => sessionId && fetchNextQuestion(sessionId)}
-                                className="bg-blue-600 hover:bg-blue-700"
-                            >
+                            <Button onClick={() => sessionId && fetchNextQuestion(sessionId)} className="bg-blue-600 hover:bg-blue-700">
                                 Tentar Novamente
                             </Button>
                         </div>
-                    ) : (generatingQuestion || !currentQuestion) ? (
+                    ) : generatingQuestion || !currentQuestion ? (
                         <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                            <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
                             <div className="text-center">
                                 <h3 className="text-base font-semibold text-slate-700">IA gerando questão adaptativa...</h3>
                                 <p className="text-slate-400 mt-1 text-sm">Personalizando o nível para você.</p>
@@ -292,8 +381,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                                 showingFeedback={showingFeedback}
                                 fetchingAi={loading}
                                 aiFeedback={correctIndex !== null ? { explanationAi: null, correctIndex } : null}
-                                streamedText={showingFeedback ? streamedText : undefined}
-                                isStreaming={isStreaming}
                                 onSelectOption={setSelectedOption}
                                 onAnswer={handleAnswer}
                                 onProceed={handleProceedAfterFeedback}
@@ -304,32 +391,32 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     )}
                 </div>
 
-                {/* Lado Direito - Feedback da IA (Só aparece quando houver resposta) */}
-                {showingFeedback && currentQuestion && (
+                {/* Lado Direito — Feedback (desktop) */}
+                {showingFeedback && !isAnswerCorrect && currentQuestion && (
                     <div className="h-full overflow-hidden border-l border-slate-100 pl-4 hidden md:block">
                         <QuizFeedbackPanel
                             showingFeedback={showingFeedback}
                             fetchingAi={loading}
                             isCorrect={correctIndex === selectedOption}
-                            hasContent={(streamedText !== undefined ? streamedText : "").length > 0}
+                            hasContent={streamedText.length > 0}
                             isStreaming={isStreaming}
-                            displayText={streamedText !== undefined ? streamedText : ""}
+                            displayText={streamedText}
                             onProceed={handleProceedAfterFeedback}
                             isLastQuestion={questionsAnswered + 1 >= 10}
                         />
                     </div>
                 )}
-                
-                {/* Mobile version for feedback */}
-                {showingFeedback && currentQuestion && (
+
+                {/* Lado Direito — Feedback (mobile) */}
+                {showingFeedback && !isAnswerCorrect && currentQuestion && (
                     <div className="md:hidden mt-4 pb-4">
                         <QuizFeedbackPanel
                             showingFeedback={showingFeedback}
                             fetchingAi={loading}
                             isCorrect={correctIndex === selectedOption}
-                            hasContent={(streamedText !== undefined ? streamedText : "").length > 0}
+                            hasContent={streamedText.length > 0}
                             isStreaming={isStreaming}
-                            displayText={streamedText !== undefined ? streamedText : ""}
+                            displayText={streamedText}
                             onProceed={handleProceedAfterFeedback}
                             isLastQuestion={questionsAnswered + 1 >= 10}
                         />

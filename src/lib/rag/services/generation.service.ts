@@ -2,9 +2,10 @@
 
 import { ModuleRepository, moduleRepository as defaultModuleRepo } from "@/repositories/module.repository";
 import { getVectorStore } from "../core/vector-store";
-import { AIOrchestrator } from "@/services/ai/orchestrator.service";
-import { CONTENT_TIMEOUT_MS } from "@/services/ai.service";
+import { LlmRouter } from "@/services/ai/llm-router";
+import { CONTENT_TIMEOUT_MS } from "@/services/ai/types";
 import { Logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 import { RAG_CONTENT_PROMPT } from "@/lib/prompts/rag-content.prompt";
 
 const logger = new Logger("ModuleContentGenerationService");
@@ -55,23 +56,15 @@ export class GenerationService {
             .replace("{{MODULE_TITLE}}", module.title)
             .replace("{{MODULE_DESCRIPTION}}", module.description ?? "Não fornecida")
             .replace("{{CONTEXT_TEXT}}", contextText);
-        // 4. Chamar IA via orchestrator com critic loop (Usando TEXTO puro para evitar quebras de JSON)
-        const resultText = await AIOrchestrator.runText(
+        // 4. Chamar IA via LlmRouter (Usando TEXTO puro para evitar quebras de JSON)
+        const resultText = await LlmRouter.generateText(
             prompt,
             {
                 pipeline: "CONTENT_GEN",
-                modelName: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-                fallbackModelName: process.env.REASONING_FALLBACK_MODEL || "llama-3.3-70b-versatile",
+                modelName: env.GEMINI_MODEL,
                 temperature: 0.6,
                 timeoutMs: CONTENT_TIMEOUT_MS,
                 moduleId,
-                useCritic: false, // Desativado para extrema velocidade
-                maxRetries: 0,
-                retrievedChunks: contextChunks.map((c) => ({
-                    id: c.id,
-                    score: c.score,
-                    fileName: c.fileName,
-                })),
             }
         );
 

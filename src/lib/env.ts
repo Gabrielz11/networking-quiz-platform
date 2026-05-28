@@ -4,6 +4,9 @@ const envSchema = z.object({
     DATABASE_URL: z.string().url(),
     GEMINI_API_KEY: z.string().min(1),
     GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+    GEMINI_PRO_MODEL: z.string().default("gemini-2.5-flash"),
+    GROQ_FALLBACK_MODEL: z.string().default("llama-3.1-8b-instant"),
+    REASONING_FALLBACK_MODEL: z.string().default("llama-3.3-70b-versatile"),
     // Obrigatória apenas quando EMBEDDING_PROVIDER=openai (padrão)
     OPENAI_API_KEY: z.string().min(1).optional(),
     GROQ_API_KEY: z.string().min(1),

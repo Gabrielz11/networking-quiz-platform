@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { QuizService } from "@/services/quiz.service";
+import { QuizProgressionService } from "@/services/quiz-progression.service";
 import { ScoreService } from "@/services/score.service";
 import { ActivityService } from "@/services/activity.service";
 import { z } from "zod";
@@ -10,7 +10,7 @@ import {
     getCachedIdempotentResponse,
     cacheIdempotentResponse,
     acquireIdempotencyLock,
-    releaseIdempotencyLock
+    releaseIdempotencyLock,
 } from "@/lib/idempotency";
 
 const logger = new Logger("QuizAnswerRoute");
@@ -23,6 +23,7 @@ const AnswerSchema = z.object({
 
 export async function POST(req: Request) {
     const start = Date.now();
+
     try {
         const sessionReq = await auth();
         if (!sessionReq?.user) {
@@ -32,13 +33,10 @@ export async function POST(req: Request) {
         const idempotencyKey = req.headers.get("Idempotency-Key");
 
         if (idempotencyKey) {
-            const cachedResponse = await getCachedIdempotentResponse(idempotencyKey);
-            if (cachedResponse) {
-                logger.info("POST", "Retornando resposta idempotente cacheada", {
-                    userId: sessionReq.user.id,
-                    idempotencyKey
-                });
-                return NextResponse.json(cachedResponse.body, { status: cachedResponse.status });
+            const cached = await getCachedIdempotentResponse(idempotencyKey);
+            if (cached) {
+                logger.info("POST", "Retornando resposta idempotente cacheada", { idempotencyKey });
+                return NextResponse.json(cached.body, { status: cached.status });
             }
 
             const locked = await acquireIdempotencyLock(idempotencyKey);
@@ -54,8 +52,9 @@ export async function POST(req: Request) {
         const parsed = AnswerSchema.safeParse(body);
 
         if (!parsed.success) {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json(
-                { error: "Parâmetros inválidos ou ausentes.", details: parsed.error.flatten().fieldErrors },
+                { error: "Parâmetros inválidos.", details: parsed.error.flatten().fieldErrors },
                 { status: 400 }
             );
         }
@@ -70,37 +69,38 @@ export async function POST(req: Request) {
 
         const session = await prisma.quizSession.findUnique({
             where: { id: sessionId },
-            include: { questions: true }
+            include: { questions: true },
         });
 
         if (!session) {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "Sessão não encontrada." }, { status: 404 });
         }
 
         if (session.userId !== sessionReq.user.id) {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "Acesso negado à sessão." }, { status: 403 });
         }
 
         if (session.status === "COMPLETED") {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "O quiz já foi finalizado." }, { status: 400 });
         }
 
-        // Verify if the question instance exists and hasn't been answered yet
-        const question = session.questions.find(q => q.id === questionId);
-
+        const question = session.questions.find((q) => q.id === questionId);
         if (!question) {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "Questão não encontrada nesta sessão." }, { status: 404 });
         }
 
         if (question.studentAnswer !== null) {
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "A questão já foi respondida." }, { status: 400 });
         }
 
-        // Answer analysis
         const isCorrect = studentAnswerIndex === question.correctOptionIndex;
 
-        // Lógica adaptativa delegada ao QuizService
-        const { nextLevel, nextErrors } = QuizService.calculateAdaptiveProgression(
+        const { nextLevel, nextErrors } = QuizProgressionService.calculateAdaptiveProgression(
             session.currentLevel,
             session.errorsInCurrentLevel,
             isCorrect
@@ -109,18 +109,12 @@ export async function POST(req: Request) {
         const updatedScore = isCorrect ? session.score + 1 : session.score;
         const nextIndex = session.currentQuestionIndex + 1;
         const isCompleted = nextIndex >= 10;
-
-        // Calcula tempo de resposta baseado em quando a questão foi instanciada
         const responseTimeMs = Date.now() - question.createdAt.getTime();
 
-        // Transaction to ensure atomicity
         await prisma.$transaction([
             prisma.questionInstance.update({
                 where: { id: question.id },
-                data: {
-                    studentAnswer: studentAnswerIndex,
-                    isCorrect: isCorrect
-                }
+                data: { studentAnswer: studentAnswerIndex, isCorrect },
             }),
             prisma.quizSession.update({
                 where: { id: session.id },
@@ -129,8 +123,8 @@ export async function POST(req: Request) {
                     errorsInCurrentLevel: nextErrors,
                     score: updatedScore,
                     currentQuestionIndex: nextIndex,
-                    status: isCompleted ? "COMPLETED" : "IN_PROGRESS"
-                }
+                    status: isCompleted ? "COMPLETED" : "IN_PROGRESS",
+                },
             }),
             prisma.studentQuizTelemetry.create({
                 data: {
@@ -139,11 +133,11 @@ export async function POST(req: Request) {
                     sessionId: session.id,
                     questionId: question.id,
                     responseTimeMs: Math.max(0, responseTimeMs),
-                    isCorrect: isCorrect,
+                    isCorrect,
                     chosenOptionIndex: studentAnswerIndex,
-                    difficultyLevel: question.difficulty
-                }
-            })
+                    difficultyLevel: question.difficulty,
+                },
+            }),
         ]);
 
         logger.info("POST", "Resposta processada com sucesso", {
@@ -155,25 +149,24 @@ export async function POST(req: Request) {
             durationMs: Date.now() - start,
         });
 
-        // Se o quiz foi concluído, registra nota e eventos de comportamento
+        // Registra eventos não-bloqueantes se quiz completado
         if (isCompleted) {
             const userId = sessionReq.user.id!;
-            const moduleId = session.moduleId;
-
-            // Todas as chamadas abaixo são não-bloqueantes
-            ScoreService.registerCompletedSession(userId, moduleId, sessionId, updatedScore);
-            ActivityService.logQuizComplete(userId, moduleId, sessionId, updatedScore);
-            ActivityService.logScoreRecorded(userId, moduleId, sessionId, updatedScore);
+            ScoreService.registerCompletedSession(userId, session.moduleId, sessionId, updatedScore);
+            ActivityService.logQuizComplete(userId, session.moduleId, sessionId, updatedScore);
+            ActivityService.logScoreRecorded(userId, session.moduleId, sessionId, updatedScore);
         }
 
         const responseJson = {
             success: true,
-            isCorrect: isCorrect,
+            isCorrect,
             correctOptionIndex: question.correctOptionIndex,
+            // Explicação base da DB — exibida imediatamente para respostas corretas.
+            // Para respostas erradas, o frontend também usa /api/explain para a versão personalizada em streaming.
             explanation: question.explanation,
             nextLevel,
             completed: isCompleted,
-            newScore: updatedScore
+            newScore: updatedScore,
         };
 
         if (idempotencyKey) {
@@ -184,14 +177,10 @@ export async function POST(req: Request) {
         return NextResponse.json(responseJson);
 
     } catch (error: any) {
-        logger.error("POST", "Falha ao processar e salvar a resposta do estudante", {
-            message: error.message || error
-        });
+        logger.error("POST", "Falha ao processar resposta do estudante", { message: error.message });
 
         const idempotencyKey = req.headers.get("Idempotency-Key");
-        if (idempotencyKey) {
-            await releaseIdempotencyLock(idempotencyKey);
-        }
+        if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey).catch(() => {});
 
         return NextResponse.json(
             { error: "Falha ao analisar resposta da questão." },
