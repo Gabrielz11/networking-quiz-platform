@@ -12,12 +12,9 @@ interface UseStreamingExplanationReturn {
     streamedText: string;
     streamingState: StreamingState;
     startStream: (payload: {
-        prompt: string;
-        base_explanation: string;
-        student_answer: string;
-        correct_answer: string;
-        moduleId?: string;
-        sessionId?: string;
+        sessionId: string;
+        questionId: string;
+        studentAnswerIndex: number;
     }) => Promise<void>;
     reset: () => void;
 }
@@ -34,12 +31,9 @@ export function useStreamingExplanation(): UseStreamingExplanationReturn {
     }, []);
 
     const startStream = useCallback(async (payload: {
-        prompt: string;
-        base_explanation: string;
-        student_answer: string;
-        correct_answer: string;
-        moduleId?: string;
-        sessionId?: string;
+        sessionId: string;
+        questionId: string;
+        studentAnswerIndex: number;
     }) => {
         // Cancela um stream anterior se ainda estiver ativo
         abortRef.current?.abort();

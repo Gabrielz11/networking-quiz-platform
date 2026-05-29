@@ -207,7 +207,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     // ── 4. Busca explicação personalizada via SSE (/api/explain) ────────────
 
     const fetchExplanation = useCallback(
-        async (question: Question, baseExplanation: string, studentAnswer: string, correctAnswer: string) => {
+        async (question: Question, studentAnswerIndex: number) => {
             setIsStreaming(true);
             setStreamedText("");
 
@@ -216,13 +216,9 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        questionId: question.id,
-                        prompt: question.prompt,
-                        base_explanation: baseExplanation,
-                        student_answer: studentAnswer,
-                        correct_answer: correctAnswer,
-                        moduleId,
                         sessionId,
+                        questionId: question.id,
+                        studentAnswerIndex,
                     }),
                 });
 
@@ -246,7 +242,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 setIsStreaming(false);
             }
         },
-        [moduleId, sessionId]
+        [sessionId]
     );
 
     // ── 5. Envia resposta do aluno ──────────────────────────────────────────
@@ -282,10 +278,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
             // Se errou, dispara SSE de explicação personalizada em paralelo
             if (!data.isCorrect) {
-                const studentAnswerText = currentQuestion.options[selectedOption] ?? "";
-                const correctAnswerText = currentQuestion.options[data.correctOptionIndex] ?? "";
-                const baseExplanationText = data.explanation || "Resposta incorreta.";
-                fetchExplanation(currentQuestion, baseExplanationText, studentAnswerText, correctAnswerText);
+                fetchExplanation(currentQuestion, selectedOption);
             }
         } catch {
             toast.error("Erro ao enviar resposta.");
