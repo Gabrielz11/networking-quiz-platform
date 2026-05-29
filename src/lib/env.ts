@@ -7,6 +7,7 @@ const envSchema = z.object({
     GEMINI_PRO_MODEL: z.string().default("gemini-2.5-flash"),
     GROQ_FALLBACK_MODEL: z.string().default("llama-3.1-8b-instant"),
     REASONING_FALLBACK_MODEL: z.string().default("llama-3.3-70b-versatile"),
+    EXPLANATION_MODEL: z.string().default("llama-3.1-8b-instant"),
     // Obrigatória apenas quando EMBEDDING_PROVIDER=openai (padrão)
     OPENAI_API_KEY: z.string().min(1).optional(),
     GROQ_API_KEY: z.string().min(1),
@@ -19,6 +20,7 @@ const envSchema = z.object({
     UPLOAD_DIR: z.string().default("./storage/uploads"),
     EMBEDDING_PROVIDER: z.enum(["openai", "gemini"]).default("openai"),
     EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
+    TEACHER_REGISTRATION_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,10 +1,13 @@
 // src/lib/rag/core/vector-store.ts
 
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import type { AddChunksInput, RetrievedChunk, SearchSimilarInput } from "../types";
-import type { DocumentChunk } from "../types";
 import { getEmbeddingProvider } from "./providers/embedding-provider";
 import { env } from "@/lib/env";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("PgVectorStore");
 
 function toPgVector(values: number[]): string {
     return `[${values.join(",")}]`;
@@ -15,17 +18,24 @@ export class PgVectorStore {
     /**
      * Persiste chunks no banco respeitando a hierarquia Parent-Child.
      *
-     * - PARETs (chunkType = "parent") são salvos primeiro via Prisma (sem embedding).
-     * - CHILDs (chunkType = "child") são salvos depois via SQL raw com embedding vector.
-     * - Chunks sem `chunkType` são tratados como legados e salvos com embedding (retrocompatível).
+     * P1.2 — Aceita um Prisma TransactionClient opcional (`tx`).
+     * Quando fornecido, todos os INSERTs rodam dentro da mesma transação
+     * (deleteMany + addChunks = atômico no worker).
+     *
+     * - PARETs (chunkType = "parent") são salvos primeiro (sem embedding).
+     * - CHILDs (chunkType = "child") são salvos depois com embedding vector.
+     * - Chunks sem `chunkType` são tratados como legados (retrocompatível).
      */
-    async addChunks(input: AddChunksInput): Promise<void> {
+    async addChunks(input: AddChunksInput, tx?: Prisma.TransactionClient): Promise<void> {
+        // Usa o client da transação se disponível, senão o client global
+        const db = tx ?? prisma;
+
         const parentChunks = input.chunks.filter(c => c.chunkType === "parent");
         const childChunks  = input.chunks.filter(c => c.chunkType !== "parent");
 
         // ── 1. Salvar PARETs (sem embedding) ────────────────────────────────
         for (const chunk of parentChunks) {
-            await prisma.$executeRawUnsafe(
+            await db.$executeRawUnsafe(
                 `INSERT INTO "ModuleSourceChunk"
                    ("id", "fileId", "moduleId", "content", "chunkIndex", "tokenCount",
                     "sourceType", "page", "sectionTitle", "embeddingModel", "parentChunkId", "createdAt")
@@ -52,7 +62,7 @@ export class PgVectorStore {
 
             if (!embedding) continue;
 
-            await prisma.$executeRawUnsafe(
+            await db.$executeRawUnsafe(
                 `INSERT INTO "ModuleSourceChunk"
                    ("id", "fileId", "moduleId", "content", "chunkIndex", "tokenCount",
                     "sourceType", "page", "sectionTitle", "embeddingModel", "parentChunkId", "embedding", "createdAt")
@@ -80,18 +90,20 @@ export class PgVectorStore {
      * 2. Para cada CHILD encontrado com `parentChunkId`, recupera o PARENT.
      * 3. Retorna o conteúdo do PARENT (contexto rico ~1500 tokens) com metadados do CHILD.
      *
+     * P1.1 — Verifica divergência de modelo de embedding entre o provider ativo
+     * e o modelo com que os chunks foram indexados. Loga aviso sem bloquear.
+     *
      * Chunks sem parentChunkId (legados) são retornados com seu próprio conteúdo.
      */
     async searchSimilar(input: SearchSimilarInput): Promise<RetrievedChunk[]> {
         const provider = getEmbeddingProvider();
         const queryEmbedding = await provider.embedText(input.query);
         const limit = input.limit ?? env.RAG_FINAL_CONTEXT_LIMIT;
-        
+
         // Importa aqui para evitar dependência circular se houver
         const { getRerankerProvider } = await import("./providers/reranker");
         const reranker = getRerankerProvider();
 
-        // Se tiver Reranker, buscamos o limite de retrieval do env
         const fetchLimit = reranker ? env.RAG_RETRIEVAL_LIMIT : limit;
 
         // Busca top-K CHILDs com embedding mais próximo
@@ -103,6 +115,7 @@ export class PgVectorStore {
                 score: number;
                 parentChunkId: string | null;
                 sectionTitle: string | null;
+                embeddingModel: string | null;
             }>
         >(
             `SELECT
@@ -110,6 +123,7 @@ export class PgVectorStore {
                 c."content",
                 c."parentChunkId",
                 c."sectionTitle",
+                c."embeddingModel",
                 f."originalName" AS "fileName",
                 1 - (c."embedding" <=> $1::vector) AS "score"
              FROM "ModuleSourceChunk" c
@@ -124,6 +138,17 @@ export class PgVectorStore {
         );
 
         if (childRows.length === 0) return [];
+
+        // P1.1 — Verificar divergência de modelo entre provider ativo e chunks armazenados
+        const storedModel = childRows[0]?.embeddingModel;
+        if (storedModel && storedModel !== provider.modelName) {
+            logger.warn("searchSimilar", "Divergência de embedding model detectada — retrieval pode ser impreciso", {
+                moduleId: input.moduleId,
+                storedModel,
+                activeModel: provider.modelName,
+                hint: "Reprocesse os arquivos do módulo para realinhar os vetores.",
+            });
+        }
 
         // ── Hierarchical retrieval: troca conteúdo CHILD → PARENT ─────────
         const parentIds = [...new Set(
@@ -159,7 +184,7 @@ export class PgVectorStore {
                 id: row.id,
                 content: parentContent ?? row.content,
                 fileName: row.fileName,
-                score: row.score, // score do pgvector (cosine similarity)
+                score: row.score,
                 sectionTitle: row.sectionTitle ?? undefined,
             });
         }
@@ -167,30 +192,27 @@ export class PgVectorStore {
         // ── Reranking (Cohere Cross-Encoder) ──────────────────────────────
         if (reranker && rawResults.length > 1) {
             try {
-                // Passa os textos brutos recuperados para o modelo re-avaliar
                 const textsToRerank = rawResults.map(r => r.content);
                 const rerankedList = await reranker.rerank(input.query, textsToRerank, limit);
 
-                // Mapeia de volta os resultados baseados no índice retornado pela Cohere
                 const finalResults: RetrievedChunk[] = [];
                 for (const item of rerankedList) {
                     const originalChunk = rawResults[item.index];
                     if (originalChunk) {
-                        // Substitui o score vetorial pelo score de relevância do reranker
                         originalChunk.score = item.relevance_score;
                         finalResults.push(originalChunk);
                     }
                 }
-                
+
                 return finalResults;
             } catch (error) {
-                console.error("Reranking falhou, caindo para busca vetorial padrão.", error);
-                // Fallback: retorna o top N original do pgvector
+                logger.warn("searchSimilar", "Reranking falhou, caindo para busca vetorial padrão", {
+                    error: error instanceof Error ? error.message : String(error),
+                });
                 return rawResults.slice(0, limit);
             }
         }
 
-        // Sem reranker (Fallback padrão)
         return rawResults.slice(0, limit);
     }
 }

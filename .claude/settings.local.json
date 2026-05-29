@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find C:\\\\Users\\\\gabri\\\\Documents\\\\PROJECTS\\\\Antigravity Projects\\\\ipv6-lms\\\\src\\\\app\\\\\\(admin\\)\\\\dashboard\\\\scores)"
+      "Bash(find C:\\\\Users\\\\gabri\\\\Documents\\\\PROJECTS\\\\Antigravity Projects\\\\ipv6-lms\\\\src\\\\app\\\\\\(admin\\)\\\\dashboard\\\\scores)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(cd:*)"
     ]
   }
 }

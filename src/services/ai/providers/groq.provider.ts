@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { AiProvider, AiGenerateOptions } from "../types";
+import { AiProvider, AiGenerateOptions, AiResponse } from "../types";
 import { Logger } from "@/lib/logger";
 import { cleanMarkdownCodeFences } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ const DEFAULT_TIMEOUT_MS = 45_000;
 export class GroqProvider implements AiProvider {
     readonly name = "groq";
 
-    async generateJson<T = unknown>(prompt: string, options: AiGenerateOptions = {}): Promise<T> {
+    async generateJson<T = unknown>(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<T>> {
         const { temperature = 0.6, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction } = options;
 
         const systemPrompt = systemInstruction
@@ -47,10 +47,17 @@ export class GroqProvider implements AiProvider {
         const data = await response.json();
         const raw = data.choices[0]?.message?.content ?? "{}";
         const cleaned = cleanMarkdownCodeFences(raw);
-        return JSON.parse(cleaned) as T;
+        
+        const promptTokens = data.usage?.prompt_tokens ?? 0;
+        const completionTokens = data.usage?.completion_tokens ?? 0;
+
+        return {
+            result: JSON.parse(cleaned) as T,
+            usage: { promptTokens, completionTokens }
+        };
     }
 
-    async generateText(prompt: string, options: AiGenerateOptions = {}): Promise<string> {
+    async generateText(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<string>> {
         const { temperature = 0.7, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction } = options;
 
         const systemPrompt = systemInstruction
@@ -82,7 +89,14 @@ export class GroqProvider implements AiProvider {
         }
 
         const data = await response.json();
-        return data.choices[0]?.message?.content ?? "";
+        
+        const promptTokens = data.usage?.prompt_tokens ?? 0;
+        const completionTokens = data.usage?.completion_tokens ?? 0;
+
+        return {
+            result: data.choices[0]?.message?.content ?? "",
+            usage: { promptTokens, completionTokens }
+        };
     }
 
     async generateTextStream(prompt: string, options: AiGenerateOptions = {}): Promise<ReadableStream<Uint8Array>> {

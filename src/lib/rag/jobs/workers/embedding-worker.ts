@@ -1,5 +1,4 @@
 import { Worker, Job } from "bullmq";
-import Redis from "ioredis";
 import { prisma } from "@/lib/prisma";
 import { parseDocument } from "../../core/document-parser";
 import { SemanticChunker } from "../../core/chunking/semantic-chunker";
@@ -7,10 +6,10 @@ import { getEmbeddingProvider } from "../../core/providers/embedding-provider";
 import { getVectorStore } from "../../core/vector-store";
 import { Logger } from "@/lib/logger";
 import { env } from "@/lib/env";
+import { createBullMQConnection } from "@/lib/redis";
 
-const connection = new Redis(env.REDIS_URL, {
-    maxRetriesPerRequest: null,
-});
+// P2.3 — Usa factory centralizada do redis.ts em vez de new Redis() local
+const connection = createBullMQConnection();
 const logger = new Logger("EmbeddingWorker");
 
 const globalForWorker = global as unknown as { embeddingWorker: Worker };
@@ -56,7 +55,8 @@ if (!workerInstance) {
                 moduleId,
                 sourceFile: sourceFile.id,
                 sourceType: sourceFile.mimeType,
-                embeddingModel: process.env.EMBEDDING_MODEL ?? "text-embedding-3-small",
+                // P2.4 — usa env validado, não process.env direto
+                embeddingModel: env.EMBEDDING_MODEL,
             };
 
             const allChunks = chunker.createChunks(parsed.text, sharedMetadata);
@@ -93,21 +93,27 @@ if (!workerInstance) {
                 logger.info("Worker", `Embeddings batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(childChunks.length / BATCH_SIZE)} concluído`);
             }
 
-            // 5. Limpar chunks antigos do arquivo
-            await prisma.moduleSourceChunk.deleteMany({
-                where: { fileId: sourceFile.id },
-            });
-
-            // 6. Persistir: PARETs primeiro (FK constraint), depois CHILDs com embedding
+            // P1.2 — Etapas 5 e 6 envolvidas em transação: tudo ou nada.
+            // Falha no insert deixa os chunks antigos intactos até o próximo retry do BullMQ.
+            // Timeout de 120s: inserir centenas de vetores via $executeRawUnsafe supera o padrão de 5s.
             const vectorStore = getVectorStore();
-            await vectorStore.addChunks({
-                moduleId,
-                fileId: sourceFile.id,
-                // Passa todos os chunks; addChunks separa internamente por chunkType
-                chunks: [...parentChunks, ...childChunks],
-                // Embeddings alinhados apenas com os childChunks (PARETs não têm embedding)
-                embeddings: childEmbeddings,
-            });
+            await prisma.$transaction(async (tx) => {
+                // 5. Limpar chunks antigos do arquivo
+                await tx.moduleSourceChunk.deleteMany({
+                    where: { fileId: sourceFile.id },
+                });
+
+                // 6. Persistir: PARETs primeiro (FK constraint), depois CHILDs com embedding
+                await vectorStore.addChunks(
+                    {
+                        moduleId,
+                        fileId: sourceFile.id,
+                        chunks: [...parentChunks, ...childChunks],
+                        embeddings: childEmbeddings,
+                    },
+                    tx  // passa o client da transação
+                );
+            }, { timeout: 120_000 });
 
             await prisma.moduleSourceFile.update({
                 where: { id: sourceFile.id },

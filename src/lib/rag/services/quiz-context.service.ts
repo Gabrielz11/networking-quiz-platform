@@ -2,6 +2,7 @@
 // Preparado para uso futuro: fornecer contexto RAG para geração de quiz.
 
 import { getVectorStore } from "../core/vector-store";
+import { env } from "@/lib/env";
 
 export async function getQuizContextFromRag(input: {
     moduleId: string;
@@ -12,6 +13,6 @@ export async function getQuizContextFromRag(input: {
     return vectorStore.searchSimilar({
         moduleId: input.moduleId,
         query: input.topic ?? "principais conceitos do módulo",
-        limit: Number(process.env.RAG_FINAL_CONTEXT_LIMIT || 5),
+        limit: env.RAG_FINAL_CONTEXT_LIMIT,
     });
 }

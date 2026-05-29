@@ -7,15 +7,24 @@ export interface AiGenerateOptions {
     modelName?: string;
     systemInstruction?: string;
     responseSchema?: any;
+    thinkingBudget?: number;
     // Metadados para persistência
     pipeline?: string;
     moduleId?: string;
     sessionId?: string;
 }
 
+export interface AiResponse<T> {
+    result: T;
+    usage?: {
+        promptTokens: number;
+        completionTokens: number;
+    };
+}
+
 export interface AiProvider {
     name: string;
-    generateJson<T = unknown>(prompt: string, options?: AiGenerateOptions): Promise<T>;
-    generateText(prompt: string, options?: AiGenerateOptions): Promise<string>;
+    generateJson<T = unknown>(prompt: string, options?: AiGenerateOptions): Promise<AiResponse<T>>;
+    generateText(prompt: string, options?: AiGenerateOptions): Promise<AiResponse<string>>;
     generateTextStream(prompt: string, options?: AiGenerateOptions): Promise<ReadableStream<Uint8Array>>;
 }

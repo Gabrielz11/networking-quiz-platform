@@ -114,6 +114,7 @@ export class SemanticCache {
             const parsed = JSON.parse(raw) as T;
             // Incrementa hit count no Redis (fire-and-forget)
             redis.incr(`${key}:hits`).catch(() => {});
+            redis.incr(`metrics:cache:${pipeline}:hits`).catch(() => {});
             logger.info("getTier1", "[CACHE HIT] Tier 1 (Redis hash)", { pipeline, hash: hash.slice(0, 8) });
             return parsed;
         } catch (err: any) {
@@ -274,6 +275,9 @@ export class SemanticCache {
                 .catch(() => {});
             return tier2;
         }
+
+        // Se chegou aqui, é um miss em ambos os tiers
+        redis.incr(`metrics:cache:${pipeline}:misses`).catch(() => {});
 
         return null;
     }

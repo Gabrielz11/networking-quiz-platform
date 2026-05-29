@@ -1,47 +1,39 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
 import { ActivityService } from "@/services/activity.service";
 import { redis } from "@/lib/redis";
+import { requireUser, handleAuthError, AuthError } from "@/lib/auth-guard";
+import { quizRepository } from "@/repositories/quiz.repository";
 
 const logger = new Logger("QuizSessionStartRoute");
+
+const BodySchema = z.object({
+    moduleId: z.string().min(1),
+});
+
 export async function POST(req: Request) {
     const start = Date.now();
     try {
-        const session = await auth();
-        //aqui define que só o aluno logado pode iniciar o quiz
-        if (!session?.user) {
-            return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-        }
+        // P0.4 / P2.1 — Usa helper central de autenticação
+        const user = await requireUser();
 
-        logger.info("POST", "Iniciando ou retomando sessão de quiz", {
-            userId: session.user.id,
-        });
+        logger.info("POST", "Iniciando ou retomando sessão de quiz", { userId: user.id });
 
-        const schema = z.object({
-            moduleId: z.string().min(1),
-        });
-
-        const parsed = schema.safeParse(await req.json());
-
+        const parsed = BodySchema.safeParse(await req.json());
         if (!parsed.success) {
-            return NextResponse.json(
-                { error: "Faltam parâmetros obrigatórios." },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Faltam parâmetros obrigatórios." }, { status: 400 });
         }
 
-        const body = parsed.data;
-        const lockKey = `lock:quiz:start:${session.user.id}:${body.moduleId}`;
+        const { moduleId } = parsed.data;
+        const lockKey = `lock:quiz:start:${user.id}:${moduleId}`;
 
-        // Tenta adquirir o lock no Redis por 5 segundos (NX = set se não existe, PX = tempo limite em ms)
+        // Lock Redis como otimização de latência (não é a garantia de corretude — ver P1.3)
         const acquired = await redis.set(lockKey, "locked", "PX", 5000, "NX");
         if (!acquired) {
             logger.warn("POST", "Bloqueando requisição de início de quiz paralela", {
-                userId: session.user.id,
-                moduleId: body.moduleId,
+                userId: user.id,
+                moduleId,
             });
             return NextResponse.json(
                 { error: "Uma requisição idêntica já está em processamento." },
@@ -50,68 +42,74 @@ export async function POST(req: Request) {
         }
 
         try {
-            // aqui ele verifica se o usuario já tem uma sessão em andamento se tiver ele traz a questão de onde ele parou
-            const existingSession = await prisma.quizSession.findFirst({
-                where: {
-                    userId: session.user.id,
-                    moduleId: body.moduleId,
-                    status: "IN_PROGRESS"
-                },
-                include: {
-                    questions: true
-                }
-            });
-            //se existir uma sessão em andamento, retorna ela
+            // P2.1 — Usa repository em vez de prisma direto
+            const existingSession = await quizRepository.findActiveSession(user.id!, moduleId);
             if (existingSession) {
                 logger.info("POST", "Sessão em andamento retomada", {
-                    userId: session.user.id,
-                    moduleId: body.moduleId,
+                    userId: user.id,
+                    moduleId,
                     sessionId: existingSession.id,
                     durationMs: Date.now() - start,
                 });
                 return NextResponse.json({ success: true, quizSession: existingSession });
             }
 
-            // Create a new session
-            //aqui ele cria uma nova sessão
-            //E já é possível ver as questões do módulo que o usuário vai responder.
-            const newSession = await prisma.quizSession.create({
-                data: {
-                    userId: session.user.id!,
-                    moduleId: body.moduleId,
-                    status: "IN_PROGRESS",
-                    currentLevel: "EASY",
-                    errorsInCurrentLevel: 0,
-                    currentQuestionIndex: 0,
-                    score: 0
-                },
-                include: {
-                    questions: true
-                }
+            const newSession = await quizRepository.createSession({
+                user: { connect: { id: user.id! } },
+                module: { connect: { id: moduleId } },
+                status: "IN_PROGRESS",
+                currentLevel: "EASY",
+                errorsInCurrentLevel: 0,
+                currentQuestionIndex: 0,
+                score: 0,
             });
-            //retorna a nova sessão
+
             logger.info("POST", "Nova sessão de quiz criada", {
-                userId: session.user.id,
-                moduleId: body.moduleId,
+                userId: user.id,
+                moduleId,
                 sessionId: newSession.id,
                 durationMs: Date.now() - start,
             });
 
-            // Registra o evento de início de quiz — não-bloqueante
-            ActivityService.logQuizStart(session.user.id!, body.moduleId, newSession.id);
+            ActivityService.logQuizStart(user.id!, moduleId, newSession.id);
 
             return NextResponse.json({ success: true, quizSession: newSession });
+
+        } catch (innerError: unknown) {
+            // P1.3 — Trata violação do índice único parcial (QuizSession_active_unique).
+            // Código Postgres 23505 / Prisma P2002: retorna a sessão existente em vez de 500.
+            const isPrismaUniqueError =
+                typeof innerError === "object" &&
+                innerError !== null &&
+                "code" in innerError &&
+                (innerError as { code: string }).code === "P2002";
+
+            if (isPrismaUniqueError) {
+                logger.warn("POST", "Violação de unicidade ao criar sessão — retornando sessão existente", {
+                    userId: user.id,
+                    moduleId,
+                });
+                const existingSession = await quizRepository.findActiveSession(user.id!, moduleId);
+                if (existingSession) {
+                    return NextResponse.json({ success: true, quizSession: existingSession });
+                }
+            }
+            throw innerError;
         } finally {
-            // Libera o lock no Redis assim que a operação é concluída
             await redis.del(lockKey);
         }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof AuthError) {
+            return handleAuthError(error);
+        }
+
+        // P0.4 — Sem detalhes de erro expostos ao cliente
         logger.error("POST", "Falha ao iniciar ou retomar a sessão de quiz", {
-            message: error.message || error
+            message: error instanceof Error ? error.message : String(error),
         });
         return NextResponse.json(
-            { error: "Falha ao iniciar ou retomar a sessão de quiz.", details: error.message },
+            { error: "Falha ao iniciar ou retomar a sessão de quiz." },
             { status: 500 }
         );
     }

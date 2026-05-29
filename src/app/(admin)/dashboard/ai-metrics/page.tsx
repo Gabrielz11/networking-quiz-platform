@@ -21,7 +21,6 @@ interface AiMetricsData {
     summary: {
         totalCostUsd: number;
         totalGenerations: number;
-        avgCriticScore: number;
         avgGenerationTimeMs: number;
         totalTokens: number;
     };
@@ -34,13 +33,11 @@ interface AiMetricsData {
         costUsd: number;
         count: number;
         avgTime: number;
-        avgScore: number;
         totalTokens: number;
     }>;
     timeSeries: Array<{
         date: string;
         totalCost: number;
-        avgScore: number;
         count: number;
     }>;
 }
@@ -114,13 +111,13 @@ export default function AiMetricsDashboard() {
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-500">Qualidade Pedagógica</CardTitle>
-                            <Star className="w-4 h-4 text-yellow-500" />
+                            <CardTitle className="text-sm font-medium text-gray-500">Gerações Totais</CardTitle>
+                            <BrainCircuit className="w-4 h-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{(data.summary.avgCriticScore * 100).toFixed(1)}%</div>
+                            <div className="text-2xl font-bold">{data.summary.totalGenerations.toLocaleString()}</div>
                             <p className="text-xs text-gray-500 mt-1">
-                                Média do Critic Score Global
+                                Chamadas realizadas à IA
                             </p>
                         </CardContent>
                     </Card>
@@ -163,16 +160,14 @@ export default function AiMetricsDashboard() {
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {data.timeSeries.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height: 300 }}>
                                     <LineChart data={data.timeSeries}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                         <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#6b7280" }} tickMargin={10} />
-                                        <YAxis yAxisId="left" tick={{ fontSize: 12, fill: "#6b7280" }} tickFormatter={(val) => val} />
-                                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: "#6b7280" }} tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} />
+                                        <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} tickFormatter={(val) => val} />
                                         <RechartsTooltip />
                                         <Legend />
-                                        <Line yAxisId="left" type="monotone" name="Gerações" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                                        <Line yAxisId="right" type="monotone" name="Critic Score" dataKey="avgScore" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
+                                        <Line type="monotone" name="Gerações" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -193,7 +188,7 @@ export default function AiMetricsDashboard() {
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {data.pipelines.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height: 300 }}>
                                     <BarChart data={data.pipelines} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
                                         <XAxis type="number" hide />
@@ -225,7 +220,6 @@ export default function AiMetricsDashboard() {
                                     <tr>
                                         <th className="px-4 py-3">Pipeline</th>
                                         <th className="px-4 py-3">Volume</th>
-                                        <th className="px-4 py-3">Score Médio</th>
                                         <th className="px-4 py-3">Tempo Médio</th>
                                         <th className="px-4 py-3">Tokens Totais</th>
                                         <th className="px-4 py-3 text-right">Custo Total</th>
@@ -236,11 +230,6 @@ export default function AiMetricsDashboard() {
                                         <tr key={p.name} className="border-b hover:bg-gray-50">
                                             <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
                                             <td className="px-4 py-3">{p.count}</td>
-                                            <td className="px-4 py-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.avgScore >= 0.8 ? 'bg-green-100 text-green-700' : p.avgScore >= 0.6 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
-                                                    {(p.avgScore * 100).toFixed(1)}%
-                                                </span>
-                                            </td>
                                             <td className="px-4 py-3">{(p.avgTime / 1000).toFixed(2)}s</td>
                                             <td className="px-4 py-3">{p.totalTokens.toLocaleString()}</td>
                                             <td className="px-4 py-3 text-right font-medium text-green-600">

@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { ContentLlmService } from "@/services/llm/content-llm.service";
+import { ModuleContentPreviewService } from "@/services/generation/module-content-preview.service";
 import { Logger } from "@/lib/logger";
+import { requireRole, handleAuthError, AuthError } from "@/lib/auth-guard";
 
 const logger = new Logger("GenerateContentRoute");
 
 export async function POST(req: Request) {
     try {
+        // Rota de professor — geração de prévia de conteúdo antes de salvar o módulo
+        await requireRole("TEACHER");
+
         const { title, description, studyMaterial } = await req.json();
 
         const hasStudyMaterial = studyMaterial && studyMaterial.trim().length > 0;
@@ -17,12 +21,15 @@ export async function POST(req: Request) {
             );
         }
 
-        const parsedData = await ContentLlmService.generate(title ?? "", description ?? "", studyMaterial);
+        const parsedData = await ModuleContentPreviewService.generate(title ?? "", description ?? "", studyMaterial);
 
         return NextResponse.json(parsedData);
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof AuthError) {
+            return handleAuthError(error);
+        }
         logger.error("POST", "Erro na geração rápida de conteúdo via IA", {
-            message: error.message || error
+            message: error instanceof Error ? error.message : String(error),
         });
         return NextResponse.json({ error: "Falha ao gerar conteúdo via IA" }, { status: 500 });
     }

@@ -49,7 +49,7 @@ export class ExplainService {
         logger.info("generateExplanationStream", "Gerando explicação em streaming");
 
         const stream = await LlmRouter.generateTextStream(promptText, {
-            modelName: env.REASONING_FALLBACK_MODEL,
+            modelName: env.EXPLANATION_MODEL ?? env.REASONING_FALLBACK_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
             temperature: 0.5,
             pipeline: "EXPLANATION",
@@ -60,10 +60,8 @@ export class ExplainService {
         if (!questionId) {
             return stream;
         }
-
         let accumulatedText = "";
         const decoder = new TextDecoder();
-        
         const transformStream = new TransformStream<Uint8Array, Uint8Array>({
             transform(chunk, controller) {
                 accumulatedText += decoder.decode(chunk, { stream: true });
@@ -93,7 +91,7 @@ export class ExplainService {
 
     /**
      * Gera explicação pedagógica completa (sem streaming).
-     * Mantido para uso futuro.
+     * Mantido para uso futuro. codigo morto
      */
     static async generateExplanation(
         prompt: string,
@@ -109,7 +107,7 @@ export class ExplainService {
         logger.info("generateExplanation", "Gerando explicação pedagógica");
 
         return LlmRouter.generateText(promptText, {
-            modelName: env.REASONING_FALLBACK_MODEL,
+            modelName: env.EXPLANATION_MODEL ?? env.REASONING_FALLBACK_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
             temperature: 0.6,
             pipeline: "EXPLANATION",

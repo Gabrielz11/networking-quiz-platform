@@ -327,7 +327,7 @@ export function StudentDetailPanel({
                   Evolução do Score por Tentativa
                 </h4>
                 <div className="h-[160px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 400, height: 160 }}>
                     <AreaChart
                       data={evolutionData}
                       margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
@@ -372,7 +372,7 @@ export function StudentDetailPanel({
                   Último Quiz
                 </h4>
                 <div className="relative flex items-center justify-center h-[120px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 200, height: 120 }}>
                     <PieChart>
                       <Pie
                         data={donutData}

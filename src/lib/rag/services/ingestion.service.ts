@@ -1,9 +1,13 @@
-// src/lib/rag/rag-ingestion-service.ts
+// src/lib/rag/services/ingestion.service.ts
+//
+// P2.1 — Esta rota apenas enfileira o job no BullMQ; NÃO instancia nem importa o Worker.
+// O Worker deve ser executado como processo dedicado:
+//   npm run worker
+// Se o worker não estiver rodando, os jobs ficam na fila mas não são processados.
 
 import { prisma } from "@/lib/prisma";
 import { enqueueDocumentProcessing } from "../jobs/queues/embedding-queue";
 import { Logger } from "@/lib/logger";
-import { embeddingWorker } from "../jobs/workers/embedding-worker";
 
 const logger = new Logger("RagIngestionService");
 
@@ -34,11 +38,7 @@ export async function processSourceFile(input: {
             mimeType: sourceFile.mimeType,
         });
 
-        // Força a compilação ativa do Worker para que o Webpack não elimine o import por Tree-Shaking
-        const workerActiveName = embeddingWorker.name;
-        logger.info("processSourceFile", `Garantindo que o worker de embeddings (${workerActiveName}) está escutando no mesmo processo.`);
-
-        // 2. Enfileirar trabalho no BullMQ
+        // 2. Enfileirar trabalho no BullMQ — o worker consome em processo separado
         await enqueueDocumentProcessing(sourceFile.id, sourceFile.moduleId);
 
         logger.info("processSourceFile", "Arquivo enfileirado com sucesso", {

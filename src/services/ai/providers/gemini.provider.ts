@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
-import { AiProvider, AiGenerateOptions } from "../types";
+import { AiProvider, AiGenerateOptions, AiResponse } from "../types";
 import { Logger } from "@/lib/logger";
 import { cleanMarkdownCodeFences } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export class GeminiProvider implements AiProvider {
         this.client = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
     }
 
-    async generateJson<T = unknown>(prompt: string, options: AiGenerateOptions = {}): Promise<T> {
+    async generateJson<T = unknown>(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<T>> {
         const { temperature = 0.6, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, responseSchema } = options;
 
         const result = await this.withTimeout(
@@ -34,12 +34,18 @@ export class GeminiProvider implements AiProvider {
             timeoutMs
         );
 
+        const promptTokens = result.usageMetadata?.promptTokenCount ?? 0;
+        const completionTokens = result.usageMetadata?.candidatesTokenCount ?? 0;
+
         const cleaned = cleanMarkdownCodeFences(result.text ?? "{}");
-        return JSON.parse(cleaned) as T;
+        return {
+            result: JSON.parse(cleaned) as T,
+            usage: { promptTokens, completionTokens }
+        };
     }
 
-    async generateText(prompt: string, options: AiGenerateOptions = {}): Promise<string> {
-        const { temperature = 0.7, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction } = options;
+    async generateText(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<string>> {
+        const { temperature = 0.7, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction, thinkingBudget } = options;
 
         const result = await this.withTimeout(
             this.client.models.generateContent({
@@ -48,12 +54,21 @@ export class GeminiProvider implements AiProvider {
                 config: {
                     systemInstruction,
                     temperature,
+                    ...(thinkingBudget !== undefined && {
+                        thinkingConfig: { thinkingBudget },
+                    }),
                 },
             }),
             timeoutMs
         );
 
-        return result.text ?? "";
+        const promptTokens = result.usageMetadata?.promptTokenCount ?? 0;
+        const completionTokens = result.usageMetadata?.candidatesTokenCount ?? 0;
+
+        return {
+            result: result.text ?? "",
+            usage: { promptTokens, completionTokens }
+        };
     }
 
     async generateTextStream(prompt: string, options: AiGenerateOptions = {}): Promise<ReadableStream<Uint8Array>> {

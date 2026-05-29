@@ -32,7 +32,7 @@ export class QuizQuestionGenerationService {
             previousPromptsCount: previousPrompts.length,
         });
 
-        const MAX_RETRIES = 3;
+        const MAX_RETRIES = 2;
         let lastError: Error | null = null;
 
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {

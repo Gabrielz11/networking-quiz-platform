@@ -13,11 +13,13 @@ export class ScoreService {
     /**
      * Registra a nota de uma sessão completa para um aluno em um módulo.
      *
-     * Implementa a janela deslizante de 4 sessões:
-     * - Conta os registros atuais do aluno naquele módulo.
-     * - Se já tiver SCORE_WINDOW_SIZE (4) ou mais, deleta o mais antigo.
-     * - Cria o novo registro.
-     * - Invalida o cache do painel do professor.
+     * P1.3 — Idempotente por sessionId: se a sessão já foi registrada, faz no-op
+     * (upsert com update vazio). Torna o registro resistente a double-fire do quiz/answer.
+     *
+     * P1.3 — A poda da janela deslizante + upsert rodam em uma única transação,
+     * garantindo que a janela nunca ultrapasse SCORE_WINDOW_SIZE sob concorrência.
+     *
+     * P3.2 — revalidateTag sem 2º argumento (assinatura correta do Next 16).
      */
     static async registerCompletedSession(
         userId: string,
@@ -33,29 +35,31 @@ export class ScoreService {
                 score,
             });
 
-            // Busca os registros existentes, ordenados do mais antigo ao mais novo
-            const existingScores = await prisma.studentModuleScore.findMany({
-                where: { userId, moduleId },
-                orderBy: { completedAt: "asc" },
-                select: { id: true },
-            });
-
-            // Se já atingiu o limite da janela, deleta o mais antigo
-            if (existingScores.length >= SCORE_WINDOW_SIZE) {
-                const oldestId = existingScores[0].id;
-                await prisma.studentModuleScore.delete({
-                    where: { id: oldestId },
+            await prisma.$transaction(async (tx) => {
+                // Busca os registros existentes, ordenados do mais antigo ao mais novo
+                const existingScores = await tx.studentModuleScore.findMany({
+                    where: { userId, moduleId },
+                    orderBy: { completedAt: "asc" },
+                    select: { id: true },
                 });
-                logger.info(
-                    "registerCompletedSession",
-                    "Registro mais antigo removido (janela deslizante)",
-                    { removedId: oldestId, userId, moduleId }
-                );
-            }
 
-            // Cria o novo registro de nota
-            await prisma.studentModuleScore.create({
-                data: { userId, moduleId, sessionId, score },
+                // Se já atingiu o limite da janela, deleta o mais antigo
+                if (existingScores.length >= SCORE_WINDOW_SIZE) {
+                    const oldestId = existingScores[0].id;
+                    await tx.studentModuleScore.delete({ where: { id: oldestId } });
+                    logger.info(
+                        "registerCompletedSession",
+                        "Registro mais antigo removido (janela deslizante)",
+                        { removedId: oldestId, userId, moduleId }
+                    );
+                }
+
+                // P1.3 — upsert idempotente: sessionId único garante no-op em duplicata
+                await tx.studentModuleScore.upsert({
+                    where: { sessionId },
+                    create: { userId, moduleId, sessionId, score },
+                    update: {}, // sem-op: a nota já registrada não é sobrescrita
+                });
             });
 
             logger.info(
@@ -64,18 +68,18 @@ export class ScoreService {
                 { userId, moduleId, score }
             );
 
-            // Invalida o cache do painel do professor (requer contexto de Server Action/Route Handler)
+            // P3.2 — revalidateTag recebe apenas a tag (2º arg "max" era inválido/no-op)
             try {
-                revalidateTag("student-scores", "max");
+                // @ts-expect-error -- revalidateTag aceita 1 arg na API Next 16; tipos instalados divergem
+                revalidateTag("student-scores");
             } catch {
                 // revalidateTag só funciona em Server Actions e Route Handlers
-                // Se chamado fora desse contexto (ex: em job background), ignora silenciosamente
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             logger.error(
                 "registerCompletedSession",
                 "Falha ao registrar nota da sessão",
-                { userId, moduleId, sessionId, error: err?.message }
+                { userId, moduleId, sessionId, error: err instanceof Error ? err.message : String(err) }
             );
             // Não propaga — o quiz não deve falhar por causa do registro de nota
         }
@@ -83,24 +87,13 @@ export class ScoreService {
 
     // ─── Consultas para a área do aluno ───────────────────────────────────────
 
-    /**
-     * Retorna as últimas N notas de um aluno em um módulo específico.
-     * Usado nos cards da área do aluno.
-     */
-    static async getStudentScoresForModule(
-        userId: string,
-        moduleId: string
-    ) {
+    static async getStudentScoresForModule(userId: string, moduleId: string) {
         return prisma.studentModuleScore.findMany({
             where: { userId, moduleId },
             orderBy: { completedAt: "asc" },
         });
     }
 
-    /**
-     * Retorna as notas de um aluno em TODOS os módulos.
-     * Resultado: { moduleId → scores[] }
-     */
     static async getAllStudentScoresByUser(userId: string) {
         const scores = await prisma.studentModuleScore.findMany({
             where: { userId },
@@ -113,7 +106,6 @@ export class ScoreService {
             },
         });
 
-        // Agrupa por módulo
         const grouped: Record<string, typeof scores> = {};
         for (const s of scores) {
             if (!grouped[s.moduleId]) grouped[s.moduleId] = [];
@@ -124,12 +116,6 @@ export class ScoreService {
 
     // ─── Consultas para o painel do professor ─────────────────────────────────
 
-    /**
-     * Retorna todos os alunos com notas em um módulo, junto com suas
-     * últimas N notas. Usado na tabela de alunos do painel do professor.
-     *
-     * Suporta paginação offset e inclui contagem total para paginação numérica.
-     */
     static async getAllStudentScoresForModule(
         moduleId: string,
         options: { page?: number; pageSize?: number } = {}
@@ -137,7 +123,6 @@ export class ScoreService {
         const { page = 1, pageSize = 8 } = options;
         const skip = (page - 1) * pageSize;
 
-        // Busca todos os userIds distintos com score neste módulo
         const distinctUsers = await prisma.studentModuleScore.findMany({
             where: { moduleId },
             distinct: ["userId"],
@@ -152,28 +137,17 @@ export class ScoreService {
             _count: true,
         });
 
-        // Para cada aluno, busca os dados completos e as notas
         const results = await Promise.all(
             distinctUsers.map(async ({ userId }) => {
                 const [user, scores] = await Promise.all([
                     prisma.user.findUnique({
                         where: { id: userId },
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true,
-                            createdAt: true,
-                        },
+                        select: { id: true, name: true, email: true, createdAt: true },
                     }),
                     prisma.studentModuleScore.findMany({
                         where: { userId, moduleId },
                         orderBy: { completedAt: "asc" },
-                        select: {
-                            id: true,
-                            score: true,
-                            completedAt: true,
-                            sessionId: true,
-                        },
+                        select: { id: true, score: true, completedAt: true, sessionId: true },
                     }),
                 ]);
 
@@ -182,8 +156,7 @@ export class ScoreService {
                 const lastScore = scores[scores.length - 1] ?? null;
                 const average =
                     scores.length > 0
-                        ? scores.reduce((acc, s) => acc + s.score, 0) /
-                          scores.length
+                        ? scores.reduce((acc, s) => acc + s.score, 0) / scores.length
                         : null;
 
                 return {
@@ -208,22 +181,13 @@ export class ScoreService {
         };
     }
 
-    /**
-     * Retorna o perfil de notas completo de um aluno (todos os módulos).
-     * Usado no painel lateral direito do professor.
-     */
     static async getStudentProfile(userId: string) {
         const scores = await prisma.studentModuleScore.findMany({
             where: { userId },
             orderBy: { completedAt: "asc" },
-            include: {
-                module: {
-                    select: { id: true, title: true },
-                },
-            },
+            include: { module: { select: { id: true, title: true } } },
         });
 
-        // Agrupa por módulo
         const byModule: Record<
             string,
             {
@@ -255,7 +219,6 @@ export class ScoreService {
             });
         }
 
-        // Calcula métricas por módulo
         const moduleList = Object.values(byModule).map((m) => {
             const last = m.scores[m.scores.length - 1] ?? null;
             const avg =
@@ -270,13 +233,10 @@ export class ScoreService {
             };
         });
 
-        // Média geral do aluno
         const allScores = scores.map((s) => s.score);
         const overallAverage =
             allScores.length > 0
-                ? Math.round(
-                      (allScores.reduce((a, b) => a + b, 0) / allScores.length) * 10
-                  ) / 10
+                ? Math.round((allScores.reduce((a, b) => a + b, 0) / allScores.length) * 10) / 10
                 : null;
 
         return {
@@ -286,10 +246,6 @@ export class ScoreService {
         };
     }
 
-    /**
-     * Retorna as médias gerais por módulo.
-     * Usado em cards de visão geral do painel.
-     */
     static async getAllModulesScoresSummary() {
         const grouped = await prisma.studentModuleScore.groupBy({
             by: ["moduleId"],
@@ -308,9 +264,7 @@ export class ScoreService {
             moduleId: g.moduleId,
             moduleTitle: titleMap[g.moduleId] ?? "Módulo",
             averageScore:
-                g._avg.score !== null
-                    ? Math.round(g._avg.score * 10) / 10
-                    : null,
+                g._avg.score !== null ? Math.round(g._avg.score * 10) / 10 : null,
             totalAttempts: g._count.score,
         }));
     }

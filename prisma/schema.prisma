@@ -100,6 +100,11 @@ model QuizSession {
   questions            QuestionInstance[]
   aiGenerations        AiGenerationMetadata[]
   telemetries          StudentQuizTelemetry[]
+
+  // P3.2 — Índice composto para a query de sessão ativa em session/start
+  @@index([userId, moduleId, status])
+  // Nota: o índice único parcial "QuizSession_active_unique" (WHERE status = 'IN_PROGRESS')
+  // é gerenciado via migration SQL crua (P1.3), pois o Prisma não suporta índices parciais.
 }
 
 model QuestionInstance {
@@ -114,6 +119,9 @@ model QuestionInstance {
   studentAnswer      Int?
   isCorrect          Boolean?
   createdAt          DateTime    @default(now())
+
+  // P3.2 — FK sessionId não é indexada automaticamente no Postgres
+  @@index([sessionId])
 }
 
 model ModuleSourceFile {
@@ -170,6 +178,8 @@ model StudentModuleScore {
   score       Int      // 0–10 (1 ponto por acerto nas 10 questões)
   completedAt DateTime @default(now())
 
+  // P1.3 — Garante idempotência: uma sessão completada gera exatamente uma nota
+  @@unique([sessionId])
   @@index([userId, moduleId])
   @@index([moduleId, completedAt])
   @@index([userId, completedAt])
@@ -193,19 +203,18 @@ model ActivityLog {
 }
 
 // ── Metadados detalhados de cada geração realizada pela IA ──────────────────────
+// P2.3 — criticScore, criticMetrics e retrievedChunks removidos (eram sempre
+// valores placeholder constantes sem Critic implementado).
 model AiGenerationMetadata {
   id                String       @id @default(cuid())
   pipeline          String       // CONTENT_GEN, QUIZ_GEN, EXPLANATION, VALIDATION
   promptUsed        String       @db.Text
-  modelName         String       // ex: gemini-2.5-pro, deepseek-r1
+  modelName         String       // ex: gemini-2.5-flash, llama-3.3-70b-versatile
   temperature       Float
   generationTimeMs  Int
   promptTokens      Int?
   completionTokens  Int?
   costUsd           Float?       // cálculo estimado de custo baseado nos tokens
-  criticScore       Float        // pontuação geral final do Scorer (0.0 a 1.0)
-  criticMetrics     Json         // detalhes de cada um dos 7 pilares de qualidade
-  retrievedChunks   Json         // IDs e relevância dos chunks de RAG utilizados
   contentVersion    Int          @default(1)
   createdAt         DateTime     @default(now())
 
@@ -214,6 +223,8 @@ model AiGenerationMetadata {
   module            Module?      @relation(fields: [moduleId], references: [id], onDelete: SetNull)
   sessionId         String?
   session           QuizSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }
 
 // ── Telemetria avançada de performance dos alunos no Quiz ──────────────────────
@@ -226,7 +237,7 @@ model StudentQuizTelemetry {
   sessionId           String
   session             QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   questionId          String       // referência a QuestionInstance
-  
+
   // Métricas capturadas
   responseTimeMs      Int          // tempo total que o aluno levou para responder a questão
   isCorrect           Boolean

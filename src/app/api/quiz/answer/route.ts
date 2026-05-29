@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { QuizProgressionService } from "@/services/quiz-progression.service";
 import { ScoreService } from "@/services/score.service";
 import { ActivityService } from "@/services/activity.service";
@@ -12,6 +10,9 @@ import {
     acquireIdempotencyLock,
     releaseIdempotencyLock,
 } from "@/lib/idempotency";
+import { requireUser, handleAuthError, AuthError } from "@/lib/auth-guard";
+import { quizRepository, AlreadyAnsweredError } from "@/repositories/quiz.repository";
+import { QUIZ_QUESTION_LIMIT } from "@/lib/quiz-config";
 
 const logger = new Logger("QuizAnswerRoute");
 
@@ -25,10 +26,8 @@ export async function POST(req: Request) {
     const start = Date.now();
 
     try {
-        const sessionReq = await auth();
-        if (!sessionReq?.user) {
-            return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-        }
+        // P2.1 — Usa helper central de autenticação
+        const user = await requireUser();
 
         const idempotencyKey = req.headers.get("Idempotency-Key");
 
@@ -62,22 +61,20 @@ export async function POST(req: Request) {
         const { sessionId, questionId, studentAnswerIndex } = parsed.data;
 
         logger.info("POST", "Processando resposta do aluno", {
-            userId: sessionReq.user.id,
+            userId: user.id,
             sessionId,
             questionId,
         });
 
-        const session = await prisma.quizSession.findUnique({
-            where: { id: sessionId },
-            include: { questions: true },
-        });
+        // P2.1 — Usa repository em vez de prisma direto
+        const session = await quizRepository.findSessionById(sessionId);
 
         if (!session) {
             if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "Sessão não encontrada." }, { status: 404 });
         }
 
-        if (session.userId !== sessionReq.user.id) {
+        if (session.userId !== user.id) {
             if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
             return NextResponse.json({ error: "Acesso negado à sessão." }, { status: 403 });
         }
@@ -93,11 +90,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Questão não encontrada nesta sessão." }, { status: 404 });
         }
 
-        if (question.studentAnswer !== null) {
-            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey);
-            return NextResponse.json({ error: "A questão já foi respondida." }, { status: 400 });
-        }
-
         const isCorrect = studentAnswerIndex === question.correctOptionIndex;
 
         const { nextLevel, nextErrors } = QuizProgressionService.calculateAdaptiveProgression(
@@ -108,40 +100,31 @@ export async function POST(req: Request) {
 
         const updatedScore = isCorrect ? session.score + 1 : session.score;
         const nextIndex = session.currentQuestionIndex + 1;
-        const isCompleted = nextIndex >= 10;
+        // P3.1 — Usa constante em vez de magic number
+        const isCompleted = nextIndex >= QUIZ_QUESTION_LIMIT;
         const responseTimeMs = Date.now() - question.createdAt.getTime();
 
-        await prisma.$transaction([
-            prisma.questionInstance.update({
-                where: { id: question.id },
-                data: { studentAnswer: studentAnswerIndex, isCorrect },
-            }),
-            prisma.quizSession.update({
-                where: { id: session.id },
-                data: {
-                    currentLevel: nextLevel,
-                    errorsInCurrentLevel: nextErrors,
-                    score: updatedScore,
-                    currentQuestionIndex: nextIndex,
-                    status: isCompleted ? "COMPLETED" : "IN_PROGRESS",
-                },
-            }),
-            prisma.studentQuizTelemetry.create({
-                data: {
-                    userId: sessionReq.user.id!,
-                    moduleId: session.moduleId,
-                    sessionId: session.id,
-                    questionId: question.id,
-                    responseTimeMs: Math.max(0, responseTimeMs),
-                    isCorrect,
-                    chosenOptionIndex: studentAnswerIndex,
-                    difficultyLevel: question.difficulty,
-                },
-            }),
-        ]);
+        // P1.1 / P2.1 — Usa saveAnswerAndProgress do repository com updateMany condicional.
+        // Garante que duas requisições paralelas à mesma questão resultem em exatamente
+        // uma pontuação registrada (corretude não depende de Idempotency-Key).
+        await quizRepository.saveAnswerAndProgress({
+            sessionId: session.id,
+            questionId: question.id,
+            studentAnswer: studentAnswerIndex,
+            isCorrect,
+            nextLevel,
+            nextErrors,
+            newScore: updatedScore,
+            nextIndex,
+            status: isCompleted ? "COMPLETED" : "IN_PROGRESS",
+            userId: user.id!,
+            moduleId: session.moduleId,
+            responseTimeMs,
+            difficultyLevel: question.difficulty,
+        });
 
         logger.info("POST", "Resposta processada com sucesso", {
-            userId: sessionReq.user.id,
+            userId: user.id,
             sessionId,
             isCorrect,
             updatedScore,
@@ -149,9 +132,8 @@ export async function POST(req: Request) {
             durationMs: Date.now() - start,
         });
 
-        // Registra eventos não-bloqueantes se quiz completado
         if (isCompleted) {
-            const userId = sessionReq.user.id!;
+            const userId = user.id!;
             ScoreService.registerCompletedSession(userId, session.moduleId, sessionId, updatedScore);
             ActivityService.logQuizComplete(userId, session.moduleId, sessionId, updatedScore);
             ActivityService.logScoreRecorded(userId, session.moduleId, sessionId, updatedScore);
@@ -161,8 +143,6 @@ export async function POST(req: Request) {
             success: true,
             isCorrect,
             correctOptionIndex: question.correctOptionIndex,
-            // Explicação base da DB — exibida imediatamente para respostas corretas.
-            // Para respostas erradas, o frontend também usa /api/explain para a versão personalizada em streaming.
             explanation: question.explanation,
             nextLevel,
             completed: isCompleted,
@@ -176,8 +156,21 @@ export async function POST(req: Request) {
 
         return NextResponse.json(responseJson);
 
-    } catch (error: any) {
-        logger.error("POST", "Falha ao processar resposta do estudante", { message: error.message });
+    } catch (error: unknown) {
+        if (error instanceof AuthError) {
+            return handleAuthError(error);
+        }
+
+        // P1.1 — Resposta já registrada por outra requisição concorrente → 409
+        if (error instanceof AlreadyAnsweredError) {
+            const idempotencyKey = req.headers.get("Idempotency-Key");
+            if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey).catch(() => {});
+            return NextResponse.json({ error: "A questão já foi respondida." }, { status: 409 });
+        }
+
+        logger.error("POST", "Falha ao processar resposta do estudante", {
+            message: error instanceof Error ? error.message : String(error),
+        });
 
         const idempotencyKey = req.headers.get("Idempotency-Key");
         if (idempotencyKey) await releaseIdempotencyLock(idempotencyKey).catch(() => {});

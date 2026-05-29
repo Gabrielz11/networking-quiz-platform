@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis";
+import { randomUUID } from "crypto";
 
 interface RateLimitConfig {
     limit: number;
@@ -8,6 +9,10 @@ interface RateLimitConfig {
 /**
  * Verifica se um identificador atingiu o limite de requisições em uma determinada rota.
  * Implementação utilizando Sliding Window Log (Sorted Set) no Redis.
+ *
+ * P3.5 — O member do sorted set agora inclui um UUID para garantir que N requisições
+ * simultâneas no mesmo milissegundo sejam contadas como N (sorted sets deduplicam
+ * membros idênticos, causando subcontagem com `now.toString()` como member).
  */
 export async function isRateLimited(
     identifier: string,
@@ -17,12 +22,14 @@ export async function isRateLimited(
     const key = `rate:limit:${identifier}:${route}`;
     const now = Date.now();
     const clearBefore = now - config.windowSeconds * 1000;
+    // Member único: timestamp + UUID — evita colisão entre requisições no mesmo ms
+    const member = `${now}-${randomUUID()}`;
 
     const pipeline = redis.pipeline();
     // 1. Remove timestamps fora da janela de tempo atual
     pipeline.zremrangebyscore(key, 0, clearBefore);
-    // 2. Adiciona o timestamp atual
-    pipeline.zadd(key, now, now.toString());
+    // 2. Adiciona o timestamp atual com member único
+    pipeline.zadd(key, now, member);
     // 3. Obtém o número de registros presentes na janela
     pipeline.zcard(key);
     // 4. Renova a expiração da chave para limpeza automática do Redis

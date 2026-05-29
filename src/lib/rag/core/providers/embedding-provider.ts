@@ -1,107 +1,99 @@
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
+import { env } from "@/lib/env";
 
 export interface EmbeddingProvider {
     embedText(text: string): Promise<number[]>;
     embedMany(texts: string[]): Promise<number[][]>;
+    readonly modelName: string;
 }
 
 // 1. Provedor Google Gemini (768 dimensões)
 export class GeminiEmbeddingProvider implements EmbeddingProvider {
     private client: GoogleGenAI;
+    // P1.1 — modelo fixado no env validado; exposto para validação de divergência
+    readonly modelName: string;
 
     constructor() {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
+        if (!env.GEMINI_API_KEY) {
             throw new Error("GEMINI_API_KEY não configurada.");
         }
-        this.client = new GoogleGenAI({ apiKey });
+        this.client = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+        this.modelName = env.EMBEDDING_MODEL;
     }
 
     async embedText(text: string): Promise<number[]> {
-        // Fallback caso o modelo configurado no .env seja da OpenAI por engano
-        let modelName = process.env.EMBEDDING_MODEL ?? "text-embedding-004";
-        if (modelName.includes("openai") || modelName.includes("text-embedding-3")) {
-            modelName = "text-embedding-004";
-        }
-        
         const result = await this.client.models.embedContent({
-            model: modelName,
+            model: this.modelName,
             contents: [{ parts: [{ text }] }],
-            config: {
-                outputDimensionality: 768
-            }
+            config: { outputDimensionality: 768 },
         });
 
         const embedding = result.embeddings?.[0]?.values;
-
         if (!embedding || embedding.length === 0) {
             throw new Error("Erro ao gerar embedding: resposta vazia do provider.");
         }
-
         return embedding;
     }
 
+    // P3.3 — Paralelismo controlado (5 concurrent) em vez de loop sequencial com sleep fixo
     async embedMany(texts: string[]): Promise<number[][]> {
-        const embeddings: number[][] = [];
-        for (const text of texts) {
-            if (embeddings.length > 0) {
-                await new Promise((resolve) => setTimeout(resolve, 100));
-            }
-            embeddings.push(await this.embedText(text));
+        const CONCURRENCY = 5;
+        const results: number[][] = [];
+        for (let i = 0; i < texts.length; i += CONCURRENCY) {
+            const batch = texts.slice(i, i + CONCURRENCY);
+            const embeddings = await Promise.all(batch.map((t) => this.embedText(t)));
+            results.push(...embeddings);
         }
-        return embeddings;
+        return results;
     }
 }
 
-// 2. Provedor OpenAI (Configurado dinamicamente para 768 dimensões)
+// 2. Provedor OpenAI (configurado para 768 dimensões)
 export class OpenAIEmbeddingProvider implements EmbeddingProvider {
     private client: OpenAI;
+    // P1.1 — modelo fixado no env validado
+    readonly modelName: string;
 
     constructor() {
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
+        if (!env.OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY não configurada.");
         }
-        this.client = new OpenAI({ apiKey });
+        this.client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+        this.modelName = env.EMBEDDING_MODEL;
     }
 
     async embedText(text: string): Promise<number[]> {
-        let modelName = process.env.EMBEDDING_MODEL ?? "text-embedding-3-small";
-        if (modelName.includes("gemini")) {
-            modelName = "text-embedding-3-small";
-        }
-
         const response = await this.client.embeddings.create({
-            model: modelName,
+            model: this.modelName,
             input: text,
             encoding_format: "float",
-            dimensions: 768 // Reduz a saída de 1536 para 768 para alinhar com o pgvector
+            dimensions: 768, // Reduz a saída de 1536 para 768 para alinhar com o pgvector
         });
-
         return response.data[0].embedding;
     }
 
     async embedMany(texts: string[]): Promise<number[][]> {
-        let modelName = process.env.EMBEDDING_MODEL ?? "text-embedding-3-small";
-        if (modelName.includes("gemini")) {
-            modelName = "text-embedding-3-small";
-        }
-
         const response = await this.client.embeddings.create({
-            model: modelName,
+            model: this.modelName,
             input: texts,
             encoding_format: "float",
-            dimensions: 768 // Reduz a saída para 768 dimensões
+            dimensions: 768,
         });
-
         return response.data.map((item) => item.embedding);
     }
 }
 
-// 3. Fábrica inteligente que escolhe o provedor dinamicamente
+/**
+ * P1.1 — Factory que usa env.EMBEDDING_PROVIDER (default "openai", alinhado com env.ts).
+ * Antes usava process.env com default "google", divergindo do env.ts e podendo causar
+ * mismatch silencioso entre ingestão e consulta vetorial.
+ *
+ * IMPORTANTE: trocar EMBEDDING_PROVIDER exige reprocessar todos os módulos —
+ * os vetores já armazenados usam o espaço vetorial do modelo anterior e são incompatíveis.
+ */
 export function getEmbeddingProvider(): EmbeddingProvider {
-    const provider = process.env.EMBEDDING_PROVIDER?.toLowerCase() ?? "google";
+    const provider = env.EMBEDDING_PROVIDER;
     if (provider === "openai") {
         return new OpenAIEmbeddingProvider();
     }

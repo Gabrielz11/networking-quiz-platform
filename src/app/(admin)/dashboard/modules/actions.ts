@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("AdminModulesActions");
 
 export async function getModules() {
   return await prisma.module.findMany({
@@ -23,6 +26,15 @@ export async function createModule(data: { title: string; content: string; descr
     },
   });
 
+  logger.info("createModule", "Novo módulo criado com sucesso pelo professor", {
+    moduleId: module.id,
+    title: module.title,
+    description: module.description,
+    authorId: session.user.id,
+    authorName: session.user.name,
+    authorEmail: session.user.email,
+  });
+
   revalidatePath("/dashboard/modules");
   revalidatePath("/student");
 
@@ -39,12 +51,23 @@ export async function updateModule(id: string, data: { title: string; content: s
     },
   });
 
+  logger.info("updateModule", "Módulo atualizado com sucesso pelo professor", {
+    moduleId: id,
+    title: data.title,
+    description: data.description,
+  });
+
   revalidatePath("/dashboard/modules");
   revalidatePath("/student");
 }
 
 export async function deleteModule(id: string) {
   await prisma.module.delete({ where: { id } });
+
+  logger.info("deleteModule", "Módulo excluído com sucesso pelo professor", {
+    moduleId: id,
+  });
+
   revalidatePath("/dashboard/modules");
   revalidatePath("/student");
 }

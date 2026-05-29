@@ -167,7 +167,7 @@ export default function AnalyticsDashboard() {
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {data.trends.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height: 300 }}>
                                     <ComposedChart data={data.trends}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                                         <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#6b7280" }} tickMargin={10} />
@@ -197,7 +197,7 @@ export default function AnalyticsDashboard() {
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {formattedDifficulty.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height: 300 }}>
                                     <BarChart data={formattedDifficulty} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />

@@ -24,14 +24,27 @@ export async function GET(
     context: { params: Promise<{ moduleId: string }> }
 ) {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
         return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 
-    const { moduleId } = await context.params;
+    const params = paramsSchema.safeParse(await context.params);
+    if (!params.success) {
+        return NextResponse.json({ error: "ID do módulo inválido." }, { status: 400 });
+    }
+
+    const { moduleId } = params.data;
+
+    // P0.2 — Ownership: só o autor do módulo pode listar seus arquivos
+    const moduleRecord = await moduleRepository.findById(moduleId);
+    if (!moduleRecord) {
+        return NextResponse.json({ error: "Módulo não encontrado." }, { status: 404 });
+    }
+    if (moduleRecord.authorId !== session.user.id) {
+        return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+    }
 
     const files = await fileRepository.findByModuleId(moduleId);
-
     return NextResponse.json(files);
 }
 

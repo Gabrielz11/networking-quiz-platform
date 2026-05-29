@@ -1,36 +1,53 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { z } from "zod";
 import { BatchQuizGenerationService } from "@/services/generation/batch-quiz-generation.service";
 import { Logger } from "@/lib/logger";
+import { requireRole, handleAuthError, AuthError } from "@/lib/auth-guard";
 
 const logger = new Logger("GenerateQuestionsRoute");
 
+const BodySchema = z.object({
+    moduleId: z.string().min(1, "moduleId é obrigatório"),
+    title: z.string().min(1, "title é obrigatório"),
+    content: z.string().min(1, "content é obrigatório"),
+});
+
 export async function POST(req: Request) {
     try {
-        const session = await auth();
-        if (!session?.user) {
-            return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-        }
+        // P0.2 — Exige role TEACHER (lança 401 sem login, 403 com role errado)
+        const user = await requireRole("TEACHER");
 
-        const { moduleId, title, content } = await req.json();
-
-        if (!moduleId || !title || !content) {
+        // P0.2 — Validação do body com Zod
+        const rawBody = await req.json();
+        const parsed = BodySchema.safeParse(rawBody);
+        if (!parsed.success) {
             return NextResponse.json(
-                { error: "Faltam parâmetros obrigatórios." },
+                { error: "Parâmetros inválidos.", details: parsed.error.flatten().fieldErrors },
                 { status: 400 }
             );
         }
 
-        // Gera questões via BatchLlmService (AiService → Gemini + fallback Groq)
-        const questions = await BatchQuizGenerationService.generate(title, content, moduleId);
+        const { moduleId, title, content } = parsed.data;
 
-        // Limpar questões antigas via Prisma
-        await prisma.question.deleteMany({
-            where: { moduleId }
+        // P0.2 — Verificar ownership: o módulo deve pertencer ao professor autenticado
+        const moduleRecord = await prisma.module.findUnique({
+            where: { id: moduleId },
+            select: { authorId: true },
         });
 
-        // Inserir as novas questões em lote (Bulk Insert) de alta performance
+        if (!moduleRecord) {
+            return NextResponse.json({ error: "Módulo não encontrado." }, { status: 404 });
+        }
+
+        if (moduleRecord.authorId !== user.id) {
+            return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+        }
+
+        // P1.2 — Gera as questões via IA ANTES de apagar as antigas.
+        // Se a IA falhar, as questões antigas permanecem intactas.
+        const questions = await BatchQuizGenerationService.generate(title, content, moduleId);
+
         const questionsData = questions.map((q) => ({
             moduleId,
             prompt: q.prompt,
@@ -38,23 +55,30 @@ export async function POST(req: Request) {
             correctOptionIndex: q.correct_option_index,
             explanationBase: JSON.stringify({
                 difficulty: q.difficulty,
-                text: q.explanation_base
-            })
+                text: q.explanation_base,
+            }),
         }));
 
-        const resultInsert = await prisma.question.createMany({
-            data: questionsData
+        // P1.2 — deleteMany + createMany em uma única transação atômica.
+        // Falha no insert faz rollback, preservando as questões antigas.
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.question.deleteMany({ where: { moduleId } });
+            return tx.question.createMany({ data: questionsData });
         });
 
         logger.info("POST", `Questões geradas e salvas em lote para o módulo ${moduleId}`, {
-            count: resultInsert.count
+            count: result.count,
         });
 
-        return NextResponse.json({ success: true, count: resultInsert.count });
+        return NextResponse.json({ success: true, count: result.count });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof AuthError) {
+            return handleAuthError(error);
+        }
+
         logger.error("POST", "Falha na geração ou gravação das questões", {
-            message: error.message || error
+            message: error instanceof Error ? error.message : String(error),
         });
         return NextResponse.json(
             { error: "Falha na geração das questões." },
