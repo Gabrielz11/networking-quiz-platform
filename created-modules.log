@@ -258,3 +258,6 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [28/05/2026, 22:09:29] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":11983}
 [28/05/2026, 22:09:31] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
 [28/05/2026, 22:09:59] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[30/05/2026, 19:39:58] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[30/05/2026, 19:39:58] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[30/05/2026, 19:39:58] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
