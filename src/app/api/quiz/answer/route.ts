@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { QuizProgressionService } from "@/services/quiz-progression.service";
 import { ScoreService } from "@/services/score.service";
 import { ActivityService } from "@/services/activity.service";
+import { StudentActivityLogService } from "@/services/student-activity-log.service";
 import { z } from "zod";
 import { Logger } from "@/lib/logger";
 import {
@@ -130,6 +131,19 @@ export async function POST(req: Request) {
             updatedScore,
             isCompleted,
             durationMs: Date.now() - start,
+        });
+
+        // Registrar resposta do quiz no sentimento.log
+        StudentActivityLogService.logEvent({
+            studentId: user.id!,
+            eventType: "QUIZ_ANSWERED",
+            metadata: {
+                moduleId: session.moduleId,
+                questionId: question.id,
+                isCorrect,
+                difficulty: question.difficulty,
+                responseTimeMs,
+            }
         });
 
         if (isCompleted) {

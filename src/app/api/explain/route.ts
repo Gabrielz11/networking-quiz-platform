@@ -1,8 +1,7 @@
-import { ExplainService } from "@/services/generation/explanation-generation.service";
 import { Logger } from "@/lib/logger";
 import { requireUser, handleAuthError, AuthError } from "@/lib/auth-guard";
 import { isRateLimited } from "@/lib/rate-limit";
-import { prisma } from "@/lib/prisma";
+import { ExplainStudentQuestionService, QuestionNotFoundError, AccessDeniedError } from "@/services/learning/explain-student-question.service";
 import { z } from "zod";
 
 const logger = new Logger("ExplainRoute");
@@ -22,9 +21,9 @@ export async function POST(req: Request) {
         const isLimited = await isRateLimited(user.id!, "explain", { limit: 15, windowSeconds: 300 });
         if (isLimited) {
             logger.warn("POST", "Rate limit atingido para explicação personalizada", { userId: user.id });
-            return new Response(
-                JSON.stringify({ error: "Limite de solicitações atingido. Por favor, aguarde alguns minutos." }),
-                { status: 429, headers: { "Content-Type": "application/json" } }
+            return Response.json(
+                { error: "Limite de solicitações atingido. Por favor, aguarde alguns minutos." },
+                { status: 429 }
             );
         }
 
@@ -32,57 +31,21 @@ export async function POST(req: Request) {
         const rawBody = await req.json();
         const parsed = BodySchema.safeParse(rawBody);
         if (!parsed.success) {
-            return new Response(
-                JSON.stringify({ error: "Parâmetros inválidos.", details: parsed.error.flatten().fieldErrors }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
+            return Response.json(
+                { error: "Parâmetros inválidos.", details: parsed.error.flatten().fieldErrors },
+                { status: 400 }
             );
         }
 
         const { sessionId, questionId, studentAnswerIndex } = parsed.data;
 
-        // P0.3 — Buscar QuestionInstance do banco e validar que pertence ao usuário autenticado
-        const questionInstance = await prisma.questionInstance.findUnique({
-            where: { id: questionId },
-            include: {
-                session: {
-                    select: { userId: true, moduleId: true },
-                },
-            },
-        });
-
-        if (!questionInstance || questionInstance.sessionId !== sessionId) {
-            return new Response(
-                JSON.stringify({ error: "Questão não encontrada." }),
-                { status: 404, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        if (questionInstance.session.userId !== user.id) {
-            return new Response(
-                JSON.stringify({ error: "Acesso negado." }),
-                { status: 403, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        // P0.3 — Derivar todos os dados do banco; nenhum dado de gabarito vem do cliente
-        const prompt = questionInstance.prompt;
-        const baseExplanation = questionInstance.explanation ?? "";
-        const correctAnswer = questionInstance.options[questionInstance.correctOptionIndex] ?? "";
-        // studentAnswerIndex do cliente é não-sensível (o aluno sabe o que escolheu),
-        // mas priorizamos o valor já armazenado no banco quando disponível.
-        const resolvedStudentAnswerIndex = questionInstance.studentAnswer ?? studentAnswerIndex;
-        const studentAnswer = questionInstance.options[resolvedStudentAnswerIndex] ?? "";
-
-        // Gera stream de explicação pedagógica com dados 100% do banco
-        const stream = await ExplainService.generateExplanationStream(
-            prompt,
-            baseExplanation,
-            studentAnswer,
-            correctAnswer,
-            questionInstance.session.moduleId,
+        // Delega lógica de domínio, banco de dados e auditoria ao Use Case/Service
+        const stream = await ExplainStudentQuestionService.execute({
+            userId: user.id!,
             sessionId,
-            questionId
-        );
+            questionId,
+            studentAnswerIndex,
+        });
 
         logger.info("POST", "Streaming de explicação iniciado", { userId: user.id, questionId });
 
@@ -101,16 +64,24 @@ export async function POST(req: Request) {
             return handleAuthError(error);
         }
 
+        if (error instanceof QuestionNotFoundError) {
+            return Response.json({ error: error.message }, { status: 404 });
+        }
+
+        if (error instanceof AccessDeniedError) {
+            return Response.json({ error: error.message }, { status: 403 });
+        }
+
         logger.error("POST", "Falha na geração da explicação personalizada", {
             message: error instanceof Error ? error.message : String(error),
         });
 
-        return new Response(
-            JSON.stringify({
+        return Response.json(
+            {
                 explanation: "Não foi possível gerar a resposta personalizada. Abaixo a explicação base:",
                 fallback: true,
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            },
+            { status: 500 }
         );
     }
 }

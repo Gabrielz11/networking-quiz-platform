@@ -41,4 +41,30 @@ export class StudentActivityLogService {
       }
     })();
   }
+
+  /**
+   * Registra um evento de solicitação de explicação por IA de forma encapsulada.
+   */
+  static logAiExplanationRequested(params: {
+    studentId: string;
+    sessionId: string;
+    questionId: string;
+    moduleId: string;
+    studentAnswer: string;
+    questionPrompt: string;
+    isCorrect: boolean;
+  }): void {
+    this.logEvent({
+      studentId: params.studentId,
+      eventType: "AI_EXPLANATION_REQUESTED",
+      textContent: `Questão: ${params.questionPrompt}\nResposta do Aluno: ${params.studentAnswer}\nCorreta: ${params.isCorrect ? "Sim" : "Não"}`,
+      metadata: {
+        sessionId: params.sessionId,
+        questionId: params.questionId,
+        moduleId: params.moduleId,
+        isCorrect: params.isCorrect,
+        studentAnswer: params.studentAnswer,
+      },
+    });
+  }
 }

@@ -261,3 +261,9 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [30/05/2026, 19:39:58] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
 [30/05/2026, 19:39:58] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
 [30/05/2026, 19:39:58] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[30/05/2026, 20:21:52] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[30/05/2026, 20:21:59] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":7431}
+[30/05/2026, 20:22:02] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[30/05/2026, 20:28:51] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[30/05/2026, 20:29:01] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":10255}
+[30/05/2026, 20:32:27] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
