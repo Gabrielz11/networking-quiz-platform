@@ -267,3 +267,10 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [30/05/2026, 20:28:51] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
 [30/05/2026, 20:29:01] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":10255}
 [30/05/2026, 20:32:27] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[30/05/2026, 21:09:41] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[30/05/2026, 21:09:45] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":4212}
+[30/05/2026, 21:10:06] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[30/05/2026, 21:10:18] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[30/05/2026, 21:10:25] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":6604}
+[30/05/2026, 21:11:03] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[30/05/2026, 21:11:15] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":12110}

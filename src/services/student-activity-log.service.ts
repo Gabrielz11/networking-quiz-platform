@@ -67,4 +67,28 @@ export class StudentActivityLogService {
       },
     });
   }
+
+  /**
+   * Registra um evento de resposta de quiz de forma encapsulada.
+   */
+  static logQuizAnswered(params: {
+    studentId: string;
+    moduleId: string;
+    questionId: string;
+    isCorrect: boolean;
+    difficulty: string;
+    responseTimeMs: number;
+  }): void {
+    this.logEvent({
+      studentId: params.studentId,
+      eventType: "QUIZ_ANSWERED",
+      metadata: {
+        moduleId: params.moduleId,
+        questionId: params.questionId,
+        isCorrect: params.isCorrect,
+        difficulty: params.difficulty,
+        responseTimeMs: params.responseTimeMs,
+      },
+    });
+  }
 }
