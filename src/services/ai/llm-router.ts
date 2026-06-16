@@ -1,54 +1,26 @@
 import { env } from "@/lib/env";
 import { Logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { AiGenerateOptions, AiResponse } from "./types";
+import { AiGenerateOptions } from "./types";
+import { AiProvider } from "./types";
 import { GeminiProvider } from "./providers/gemini.provider";
 import { GroqProvider } from "./providers/groq.provider";
 import { SemanticCache } from "@/lib/semantic-cache";
 import { calculateCost } from "./pricing";
+import { validateSchemaRequirements } from "@/lib/utils";
 
 export type { AiGenerateOptions };
 
 const logger = new Logger("LlmRouter");
 
-const DEFAULT_GROQ_MODEL = env.REASONING_FALLBACK_MODEL;
-const DEFAULT_GEMINI_MODEL = env.GEMINI_MODEL;
+// Provider e modelo padrão para geração de conteúdo (Gemini como primário)
+const DEFAULT_GEMINI_MODEL = env.CONTENT_GENERATION_MODEL;
+// Modelo de fallback — usado quando o provider primário falha e CONTENT_FALLBACK_ENABLED=true
+const DEFAULT_GROQ_MODEL = env.CONTENT_FALLBACK_MODEL;
 
-// Configuração da política de retry com backoff exponencial.
-// Apenas erros transitórios (429, 5xx) são reexecutados; 4xx de auth/quota não são.
-const RETRY_CONFIG = {
-    maxAttempts: 3,
-    baseDelayMs: 500,
-    retryableStatusCodes: new Set([429, 500, 502, 503, 504]),
-};
 
-function isTransientError(err: unknown): boolean {
-    if (typeof err !== "object" || err === null) return false;
-    const status = (err as { status?: number }).status;
-    if (status !== undefined) return RETRY_CONFIG.retryableStatusCodes.has(status);
-    const msg = ((err as { message?: string }).message ?? "").toLowerCase();
-    return msg.includes("timeout") || msg.includes("econnreset") || msg.includes("network");
-}
 
-async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
-    let lastError: unknown;
-    for (let attempt = 1; attempt <= RETRY_CONFIG.maxAttempts; attempt++) {
-        try {
-            return await fn();
-        } catch (err) {
-            lastError = err;
-            if (!isTransientError(err) || attempt === RETRY_CONFIG.maxAttempts) {
-                throw err;
-            }
-            const delayMs = RETRY_CONFIG.baseDelayMs * 2 ** (attempt - 1);
-            logger.warn("withRetry", `${label} — tentativa ${attempt} falhou, aguardando ${delayMs}ms`, {
-                error: (err as { message?: string }).message,
-            });
-            await new Promise((resolve) => setTimeout(resolve, delayMs));
-        }
-    }
-    throw lastError;
-}
+// ─── Seleção de Providers ─────────────────────────────────────────────────────
 
 // Instâncias singleton dos providers
 const groq = new GroqProvider();
@@ -59,90 +31,173 @@ function getGemini(): GeminiProvider {
     return gemini;
 }
 
-/** Seleciona provider baseado no modelName */
+/** Seleciona provider baseado no modelName e prepara o fallback simétrico. */
 function selectProvider(modelName?: string) {
     const name = (modelName ?? "").toLowerCase();
     if (!name || name.includes("gemini")) {
-        return { provider: getGemini(), resolvedModel: modelName ?? DEFAULT_GEMINI_MODEL, fallback: () => groq, fallbackModel: DEFAULT_GROQ_MODEL };
+        return {
+            provider: getGemini() as AiProvider,
+            resolvedModel: modelName ?? DEFAULT_GEMINI_MODEL,
+            fallback: () => groq as AiProvider,
+            fallbackModel: DEFAULT_GROQ_MODEL,
+        };
     }
-    return { provider: groq, resolvedModel: modelName ?? DEFAULT_GROQ_MODEL, fallback: () => getGemini(), fallbackModel: DEFAULT_GEMINI_MODEL };
+    return {
+        provider: groq as AiProvider,
+        resolvedModel: modelName ?? DEFAULT_GROQ_MODEL,
+        fallback: () => getGemini() as AiProvider,
+        fallbackModel: DEFAULT_GEMINI_MODEL,
+    };
+}
+
+// ─── Executor genérico com fallback ───────────────────────────────────────────
+
+interface ExecuteOptions<T> {
+    label: string;
+    provider: AiProvider;
+    resolvedModel: string;
+    fallback: () => AiProvider;
+    fallbackModel: string;
+    call: (p: AiProvider, model: string) => Promise<{ result: T; usage?: { promptTokens: number; completionTokens: number } }>;
+    options: AiGenerateOptions;
+    start: number;
 }
 
 /**
+ * Executa uma chamada LLM com retry e fallback simétrico.
+ * Centraliza o fluxo compartilhado entre `generateJson` e `generateText`,
+ * eliminando duplicação e garantindo comportamento consistente.
+ */
+async function executeWithFallback<T>({
+    label,
+    provider,
+    resolvedModel,
+    fallback,
+    fallbackModel,
+    call,
+    options,
+    start,
+}: ExecuteOptions<T>): Promise<{ result: T; modelUsed: string; providerName: string; usage?: { promptTokens: number; completionTokens: number } }> {
+    logger.info(label, `Chamando ${provider.name}`, { model: resolvedModel });
+
+    try {
+        const { result, usage } = await call(provider, resolvedModel);
+        const durationMs = Date.now() - start;
+        logger.info(label, `${provider.name} respondeu`, { durationMs });
+        if (usage) {
+            logger.info(label, `Consumo de Tokens — Modelo: ${resolvedModel} | Input: ${usage.promptTokens} | Output: ${usage.completionTokens} | Total: ${usage.promptTokens + usage.completionTokens}`, {
+                promptTokens: usage.promptTokens,
+                completionTokens: usage.completionTokens,
+                totalTokens: usage.promptTokens + usage.completionTokens,
+            });
+        }
+        saveMetadataAsync({ ...options, modelName: resolvedModel, durationMs, provider: provider.name, usage });
+        return { result, modelUsed: resolvedModel, providerName: provider.name, usage };
+    } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        logger.error(label, `${provider.name} falhou (tentando fallback). Erro original: ${errMsg}`, {
+            error: errMsg,
+        });
+
+        const fallbackAllowed = options.fallbackEnabled ?? env.CONTENT_FALLBACK_ENABLED;
+        if (!fallbackAllowed) {
+            logger.warn(label, `Fallback desabilitado para esta chamada — propagando erro original: ${errMsg}`);
+            throw err;
+        }
+
+        const fallbackProvider = fallback();
+        logger.info(label, `Tentando fallback para ${fallbackProvider.name}`);
+
+        try {
+            const { result, usage } = await call(fallbackProvider, fallbackModel);
+            const durationMs = Date.now() - start;
+            if (usage) {
+                logger.info(label, `Consumo de Tokens (Fallback) — Modelo: ${fallbackModel} | Input: ${usage.promptTokens} | Output: ${usage.completionTokens} | Total: ${usage.promptTokens + usage.completionTokens}`, {
+                    promptTokens: usage.promptTokens,
+                    completionTokens: usage.completionTokens,
+                    totalTokens: usage.promptTokens + usage.completionTokens,
+                });
+            }
+            saveMetadataAsync({
+                ...options,
+                modelName: fallbackModel,
+                durationMs,
+                provider: `${fallbackProvider.name}-fallback`,
+                usage,
+            });
+            return { result, modelUsed: fallbackModel, providerName: `${fallbackProvider.name}-fallback`, usage };
+        } catch (fallbackErr: unknown) {
+            const fallbackErrMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+            logger.error(label, `${fallbackProvider.name} (fallback) também falhou. Erro original: ${fallbackErrMsg}`, {
+                error: fallbackErrMsg,
+            });
+            throw fallbackErr;
+        }
+    }
+}
+
+// ─── API Pública ───────────────────────────────────────────────────────────────
+
+/**
  * Gera conteúdo JSON via LLM.
- * P2.2 — Consulta SemanticCache antes de chamar o LLM; armazena após resposta.
+ * Consulta SemanticCache antes de chamar o LLM; armazena após resposta.
  * Fallback simétrico: Gemini falha → Groq; Groq falha → Gemini.
- * Erros transitórios são reexecutados com backoff exponencial antes do fallback.
+ * Erros de servidor (5xx) são retriados com backoff; 429 vai direto ao fallback.
  */
 export async function generateJson<T = unknown>(
     prompt: string,
     options: AiGenerateOptions = {}
 ): Promise<T> {
-    // P2.2 — Consultar cache antes de chamar o LLM (evita custo/latência)
     if (options.pipeline) {
         const temperature = options.temperature ?? 0.7;
         const cached = await SemanticCache.get<T>(options.pipeline, prompt, temperature);
         if (cached !== null) {
-            logger.info("generateJson", "Cache hit — retornando resposta cacheada", { pipeline: options.pipeline });
-            saveMetadataAsync({ ...options, modelName: "cache", durationMs: 0, provider: "semantic-cache" });
-            return cached;
+            let cacheIsValid = true;
+            if (options.responseSchema) {
+                const schemaError = validateSchemaRequirements(cached, options.responseSchema);
+                if (schemaError) {
+                    logger.warn("generateJson", `Cache ignorado (inválido no schema): ${schemaError}`);
+                    cacheIsValid = false;
+                }
+            }
+
+            if (cacheIsValid) {
+                logger.info("generateJson", "Cache hit — retornando resposta cacheada", { pipeline: options.pipeline });
+                saveMetadataAsync({ ...options, modelName: "cache", durationMs: 0, provider: "semantic-cache" });
+                return cached;
+            }
         }
     }
 
     const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options.modelName);
     const start = Date.now();
 
-    logger.info("generateJson", `Chamando ${provider.name}`, { model: resolvedModel });
+    const { result } = await executeWithFallback<T>({
+        label: "generateJson",
+        provider,
+        resolvedModel,
+        fallback,
+        fallbackModel,
+        call: (p, model) => p.generateJson<T>(prompt, { ...options, modelName: model }),
+        options,
+        start,
+    });
 
-    try {
-        const { result, usage } = await withRetry(
-            () => provider.generateJson<T>(prompt, { ...options, modelName: resolvedModel }),
-            `generateJson:${provider.name}`
-        );
-        const durationMs = Date.now() - start;
-        logger.info("generateJson", `${provider.name} respondeu`, { durationMs });
-        saveMetadataAsync({ ...options, modelName: resolvedModel, durationMs, provider: provider.name, usage });
-        // P2.2 — Armazenar no cache (fire-and-forget)
-        if (options.pipeline) {
-            SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, result);
-        }
-        return result;
-    } catch (err: unknown) {
-        logger.error("generateJson", `${provider.name} falhou, tentando fallback`, {
-            error: (err as { message?: string }).message,
-        });
-
-        const fallbackProvider = fallback();
-        logger.info("generateJson", `Tentando fallback para ${fallbackProvider.name}`);
-        const { result: fallbackResult, usage: fallbackUsage } = await withRetry(
-            () => fallbackProvider.generateJson<T>(prompt, { ...options, modelName: fallbackModel }),
-            `generateJson:${fallbackProvider.name}-fallback`
-        );
-        const durationMs = Date.now() - start;
-        saveMetadataAsync({
-            ...options,
-            modelName: fallbackModel,
-            durationMs,
-            provider: `${fallbackProvider.name}-fallback`,
-            usage: fallbackUsage
-        });
-        if (options.pipeline) {
-            SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, fallbackResult);
-        }
-        return fallbackResult;
+    if (options.pipeline) {
+        SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, result);
     }
+    return result;
 }
 
 /**
  * Gera texto puro via LLM.
- * P2.2 — Consulta SemanticCache antes de chamar o LLM.
- * Fallback simétrico com retry.
+ * Consulta SemanticCache antes de chamar o LLM; armazena após resposta.
+ * Fallback simétrico com retry em erros de servidor.
  */
 export async function generateText(
     prompt: string,
     options: AiGenerateOptions = {}
 ): Promise<string> {
-    // P2.2 — Consultar cache antes de chamar o LLM
     if (options.pipeline) {
         const temperature = options.temperature ?? 0.7;
         const cached = await SemanticCache.get<string>(options.pipeline, prompt, temperature);
@@ -156,49 +211,27 @@ export async function generateText(
     const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options.modelName);
     const start = Date.now();
 
-    logger.info("generateText", `Chamando ${provider.name}`, { model: resolvedModel });
+    const { result } = await executeWithFallback<string>({
+        label: "generateText",
+        provider,
+        resolvedModel,
+        fallback,
+        fallbackModel,
+        call: (p, model) => p.generateText(prompt, { ...options, modelName: model }),
+        options,
+        start,
+    });
 
-    try {
-        const { result, usage } = await withRetry(
-            () => provider.generateText(prompt, { ...options, modelName: resolvedModel }),
-            `generateText:${provider.name}`
-        );
-        const durationMs = Date.now() - start;
-        logger.info("generateText", `${provider.name} respondeu`, { durationMs });
-        saveMetadataAsync({ ...options, modelName: resolvedModel, durationMs, provider: provider.name, usage });
-        if (options.pipeline) {
-            SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, result);
-        }
-        return result;
-    } catch (err: unknown) {
-        logger.error("generateText", `${provider.name} falhou, tentando fallback`, {
-            error: (err as { message?: string }).message,
-        });
-
-        const fallbackProvider = fallback();
-        logger.info("generateText", `Tentando fallback para ${fallbackProvider.name}`);
-        const { result: fallbackResult, usage: fallbackUsage } = await withRetry(
-            () => fallbackProvider.generateText(prompt, { ...options, modelName: fallbackModel }),
-            `generateText:${fallbackProvider.name}-fallback`
-        );
-        const durationMs = Date.now() - start;
-        saveMetadataAsync({
-            ...options,
-            modelName: fallbackModel,
-            durationMs,
-            provider: `${fallbackProvider.name}-fallback`,
-            usage: fallbackUsage
-        });
-        if (options.pipeline) {
-            SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, fallbackResult);
-        }
-        return fallbackResult;
+    if (options.pipeline) {
+        SemanticCache.set(options.pipeline, prompt, options.temperature ?? 0.7, result);
     }
+    return result;
 }
 
 /**
  * Gera texto em streaming via LLM.
- * Fallback simétrico (sem cache: streaming não pode ser armazenado em JSON).
+ * Fallback simétrico (sem cache: streaming não pode ser serializado em JSON).
+ * Nota: retry não é aplicado aqui pois streams parciais não são idempotentes.
  */
 export async function generateTextStream(
     prompt: string,
@@ -211,8 +244,15 @@ export async function generateTextStream(
     try {
         return await provider.generateTextStream(prompt, { ...options, modelName: resolvedModel });
     } catch (err: unknown) {
-        logger.warn("generateTextStream", `${provider.name} falhou, usando fallback`, {
-            error: (err as { message?: string }).message,
+        const errMsg = err instanceof Error ? err.message : String(err);
+        const fallbackAllowed = options.fallbackEnabled ?? env.CONTENT_FALLBACK_ENABLED;
+        if (!fallbackAllowed) {
+            logger.warn("generateTextStream", `${provider.name} falhou. Fallback desabilitado para esta chamada — propagando erro original: ${errMsg}`);
+            throw err;
+        }
+
+        logger.warn("generateTextStream", `${provider.name} falhou (usando fallback). Erro original: ${errMsg}`, {
+            error: errMsg,
         });
 
         const fallbackProvider = fallback();
@@ -234,7 +274,6 @@ interface MetadataParams extends AiGenerateOptions {
 
 function saveMetadataAsync(params: MetadataParams): void {
     if (!params.pipeline) return;
-    // Não persiste metadados de cache hits (durationMs = 0 indica hit)
     if (params.provider === "semantic-cache") return;
 
     const promptTokens = params.usage?.promptTokens ?? null;

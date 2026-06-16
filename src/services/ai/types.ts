@@ -8,6 +8,8 @@ export interface AiGenerateOptions {
     systemInstruction?: string;
     responseSchema?: any;
     thinkingBudget?: number;
+    fallbackEnabled?: boolean;
+    maxTokens?: number;
     // Metadados para persistência
     pipeline?: string;
     moduleId?: string;

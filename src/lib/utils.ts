@@ -48,3 +48,32 @@ export function safeJsonParse<T = unknown>(raw: string): SafeJsonResult<T> {
   }
 }
 
+/**
+ * Validação estrutural básica de schema para respostas JSON.
+ * Usado nos provedores LLM para rejeitar JSONs que, embora sintaticamente válidos
+ * (devido ao jsonrepair), estão incompletos estruturalmente (truncados).
+ */
+export function validateSchemaRequirements(data: any, schema: any): string | null {
+  if (!schema) return null;
+  
+  if (schema.type === "object" && Array.isArray(schema.required)) {
+    if (typeof data !== "object" || data === null) {
+      return "Expected an object";
+    }
+    for (const req of schema.required) {
+      if (!(req in data)) {
+        return `Missing required property: ${req}`;
+      }
+    }
+  }
+
+  if (schema.type === "array") {
+    if (!Array.isArray(data)) return "Expected an array";
+    if (typeof schema.minItems === "number" && data.length < schema.minItems) {
+      return `Array has less than ${schema.minItems} items`;
+    }
+  }
+
+  return null;
+}
+

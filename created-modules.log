@@ -274,3 +274,287 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [30/05/2026, 21:10:25] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":6604}
 [30/05/2026, 21:11:03] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
 [30/05/2026, 21:11:15] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":12110}
+[08/06/2026, 22:23:37] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[08/06/2026, 22:23:52] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[08/06/2026, 22:23:52] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[08/06/2026, 22:42:55] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[09/06/2026, 08:19:16] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[09/06/2026, 08:19:16] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 08:19:16] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 08:19:46] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmpxyt1uy0009omhc66ufber4","title":"RFC","description":"Explora o IPv6 Stateless Address Autoconfiguration (SLAAC) conforme RFC 4862, detalhando a geração de endereços, DAD e renumeração de redes."}
+[09/06/2026, 08:20:39] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmpo5p8j8000homl0q652d744"}
+[09/06/2026, 08:20:43] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt","title":"Introdução e Endereçamento IPv6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[09/06/2026, 08:21:01] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmq6jtvrn0002omu0e05xhz4b","mimeType":"application/pdf"}
+[09/06/2026, 08:21:01] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmq6jtvrn0002omu0e05xhz4b"}
+[09/06/2026, 08:21:01] [INFO] [EmbeddingWorker.Worker] Started processing job 22
+[09/06/2026, 08:21:01] [INFO] [WorkerProcess.Worker] Started processing job 22
+[09/06/2026, 08:21:01] [INFO] [EmbeddingWorker.Worker] Processing job 22 for file cmq6jtvrn0002omu0e05xhz4b
+[09/06/2026, 08:21:02] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 08:21:04] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[09/06/2026, 08:21:05] [INFO] [EmbeddingWorker.Worker] Job 22 concluído com sucesso | Meta: {"parents":1,"children":12}
+[09/06/2026, 08:21:05] [INFO] [EmbeddingWorker.Worker] Completed job 22
+[09/06/2026, 08:21:05] [INFO] [WorkerProcess.Worker] Completed job 22
+[09/06/2026, 08:21:08] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:21:09] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 08:21:10] [ERROR] [LlmRouter.generateText] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. \",\"status\":\"RESOURCE_EXHAUSTED\"}}"}
+[09/06/2026, 08:21:10] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[09/06/2026, 08:25:51] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:25:52] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 08:25:53] [ERROR] [LlmRouter.generateText] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. \",\"status\":\"RESOURCE_EXHAUSTED\"}}"}
+[09/06/2026, 08:25:53] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[09/06/2026, 08:25:53] [ERROR] [LlmRouter.generateText] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.3-70b-versatile` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Requested 12284, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 08:33:21] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:33:22] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 08:33:23] [ERROR] [LlmRouter.generateText] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. \",\"status\":\"RESOURCE_EXHAUSTED\"}}"}
+[09/06/2026, 08:33:23] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[09/06/2026, 08:33:23] [ERROR] [LlmRouter.generateText] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 12284, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 08:35:14] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:35:15] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 08:35:17] [ERROR] [LlmRouter.generateText] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":403,\"message\":\"Your project has been denied access. Please contact support.\",\"status\":\"PERMISSION_DENIED\"}}"}
+[09/06/2026, 08:35:17] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[09/06/2026, 08:35:17] [ERROR] [LlmRouter.generateText] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 12284, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 08:37:48] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:37:49] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.5-flash"}
+[09/06/2026, 08:37:50] [ERROR] [LlmRouter.generateText] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":403,\"message\":\"Your project has been denied access. Please contact support.\",\"status\":\"PERMISSION_DENIED\"}}"}
+[09/06/2026, 08:37:50] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[09/06/2026, 08:37:50] [ERROR] [LlmRouter.generateText] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.1-8b-instant` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 12284, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 08:54:01] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[09/06/2026, 08:58:42] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[09/06/2026, 08:58:42] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 08:58:42] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 08:59:02] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt","title":"Introdução e Endereçamento IPv6","description":""}
+[09/06/2026, 08:59:08] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:59:09] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.1-flash-lite"}
+[09/06/2026, 08:59:16] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":7004}
+[09/06/2026, 08:59:16] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 08:59:18] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt","title":"Introdução e Endereçamento IPv6","description":"Domine a arquitetura de endereçamento IPv6: da estrutura de 128 bits e tipos de endereços (Unicast, Multicast, Anycast) às normas da RFC 4291."}
+[09/06/2026, 10:22:56] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmq6jtn2i0001omu0obubcxjt"}
+[09/06/2026, 10:23:05] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1","title":"Introdução e Endereçamento IPv6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[09/06/2026, 10:23:13] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380","mimeType":"application/pdf"}
+[09/06/2026, 10:23:13] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380"}
+[09/06/2026, 10:23:13] [INFO] [EmbeddingWorker.Worker] Started processing job 23
+[09/06/2026, 10:23:13] [INFO] [WorkerProcess.Worker] Started processing job 23
+[09/06/2026, 10:23:13] [INFO] [EmbeddingWorker.Worker] Processing job 23 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:23:14] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:23:15] [ERROR] [EmbeddingWorker.Worker] Failed job 23: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:15] [ERROR] [EmbeddingWorker.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:15] [ERROR] [WorkerProcess.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:17] [INFO] [EmbeddingWorker.Worker] Started processing job 23
+[09/06/2026, 10:23:17] [INFO] [WorkerProcess.Worker] Started processing job 23
+[09/06/2026, 10:23:17] [INFO] [EmbeddingWorker.Worker] Processing job 23 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:23:17] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:23:17] [ERROR] [EmbeddingWorker.Worker] Failed job 23: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:17] [ERROR] [EmbeddingWorker.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:17] [ERROR] [WorkerProcess.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:21] [INFO] [EmbeddingWorker.Worker] Started processing job 23
+[09/06/2026, 10:23:21] [INFO] [WorkerProcess.Worker] Started processing job 23
+[09/06/2026, 10:23:21] [INFO] [EmbeddingWorker.Worker] Processing job 23 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:23:21] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:23:22] [ERROR] [EmbeddingWorker.Worker] Failed job 23: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:22] [ERROR] [EmbeddingWorker.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:23:22] [ERROR] [WorkerProcess.Worker] Job 23 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:52] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1","title":"Introdução e Endereçamento IPv6","description":""}
+[09/06/2026, 10:26:56] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380","mimeType":"application/pdf"}
+[09/06/2026, 10:26:56] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380"}
+[09/06/2026, 10:26:56] [INFO] [EmbeddingWorker.Worker] Started processing job 24
+[09/06/2026, 10:26:56] [INFO] [WorkerProcess.Worker] Started processing job 24
+[09/06/2026, 10:26:56] [INFO] [EmbeddingWorker.Worker] Processing job 24 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:26:56] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:26:57] [ERROR] [EmbeddingWorker.Worker] Failed job 24: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:57] [ERROR] [EmbeddingWorker.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:57] [ERROR] [WorkerProcess.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:59] [INFO] [EmbeddingWorker.Worker] Started processing job 24
+[09/06/2026, 10:26:59] [INFO] [WorkerProcess.Worker] Started processing job 24
+[09/06/2026, 10:26:59] [INFO] [EmbeddingWorker.Worker] Processing job 24 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:26:59] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:26:59] [ERROR] [EmbeddingWorker.Worker] Failed job 24: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:59] [ERROR] [EmbeddingWorker.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:26:59] [ERROR] [WorkerProcess.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:27:03] [INFO] [EmbeddingWorker.Worker] Started processing job 24
+[09/06/2026, 10:27:03] [INFO] [WorkerProcess.Worker] Started processing job 24
+[09/06/2026, 10:27:03] [INFO] [EmbeddingWorker.Worker] Processing job 24 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:27:03] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:27:04] [ERROR] [EmbeddingWorker.Worker] Failed job 24: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:27:04] [ERROR] [EmbeddingWorker.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:27:04] [ERROR] [WorkerProcess.Worker] Job 24 failed: 401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************a7EA. You can find your API key at https://platform.openai.com/account/api-keys.
+[09/06/2026, 10:28:55] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[09/06/2026, 10:29:14] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[09/06/2026, 10:29:14] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 10:29:14] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[09/06/2026, 10:29:28] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1","title":"Introdução e Endereçamento IPv6","description":""}
+[09/06/2026, 10:29:34] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380","mimeType":"application/pdf"}
+[09/06/2026, 10:29:34] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmq6o72ic0006om9cbpwfg380"}
+[09/06/2026, 10:29:34] [INFO] [EmbeddingWorker.Worker] Started processing job 25
+[09/06/2026, 10:29:34] [INFO] [WorkerProcess.Worker] Started processing job 25
+[09/06/2026, 10:29:34] [INFO] [EmbeddingWorker.Worker] Processing job 25 for file cmq6o72ic0006om9cbpwfg380
+[09/06/2026, 10:29:34] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[09/06/2026, 10:29:36] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[09/06/2026, 10:29:37] [INFO] [EmbeddingWorker.Worker] Job 25 concluído com sucesso | Meta: {"parents":1,"children":12}
+[09/06/2026, 10:29:37] [INFO] [EmbeddingWorker.Worker] Completed job 25
+[09/06/2026, 10:29:37] [INFO] [WorkerProcess.Worker] Completed job 25
+[09/06/2026, 10:29:42] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1"}
+[09/06/2026, 10:29:43] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 10:30:20] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":37502}
+[09/06/2026, 10:30:21] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1"}
+[09/06/2026, 10:30:25] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1","title":"Introdução e Endereçamento IPv6","description":"Explore a arquitetura de endereçamento IPv6, desde sua motivação e estrutura de 128 bits até os tipos de endereços (Unicast, Anycast, Multicast) e representações textuais, com foco em RFCs e exemplos práticos."}
+[09/06/2026, 10:32:46] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmq6ojg9h0003omkgow342ur0","title":"ASDSADASDASD","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[09/06/2026, 10:33:26] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmq6ojg9h0003omkgow342ur0"}
+[09/06/2026, 10:36:24] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 10:36:27] [WARN] [LlmRouter.withRetry] generateJson:gemini — tentativa 1 falhou, aguardando 500ms | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 10:36:31] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":7210}
+[09/06/2026, 10:37:02] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 10:37:13] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":11206}
+[09/06/2026, 10:43:28] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 10:57:40] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 10:57:51] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":11026}
+[09/06/2026, 10:59:57] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 11:00:06] [WARN] [LlmRouter.withRetry] generateJson:gemini — tentativa 1 falhou, aguardando 500ms | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:10] [WARN] [LlmRouter.withRetry] generateJson:gemini — tentativa 2 falhou, aguardando 1000ms | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:13] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:13] [WARN] [LlmRouter.generateJson] Fallback desabilitado para esta chamada — propagando erro original
+[09/06/2026, 11:00:13] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 11:00:15] [WARN] [LlmRouter.withRetry] generateJson:gemini — tentativa 1 falhou, aguardando 500ms | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:16] [WARN] [LlmRouter.withRetry] generateJson:gemini — tentativa 2 falhou, aguardando 1000ms | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:18] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 11:00:18] [WARN] [LlmRouter.generateJson] Fallback desabilitado para esta chamada — propagando erro original
+[09/06/2026, 12:05:34] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:06:00] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":25191}
+[09/06/2026, 12:07:23] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:07:23] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\",\"service\":\"generativelanguage.googleapis.com\"}}]}}"}
+[09/06/2026, 12:07:23] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 12:07:23] [ERROR] [LlmRouter.generateJson] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.3-70b-versatile` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Requested 13121, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 12:07:42] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:07:42] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\",\"service\":\"generativelanguage.googleapis.com\"}}]}}"}
+[09/06/2026, 12:07:42] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 12:07:43] [ERROR] [LlmRouter.generateJson] groq (fallback) também falhou — ambos os providers indisponíveis | Meta: {"error":"Groq API failed (413): {\"error\":{\"message\":\"Request too large for model `llama-3.3-70b-versatile` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Requested 13121, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
+[09/06/2026, 12:08:30] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:08:30] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"service\":\"generativelanguage.googleapis.com\",\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\"}}]}}"}
+[09/06/2026, 12:08:30] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 12:09:35] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 12:09:57] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:09:58] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\",\"service\":\"generativelanguage.googleapis.com\"}}]}}"}
+[09/06/2026, 12:09:58] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 12:10:52] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 12:11:24] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 12:11:29] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":5274}
+[09/06/2026, 14:27:48] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:27:48] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\",\"service\":\"generativelanguage.googleapis.com\"}}]}}"}
+[09/06/2026, 14:27:48] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:29:27] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:29:34] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"Unterminated string in JSON at position 127 (line 1 column 128)"}
+[09/06/2026, 14:29:34] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:29:57] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:32:00] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:32:01] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 14:32:01] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:32:02] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Meta: {"promptTokens":102,"completionTokens":275,"totalTokens":377}
+[09/06/2026, 14:32:49] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:32:54] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":4705}
+[09/06/2026, 14:32:54] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-2.5-flash | Input: 22 | Output: 217 | Total: 239 | Meta: {"promptTokens":22,"completionTokens":217,"totalTokens":239}
+[09/06/2026, 14:32:56] [INFO] [LlmRouter.generateText] Chamando groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:32:57] [INFO] [LlmRouter.generateText] groq respondeu | Meta: {"durationMs":865}
+[09/06/2026, 14:32:57] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: llama-3.1-8b-instant | Input: 182 | Output: 225 | Total: 407 | Meta: {"promptTokens":182,"completionTokens":225,"totalTokens":407}
+[09/06/2026, 14:33:44] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:33:51] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"Unterminated string in JSON at position 120 (line 2 column 119)"}
+[09/06/2026, 14:33:51] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:33:52] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4990 | Output: 254 | Total: 5244 | Meta: {"promptTokens":4990,"completionTokens":254,"totalTokens":5244}
+[09/06/2026, 14:34:55] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:37:55] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:41:03] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:41:10] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"Unterminated string in JSON at position 125 (line 2 column 124)"}
+[09/06/2026, 14:41:10] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:41:11] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 5048 | Output: 228 | Total: 5276 | Meta: {"promptTokens":5048,"completionTokens":228,"totalTokens":5276}
+[09/06/2026, 14:41:31] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:47:41] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:47:47] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"Unterminated string in JSON at position 711 (line 1 column 712)"}
+[09/06/2026, 14:47:47] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:47:49] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4403 | Output: 266 | Total: 4669 | Meta: {"promptTokens":4403,"completionTokens":266,"totalTokens":4669}
+[09/06/2026, 14:48:02] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:48:23] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:48:30] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"Unterminated string in JSON at position 360 (line 1 column 361)"}
+[09/06/2026, 14:48:30] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 14:48:31] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4511 | Output: 230 | Total: 4741 | Meta: {"promptTokens":4511,"completionTokens":230,"totalTokens":4741}
+[09/06/2026, 14:48:47] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:48:56] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:49:02] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":5890}
+[09/06/2026, 14:49:02] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-2.5-flash | Input: 4308 | Output: 204 | Total: 4512 | Meta: {"promptTokens":4308,"completionTokens":204,"totalTokens":4512}
+[09/06/2026, 14:49:16] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 14:53:34] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 14:53:37] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2278}
+[09/06/2026, 14:53:37] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-2.5-flash | Input: 22 | Output: 114 | Total: 136 | Meta: {"promptTokens":22,"completionTokens":114,"totalTokens":136}
+[09/06/2026, 14:59:47] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 15:00:11] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 15:00:48] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[09/06/2026, 15:00:48] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 15:00:49] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 113 | Output: 55 | Total: 168 | Meta: {"promptTokens":113,"completionTokens":55,"totalTokens":168}
+[09/06/2026, 15:01:03] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 15:01:31] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 15:01:31] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\",\"service\":\"generativelanguage.googleapis.com\"}}]}}"}
+[09/06/2026, 15:01:31] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 15:01:32] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 118 | Output: 125 | Total: 243 | Meta: {"promptTokens":118,"completionTokens":125,"totalTokens":243}
+[09/06/2026, 15:04:23] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 15:04:24] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 35.686901646s.\",\"status\":\"RESOURCE_EXHAUSTED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.5-flash\"},\"quotaValue\":\"20\"}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"35s\"}]}}"}
+[09/06/2026, 15:04:24] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 15:04:25] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 5068 | Output: 218 | Total: 5286 | Meta: {"promptTokens":5068,"completionTokens":218,"totalTokens":5286}
+[09/06/2026, 15:05:25] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 15:05:26] [ERROR] [LlmRouter.generateJson] gemini falhou, tentando fallback | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 33.719778443s.\",\"status\":\"RESOURCE_EXHAUSTED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.5-flash\"},\"quotaValue\":\"20\"}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"33s\"}]}}"}
+[09/06/2026, 15:05:26] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 15:05:28] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 5086 | Output: 365 | Total: 5451 | Meta: {"promptTokens":5086,"completionTokens":365,"totalTokens":5451}
+[09/06/2026, 16:52:14] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 16:52:14] [ERROR] [LlmRouter.generateJson] gemini falhou (tentando fallback). Erro original: {"error":{"code":401,"message":"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.","status":"UNAUTHENTICATED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"ACCESS_TOKEN_TYPE_UNSUPPORTED","metadata":{"service":"generativelanguage.googleapis.com","method":"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent"}}]}} | Meta: {"error":"{\"error\":{\"code\":401,\"message\":\"Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.\",\"status\":\"UNAUTHENTICATED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.ErrorInfo\",\"reason\":\"ACCESS_TOKEN_TYPE_UNSUPPORTED\",\"metadata\":{\"service\":\"generativelanguage.googleapis.com\",\"method\":\"google.ai.generativelanguage.v1beta.GenerativeService.GenerateContent\"}}]}}"}
+[09/06/2026, 16:52:14] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 16:52:15] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 118 | Output: 122 | Total: 240 | Meta: {"promptTokens":118,"completionTokens":122,"totalTokens":240}
+[09/06/2026, 16:53:22] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 16:53:28] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 16:53:34] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":6270}
+[09/06/2026, 16:53:34] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-2.5-flash | Input: 4896 | Output: 28 | Total: 4924 | Meta: {"promptTokens":4896,"completionTokens":28,"totalTokens":4924}
+[09/06/2026, 16:53:55] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 16:53:56] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 16:57:11] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 16:57:42] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 16:57:49] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":6706}
+[09/06/2026, 16:57:49] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-2.5-flash | Input: 54 | Output: 365 | Total: 419 | Meta: {"promptTokens":54,"completionTokens":365,"totalTokens":419}
+[09/06/2026, 16:59:39] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 16:59:53] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 17:00:01] [INFO] [LlmRouter.generateJson] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"QUIZ_GEN"}
+[09/06/2026, 17:00:34] [WARN] [LlmRouter.generateJson] Cache ignorado (inválido no schema): Missing required property: options
+[09/06/2026, 17:00:34] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 17:00:41] [ERROR] [LlmRouter.generateJson] gemini falhou (tentando fallback). Erro original: Schema validation failed: Missing required property: options | Meta: {"error":"Schema validation failed: Missing required property: options"}
+[09/06/2026, 17:00:41] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 17:00:42] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 5138 | Output: 296 | Total: 5434 | Meta: {"promptTokens":5138,"completionTokens":296,"totalTokens":5434}
+[09/06/2026, 17:01:21] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 17:01:21] [ERROR] [LlmRouter.generateJson] gemini falhou (tentando fallback). Erro original: {"error":{"code":429,"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 38.261410388s.","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.5-flash"},"quotaValue":"20"}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"38s"}]}} | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 38.261410388s.\",\"status\":\"RESOURCE_EXHAUSTED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.5-flash\"},\"quotaValue\":\"20\"}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"38s\"}]}}"}
+[09/06/2026, 17:01:21] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 17:01:23] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4548 | Output: 255 | Total: 4803 | Meta: {"promptTokens":4548,"completionTokens":255,"totalTokens":4803}
+[09/06/2026, 17:04:58] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[09/06/2026, 17:05:06] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[09/06/2026, 17:05:07] [ERROR] [LlmRouter.generateJson] gemini falhou (tentando fallback). Erro original: {"error":{"code":429,"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 53.20018989s.","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.5-flash"},"quotaValue":"20"}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"53s"}]}} | Meta: {"error":"{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 53.20018989s.\",\"status\":\"RESOURCE_EXHAUSTED\",\"details\":[{\"@type\":\"type.googleapis.com/google.rpc.Help\",\"links\":[{\"description\":\"Learn more about Gemini API quotas\",\"url\":\"https://ai.google.dev/gemini-api/docs/rate-limits\"}]},{\"@type\":\"type.googleapis.com/google.rpc.QuotaFailure\",\"violations\":[{\"quotaMetric\":\"generativelanguage.googleapis.com/generate_content_free_tier_requests\",\"quotaId\":\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",\"quotaDimensions\":{\"location\":\"global\",\"model\":\"gemini-2.5-flash\"},\"quotaValue\":\"20\"}]},{\"@type\":\"type.googleapis.com/google.rpc.RetryInfo\",\"retryDelay\":\"53s\"}]}}"}
+[09/06/2026, 17:05:07] [INFO] [LlmRouter.generateJson] Tentando fallback para groq
+[09/06/2026, 17:05:08] [INFO] [LlmRouter.generateJson] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4645 | Output: 254 | Total: 4899 | Meta: {"promptTokens":4645,"completionTokens":254,"totalTokens":4899}
+[09/06/2026, 17:06:17] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[16/06/2026, 14:19:15] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[16/06/2026, 14:19:38] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[16/06/2026, 14:19:38] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[16/06/2026, 14:34:52] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmq6o701b0005om9chkzj8gr1","title":"Introdução e Endereçamento IPv6","description":"Explore a arquitetura de endereçamento IPv6, desde sua motivação e estrutura de 128 bits até os tipos de endereços (Unicast, Anycast, Multicast) e representações textuais, com foco em RFCs e exemplos práticos."}
+[16/06/2026, 14:35:24] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[16/06/2026, 14:35:52] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[16/06/2026, 14:35:52] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[16/06/2026, 14:35:52] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[16/06/2026, 14:37:09] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n","title":"SEGURANÇA NO PROTOCOLO IPV6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[16/06/2026, 14:37:34] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmqgxd1jv0002om0w62tow1av","mimeType":"application/pdf"}
+[16/06/2026, 14:37:34] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmqgxd1jv0002om0w62tow1av"}
+[16/06/2026, 14:37:34] [INFO] [EmbeddingWorker.Worker] Started processing job 26
+[16/06/2026, 14:37:34] [INFO] [WorkerProcess.Worker] Started processing job 26
+[16/06/2026, 14:37:34] [INFO] [EmbeddingWorker.Worker] Processing job 26 for file cmqgxd1jv0002om0w62tow1av
+[16/06/2026, 14:37:34] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[16/06/2026, 14:37:38] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[16/06/2026, 14:37:39] [INFO] [EmbeddingWorker.Worker] Job 26 concluído com sucesso | Meta: {"parents":1,"children":5}
+[16/06/2026, 14:37:39] [INFO] [EmbeddingWorker.Worker] Completed job 26
+[16/06/2026, 14:37:39] [INFO] [WorkerProcess.Worker] Completed job 26
+[16/06/2026, 14:38:10] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n"}
+[16/06/2026, 14:38:11] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-2.5-flash"}
+[16/06/2026, 14:38:12] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":403,"message":"Your project has been denied access. Please contact support.","status":"PERMISSION_DENIED"}} | Meta: {"error":"{\"error\":{\"code\":403,\"message\":\"Your project has been denied access. Please contact support.\",\"status\":\"PERMISSION_DENIED\"}}"}
+[16/06/2026, 14:38:12] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[16/06/2026, 14:38:15] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 1471 | Output: 1202 | Total: 2673 | Meta: {"promptTokens":1471,"completionTokens":1202,"totalTokens":2673}
+[16/06/2026, 14:38:15] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n"}
+[16/06/2026, 14:38:49] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n","title":"SEGURANÇA NO PROTOCOLO IPV6","description":"Segurança no Protocolo IPv6: Desafios e Soluções."}

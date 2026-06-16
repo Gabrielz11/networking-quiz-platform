@@ -49,10 +49,12 @@ export class ExplainService {
         logger.info("generateExplanationStream", "Gerando explicação em streaming");
 
         const stream = await LlmRouter.generateTextStream(promptText, {
-            modelName: env.EXPLANATION_MODEL ?? env.REASONING_FALLBACK_MODEL,
+            modelName: env.EXPLANATION_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
             temperature: 0.5,
             pipeline: "EXPLANATION",
+            fallbackEnabled: false,
+            maxTokens: 512,
             moduleId,
             sessionId,
         });
@@ -107,10 +109,12 @@ export class ExplainService {
         logger.info("generateExplanation", "Gerando explicação pedagógica");
 
         return LlmRouter.generateText(promptText, {
-            modelName: env.EXPLANATION_MODEL ?? env.REASONING_FALLBACK_MODEL,
+            modelName: env.EXPLANATION_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
             temperature: 0.6,
             pipeline: "EXPLANATION",
+            fallbackEnabled: false,
+            maxTokens: 512,
             moduleId,
             sessionId,
         });

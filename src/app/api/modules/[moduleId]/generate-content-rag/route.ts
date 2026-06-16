@@ -4,6 +4,9 @@
 import { NextResponse } from "next/server";
 import { moduleContentRagService } from "@/services/generation/module-content-rag.service";
 import { requireRole, handleAuthError, AuthError } from "@/lib/auth-guard";
+import { Logger } from "@/lib/logger";
+
+const logger = new Logger("generate-content-rag");
 
 export async function POST(
     _request: Request,
@@ -26,6 +29,9 @@ export async function POST(
         if (error instanceof AuthError) {
             return handleAuthError(error);
         }
+        logger.error("POST", "Falha ao gerar conteúdo com RAG", {
+            error: (error as { message?: string }).message,
+        });
         return NextResponse.json(
             { error: "Falha ao gerar conteúdo com RAG." },
             { status: 500 }

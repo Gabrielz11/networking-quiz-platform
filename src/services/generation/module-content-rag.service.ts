@@ -22,6 +22,20 @@ import { RAG_CONTENT_PROMPT } from "@/lib/prompts/rag-content.prompt";
 
 const logger = new Logger("ModuleContentRagService");
 
+/**
+ * Limite máximo de caracteres por chunk de contexto injetado no prompt.
+ *
+ * O hierarchical retrieval retorna o chunk PARENT, que pode conter o documento
+ * inteiro (~14.000 chars / ~12.000 tokens para um PDF típico). Sem truncagem,
+ * qualquer provider com janela menor (ex: Groq free tier ≤ 12.000 TPM) falha.
+ *
+ * Com 3.000 chars/chunk × até 3 chunks = ~9.000 chars ≈ ~2.250 tokens de contexto.
+ * Somando o template (~750 tokens), o prompt total fica em ~3.000 tokens —
+ * dentro dos limites de todos os providers (Groq free: 6.000–12.000 TPM).
+ */
+const MAX_CONTEXT_CHARS_PER_CHUNK = 2_000;
+
+
 export class ModuleContentRagService {
     constructor(private moduleRepo: ModuleRepository) {}
 
@@ -54,7 +68,12 @@ export class ModuleContentRagService {
                     ? ` | Seção: ${c.sectionTitle.replace(/^#{1,4}\s*/, "")}`
                     : "";
                 const header = `[Fonte: ${c.fileName}${sectionLabel} | Relevância: ${(c.score * 100).toFixed(0)}%]`;
-                return `${header}\n${c.content}`;
+                // Trunca o conteúdo do chunk para evitar prompts que excedam os
+                // limites de tokens dos providers (especialmente Groq no free tier).
+                const content = c.content.length > MAX_CONTEXT_CHARS_PER_CHUNK
+                    ? c.content.slice(0, MAX_CONTEXT_CHARS_PER_CHUNK) + "\n[...conteúdo truncado para caber nos limites do provider...]"
+                    : c.content;
+                return `${header}\n${content}`;
             })
             .join("\n\n---\n\n");
 
@@ -65,10 +84,11 @@ export class ModuleContentRagService {
 
         const resultText = await LlmRouter.generateText(prompt, {
             pipeline: "CONTENT_GEN",
-            modelName: env.GEMINI_MODEL,
+            modelName: env.CONTENT_GENERATION_MODEL,
             temperature: 0.6,
             timeoutMs: CONTENT_TIMEOUT_MS,
             thinkingBudget: 0,
+            maxTokens: 4096,
             moduleId,
         });
 

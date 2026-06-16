@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { env } from "@/lib/env";
 import { AiProvider, AiGenerateOptions, AiResponse } from "../types";
 import { Logger } from "@/lib/logger";
-import { cleanMarkdownCodeFences } from "@/lib/utils";
+import { cleanMarkdownCodeFences, safeJsonParse, validateSchemaRequirements } from "@/lib/utils";
 
 const logger = new Logger("GeminiProvider");
 
@@ -18,7 +18,7 @@ export class GeminiProvider implements AiProvider {
     }
 
     async generateJson<T = unknown>(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<T>> {
-        const { temperature = 0.6, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, responseSchema } = options;
+        const { temperature = 0.6, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, responseSchema, maxTokens } = options;
 
         const result = await this.withTimeout(
             this.client.models.generateContent({
@@ -27,8 +27,14 @@ export class GeminiProvider implements AiProvider {
                 config: {
                     responseMimeType: "application/json",
                     temperature,
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: maxTokens ?? 2048,
                     responseSchema,
+                    safetySettings: [
+                        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE }
+                    ]
                 },
             }),
             timeoutMs
@@ -38,14 +44,30 @@ export class GeminiProvider implements AiProvider {
         const completionTokens = result.usageMetadata?.candidatesTokenCount ?? 0;
 
         const cleaned = cleanMarkdownCodeFences(result.text ?? "{}");
-        return {
-            result: JSON.parse(cleaned) as T,
-            usage: { promptTokens, completionTokens }
-        };
+        const parsed = safeJsonParse<T>(cleaned);
+        if (parsed.success) {
+            if (responseSchema) {
+                const schemaError = validateSchemaRequirements(parsed.data, responseSchema);
+                if (schemaError) {
+                    logger.error("generateJson", `Falha na validação de schema (Gemini): ${schemaError}`);
+                    throw new Error(`Schema validation failed: ${schemaError}`);
+                }
+            }
+            return {
+                result: parsed.data!,
+                usage: { promptTokens, completionTokens }
+            };
+        }
+
+        logger.error("generateJson", "Falha crítica de parsing no JSON do Gemini (mesmo após reparo)", {
+            error: parsed.error?.message,
+            rawOutput: cleaned.slice(0, 1000)
+        });
+        throw parsed.error ?? new Error("JSON parsing failed");
     }
 
     async generateText(prompt: string, options: AiGenerateOptions = {}): Promise<AiResponse<string>> {
-        const { temperature = 0.7, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction, thinkingBudget } = options;
+        const { temperature = 0.7, timeoutMs = DEFAULT_TIMEOUT_MS, modelName = DEFAULT_MODEL, systemInstruction, thinkingBudget, maxTokens } = options;
 
         const result = await this.withTimeout(
             this.client.models.generateContent({
@@ -54,6 +76,7 @@ export class GeminiProvider implements AiProvider {
                 config: {
                     systemInstruction,
                     temperature,
+                    maxOutputTokens: maxTokens,
                     ...(thinkingBudget !== undefined && {
                         thinkingConfig: { thinkingBudget },
                     }),
@@ -72,7 +95,7 @@ export class GeminiProvider implements AiProvider {
     }
 
     async generateTextStream(prompt: string, options: AiGenerateOptions = {}): Promise<ReadableStream<Uint8Array>> {
-        const { temperature = 0.7, modelName = DEFAULT_MODEL, systemInstruction } = options;
+        const { temperature = 0.7, modelName = DEFAULT_MODEL, systemInstruction, maxTokens } = options;
         const encoder = new TextEncoder();
 
         logger.info("generateTextStream", "Gemini stream iniciado", { model: modelName });
@@ -83,16 +106,27 @@ export class GeminiProvider implements AiProvider {
             config: {
                 systemInstruction,
                 temperature,
+                maxOutputTokens: maxTokens,
             },
         });
 
         return new ReadableStream<Uint8Array>({
             async start(controller) {
                 try {
+                    let lastChunk: any = null;
                     for await (const chunk of stream) {
+                        lastChunk = chunk;
                         const text = chunk.text;
                         if (text) controller.enqueue(encoder.encode(text));
                     }
+
+                    const metadata = lastChunk?.usageMetadata;
+                    if (metadata) {
+                        const promptTokens = metadata.promptTokenCount ?? 0;
+                        const completionTokens = metadata.candidatesTokenCount ?? 0;
+                        logger.info("generateTextStream", `Consumo de Tokens (Stream) — Modelo: ${modelName} | Input: ${promptTokens} | Output: ${completionTokens} | Total: ${promptTokens + completionTokens}`);
+                    }
+
                     controller.close();
                 } catch (err) {
                     controller.error(err);

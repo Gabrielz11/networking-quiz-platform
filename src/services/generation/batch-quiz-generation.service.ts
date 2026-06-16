@@ -31,6 +31,7 @@ export class BatchQuizGenerationService {
 
         const data = await LlmRouter.generateJson<BatchResponse>(prompt, {
             pipeline: "QUIZ_GEN",
+            maxTokens: 3000,
             moduleId,
             responseSchema: {
                 type: "object",
