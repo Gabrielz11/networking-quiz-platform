@@ -558,3 +558,4 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [16/06/2026, 14:38:15] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 1471 | Output: 1202 | Total: 2673 | Meta: {"promptTokens":1471,"completionTokens":1202,"totalTokens":2673}
 [16/06/2026, 14:38:15] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n"}
 [16/06/2026, 14:38:49] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmqgxcp5l0001om0wug15nq7n","title":"SEGURANÇA NO PROTOCOLO IPV6","description":"Segurança no Protocolo IPv6: Desafios e Soluções."}
+[16/06/2026, 15:42:06] [INFO] [WorkerProcess.Shutdown] Closing workers...
