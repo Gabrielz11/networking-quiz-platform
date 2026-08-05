@@ -5,6 +5,7 @@ import { AiGenerateOptions } from "./types";
 import { AiProvider } from "./types";
 import { GeminiProvider } from "./providers/gemini.provider";
 import { GroqProvider } from "./providers/groq.provider";
+import { OpenaiProvider } from "./providers/openai.provider";
 import { SemanticCache } from "@/lib/semantic-cache";
 import { calculateCost } from "./pricing";
 import { validateSchemaRequirements } from "@/lib/utils";
@@ -22,31 +23,44 @@ const DEFAULT_GROQ_MODEL = env.CONTENT_FALLBACK_MODEL;
 
 // ─── Seleção de Providers ─────────────────────────────────────────────────────
 
-// Instâncias singleton dos providers
-const groq = new GroqProvider();
-let gemini: GeminiProvider | null = null;
+// Instâncias singleton lazy-loaded
+let geminiInstance: GeminiProvider | null = null;
+let groqInstance: GroqProvider | null = null;
+let openaiInstance: OpenaiProvider | null = null;
 
-function getGemini(): GeminiProvider {
-    if (!gemini) gemini = new GeminiProvider();
-    return gemini;
+function getProviderInstance(name: string): AiProvider {
+    const key = name.toLowerCase();
+    if (key.includes("openai") || key.includes("gpt")) {
+        if (!openaiInstance) openaiInstance = new OpenaiProvider();
+        return openaiInstance;
+    }
+    if (key.includes("groq") || key.includes("llama")) {
+        if (!groqInstance) groqInstance = new GroqProvider();
+        return groqInstance;
+    }
+    if (!geminiInstance) geminiInstance = new GeminiProvider();
+    return geminiInstance;
 }
 
-/** Seleciona provider baseado no modelName e prepara o fallback simétrico. */
+/** Seleciona provider baseado no modelName e prepara o fallback configurado no .env. */
 function selectProvider(modelName?: string) {
     const name = (modelName ?? "").toLowerCase();
+    const fallbackProviderName = env.CONTENT_FALLBACK_PROVIDER;
+    const fallbackModelName = env.CONTENT_FALLBACK_MODEL;
+
     if (!name || name.includes("gemini")) {
         return {
-            provider: getGemini() as AiProvider,
-            resolvedModel: modelName ?? DEFAULT_GEMINI_MODEL,
-            fallback: () => groq as AiProvider,
-            fallbackModel: DEFAULT_GROQ_MODEL,
+            provider: getProviderInstance("gemini"),
+            resolvedModel: modelName ?? env.CONTENT_GENERATION_MODEL,
+            fallback: () => getProviderInstance(fallbackProviderName),
+            fallbackModel: fallbackModelName,
         };
     }
     return {
-        provider: groq as AiProvider,
-        resolvedModel: modelName ?? DEFAULT_GROQ_MODEL,
-        fallback: () => getGemini() as AiProvider,
-        fallbackModel: DEFAULT_GEMINI_MODEL,
+        provider: getProviderInstance(name),
+        resolvedModel: modelName ?? fallbackModelName,
+        fallback: () => getProviderInstance("gemini"),
+        fallbackModel: env.CONTENT_GENERATION_MODEL,
     };
 }
 
@@ -90,6 +104,10 @@ async function executeWithFallback<T>({
                 completionTokens: usage.completionTokens,
                 totalTokens: usage.promptTokens + usage.completionTokens,
             });
+            const cost = calculateCost(resolvedModel, usage.promptTokens, usage.completionTokens);
+            if (cost !== null) {
+                logger.info(label, `Custo estimado: $${cost.toFixed(6)} USD`, { model: resolvedModel, costUsd: cost });
+            }
         }
         saveMetadataAsync({ ...options, modelName: resolvedModel, durationMs, provider: provider.name, usage });
         return { result, modelUsed: resolvedModel, providerName: provider.name, usage };
@@ -117,6 +135,10 @@ async function executeWithFallback<T>({
                     completionTokens: usage.completionTokens,
                     totalTokens: usage.promptTokens + usage.completionTokens,
                 });
+                const cost = calculateCost(fallbackModel, usage.promptTokens, usage.completionTokens);
+                if (cost !== null) {
+                    logger.info(label, `Custo estimado (Fallback): $${cost.toFixed(6)} USD`, { model: fallbackModel, costUsd: cost });
+                }
             }
             saveMetadataAsync({
                 ...options,

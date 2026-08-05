@@ -51,10 +51,10 @@ export class ExplainService {
         const stream = await LlmRouter.generateTextStream(promptText, {
             modelName: env.EXPLANATION_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
-            temperature: 0.5,
+            temperature: env.EXPLANATION_TEMPERATURE,
             pipeline: "EXPLANATION",
             fallbackEnabled: false,
-            maxTokens: 512,
+            maxTokens: env.EXPLANATION_MAX_TOKENS,
             moduleId,
             sessionId,
         });
@@ -111,10 +111,10 @@ export class ExplainService {
         return LlmRouter.generateText(promptText, {
             modelName: env.EXPLANATION_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
-            temperature: 0.6,
+            temperature: env.EXPLANATION_TEMPERATURE,
             pipeline: "EXPLANATION",
             fallbackEnabled: false,
-            maxTokens: 512,
+            maxTokens: env.EXPLANATION_MAX_TOKENS,
             moduleId,
             sessionId,
         });

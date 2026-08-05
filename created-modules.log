@@ -659,3 +659,468 @@ Transaction API error: Transaction already closed: A query cannot be executed on
  | Meta: {"error":"Groq API failed (429): {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kmg7rhthffa8rqykt50ew43n` service tier `on_demand` on tokens per minute (TPM): Limit 12000, Used 9029, Requested 4996. Please try again in 10.125s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n"}
 [08/07/2026, 16:03:36] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmrcf5d3p0001om64my6932ts","title":"Introdução ao IPV6","description":"Introdução ao IPv6: fundamentos e configuração."}
 [08/07/2026, 18:49:16] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 08:08:20] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 08:08:21] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 08:08:21] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 09:30:49] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg2fc5q0004om6omu33c3lt","title":"IPv6 Addressing Architecture","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 09:33:00] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg2hxes0005om6oro40g4o3","mimeType":"application/pdf"}
+[05/08/2026, 09:33:00] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg2hxes0005om6oro40g4o3"}
+[05/08/2026, 09:33:00] [INFO] [EmbeddingWorker.Worker] Started processing job 28
+[05/08/2026, 09:33:00] [INFO] [WorkerProcess.Worker] Started processing job 28
+[05/08/2026, 09:33:00] [INFO] [EmbeddingWorker.Worker] Processing job 28 for file cmsg2hxes0005om6oro40g4o3
+[05/08/2026, 09:33:01] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[05/08/2026, 09:33:03] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 09:33:04] [INFO] [EmbeddingWorker.Worker] Job 28 concluído com sucesso | Meta: {"parents":1,"children":12}
+[05/08/2026, 09:33:04] [INFO] [EmbeddingWorker.Worker] Completed job 28
+[05/08/2026, 09:33:04] [INFO] [WorkerProcess.Worker] Completed job 28
+[05/08/2026, 09:33:13] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg2fc5q0004om6omu33c3lt"}
+[05/08/2026, 09:33:14] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.5-flash"}
+[05/08/2026, 09:33:14] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":403,"message":"Your project has been denied access. Please contact support.","status":"PERMISSION_DENIED"}} | Meta: {"error":"{\"error\":{\"code\":403,\"message\":\"Your project has been denied access. Please contact support.\",\"status\":\"PERMISSION_DENIED\"}}"}
+[05/08/2026, 09:33:14] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[05/08/2026, 09:33:19] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 1649 | Output: 1509 | Total: 3158 | Meta: {"promptTokens":1649,"completionTokens":1509,"totalTokens":3158}
+[05/08/2026, 09:33:19] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg2fc5q0004om6omu33c3lt"}
+[05/08/2026, 09:33:44] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg2fc5q0004om6omu33c3lt","title":"IPv6 Addressing Architecture","description":"IPv6 Addressing Architecture: fundamentos e detalhes técnicos."}
+[05/08/2026, 09:38:50] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 09:38:50] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 09:38:50] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 09:39:12] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmsg2fc5q0004om6omu33c3lt"}
+[05/08/2026, 09:39:47] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg2qvek0001om1se6pmi4ae","title":"IPv6 Addressing","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 09:40:27] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg2rhtm0002om1smww8fwkt","mimeType":"application/pdf"}
+[05/08/2026, 09:40:27] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg2rhtm0002om1smww8fwkt"}
+[05/08/2026, 09:40:27] [INFO] [EmbeddingWorker.Worker] Started processing job 29
+[05/08/2026, 09:40:27] [INFO] [WorkerProcess.Worker] Started processing job 29
+[05/08/2026, 09:40:27] [INFO] [EmbeddingWorker.Worker] Processing job 29 for file cmsg2rhtm0002om1smww8fwkt
+[05/08/2026, 09:40:28] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":13,"parents":1,"children":12}
+[05/08/2026, 09:40:29] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 09:40:30] [INFO] [EmbeddingWorker.Worker] Job 29 concluído com sucesso | Meta: {"parents":1,"children":12}
+[05/08/2026, 09:40:30] [INFO] [EmbeddingWorker.Worker] Completed job 29
+[05/08/2026, 09:40:30] [INFO] [WorkerProcess.Worker] Completed job 29
+[05/08/2026, 09:40:42] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg2qvek0001om1se6pmi4ae"}
+[05/08/2026, 09:40:43] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.5-flash"}
+[05/08/2026, 09:40:43] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":403,"message":"Your project has been denied access. Please contact support.","status":"PERMISSION_DENIED"}} | Meta: {"error":"{\"error\":{\"code\":403,\"message\":\"Your project has been denied access. Please contact support.\",\"status\":\"PERMISSION_DENIED\"}}"}
+[05/08/2026, 09:40:43] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[05/08/2026, 09:40:49] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 1648 | Output: 1887 | Total: 3535 | Meta: {"promptTokens":1648,"completionTokens":1887,"totalTokens":3535}
+[05/08/2026, 09:40:49] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg2qvek0001om1se6pmi4ae"}
+[05/08/2026, 09:43:19] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg2qvek0001om1se6pmi4ae","title":"IPv6 Addressing","description":"Endereçamento IPv6: Arquitetura e Funcionamento."}
+[05/08/2026, 10:01:09] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg3id3b0006om1s2ucuzbln","title":"Comparativo IPV6 vs IPV4","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 10:03:14] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3jjpl0009om1s8uonso5v","mimeType":"application/pdf"}
+[05/08/2026, 10:03:14] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3jjpl0009om1s8uonso5v"}
+[05/08/2026, 10:03:14] [INFO] [EmbeddingWorker.Worker] Started processing job 30
+[05/08/2026, 10:03:14] [INFO] [WorkerProcess.Worker] Started processing job 30
+[05/08/2026, 10:03:14] [INFO] [EmbeddingWorker.Worker] Processing job 30 for file cmsg3jjpl0009om1s8uonso5v
+[05/08/2026, 10:03:15] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":37,"parents":1,"children":36}
+[05/08/2026, 10:03:15] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3je1s0008om1sa7lt8m5j","mimeType":"application/pdf"}
+[05/08/2026, 10:03:15] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3je1s0008om1sa7lt8m5j"}
+[05/08/2026, 10:03:16] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3j9a20007om1seehco8g9","mimeType":"application/pdf"}
+[05/08/2026, 10:03:16] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3j9a20007om1seehco8g9"}
+[05/08/2026, 10:03:17] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:03:19] [INFO] [EmbeddingWorker.Worker] Job 30 concluído com sucesso | Meta: {"parents":1,"children":36}
+[05/08/2026, 10:03:19] [INFO] [EmbeddingWorker.Worker] Completed job 30
+[05/08/2026, 10:03:19] [INFO] [WorkerProcess.Worker] Completed job 30
+[05/08/2026, 10:03:19] [INFO] [EmbeddingWorker.Worker] Processing job 31 for file cmsg3je1s0008om1sa7lt8m5j
+[05/08/2026, 10:03:19] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 10:03:20] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Job 31 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Completed job 31
+[05/08/2026, 10:03:21] [INFO] [WorkerProcess.Worker] Completed job 31
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Processing job 32 for file cmsg3j9a20007om1seehco8g9
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Job 32 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 10:03:21] [INFO] [EmbeddingWorker.Worker] Completed job 32
+[05/08/2026, 10:03:21] [INFO] [WorkerProcess.Worker] Completed job 32
+[05/08/2026, 10:05:24] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 10:05:48] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 10:05:49] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:05:49] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:05:54] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmsg3id3b0006om1s2ucuzbln"}
+[05/08/2026, 10:06:18] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg3oz4n0001omw0ssuyf79h","title":"Qual é a diferença entre o IPv4 e o IPv6?","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 10:06:56] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3pf120002omw04opoyrpd","mimeType":"application/pdf"}
+[05/08/2026, 10:06:56] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3pf120002omw04opoyrpd"}
+[05/08/2026, 10:06:56] [INFO] [EmbeddingWorker.Worker] Started processing job 33
+[05/08/2026, 10:06:56] [INFO] [WorkerProcess.Worker] Started processing job 33
+[05/08/2026, 10:06:56] [INFO] [EmbeddingWorker.Worker] Processing job 33 for file cmsg3pf120002omw04opoyrpd
+[05/08/2026, 10:06:56] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 10:06:57] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:06:57] [INFO] [EmbeddingWorker.Worker] Job 33 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 10:06:57] [INFO] [EmbeddingWorker.Worker] Completed job 33
+[05/08/2026, 10:06:57] [INFO] [WorkerProcess.Worker] Completed job 33
+[05/08/2026, 10:06:58] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3ph5j0003omw0iwevi6bb","mimeType":"application/pdf"}
+[05/08/2026, 10:06:58] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3ph5j0003omw0iwevi6bb"}
+[05/08/2026, 10:06:58] [INFO] [EmbeddingWorker.Worker] Started processing job 34
+[05/08/2026, 10:06:58] [INFO] [WorkerProcess.Worker] Started processing job 34
+[05/08/2026, 10:06:58] [INFO] [EmbeddingWorker.Worker] Processing job 34 for file cmsg3ph5j0003omw0iwevi6bb
+[05/08/2026, 10:06:58] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 10:06:59] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:07:00] [INFO] [EmbeddingWorker.Worker] Job 34 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 10:07:00] [INFO] [EmbeddingWorker.Worker] Completed job 34
+[05/08/2026, 10:07:00] [INFO] [WorkerProcess.Worker] Completed job 34
+[05/08/2026, 10:07:01] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3pl0e0004omw06wn8slqh","mimeType":"application/pdf"}
+[05/08/2026, 10:07:01] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3pl0e0004omw06wn8slqh"}
+[05/08/2026, 10:07:01] [INFO] [EmbeddingWorker.Worker] Started processing job 35
+[05/08/2026, 10:07:01] [INFO] [WorkerProcess.Worker] Started processing job 35
+[05/08/2026, 10:07:01] [INFO] [EmbeddingWorker.Worker] Processing job 35 for file cmsg3pl0e0004omw06wn8slqh
+[05/08/2026, 10:07:01] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":37,"parents":1,"children":36}
+[05/08/2026, 10:07:02] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:07:04] [INFO] [EmbeddingWorker.Worker] Job 35 concluído com sucesso | Meta: {"parents":1,"children":36}
+[05/08/2026, 10:07:04] [INFO] [EmbeddingWorker.Worker] Completed job 35
+[05/08/2026, 10:07:04] [INFO] [WorkerProcess.Worker] Completed job 35
+[05/08/2026, 10:07:48] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg3oz4n0001omw0ssuyf79h"}
+[05/08/2026, 10:07:50] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.5-flash"}
+[05/08/2026, 10:09:08] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.","status":"UNAVAILABLE"}} | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[05/08/2026, 10:09:08] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[05/08/2026, 10:09:13] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 2960 | Output: 1809 | Total: 4769 | Meta: {"promptTokens":2960,"completionTokens":1809,"totalTokens":4769}
+[05/08/2026, 10:09:13] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg3oz4n0001omw0ssuyf79h"}
+[05/08/2026, 10:11:52] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg3oz4n0001omw0ssuyf79h","title":"Qual é a diferença entre o IPv4 e o IPv6?","description":"IPv4 x IPv6: Diferenças e Características."}
+[05/08/2026, 10:13:50] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 10:13:59] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 10:13:59] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:13:59] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:14:19] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg3za5w0001om9klhn2wq7a","title":"Diferença entre IPV4 e IPV6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3zdes0002om9kjlv2dkh7","mimeType":"application/pdf"}
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3zfjm0003om9kp2fjo3nr","mimeType":"application/pdf"}
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3zdes0002om9kjlv2dkh7"}
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3zfjm0003om9kp2fjo3nr"}
+[05/08/2026, 10:14:37] [INFO] [EmbeddingWorker.Worker] Started processing job 36
+[05/08/2026, 10:14:37] [INFO] [WorkerProcess.Worker] Started processing job 36
+[05/08/2026, 10:14:37] [INFO] [EmbeddingWorker.Worker] Processing job 36 for file cmsg3zdes0002om9kjlv2dkh7
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg3zjfa0004om9kai37k5vf","mimeType":"application/pdf"}
+[05/08/2026, 10:14:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg3zjfa0004om9kai37k5vf"}
+[05/08/2026, 10:14:37] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 10:14:39] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:14:39] [INFO] [EmbeddingWorker.Worker] Job 36 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 10:14:39] [INFO] [EmbeddingWorker.Worker] Completed job 36
+[05/08/2026, 10:14:39] [INFO] [WorkerProcess.Worker] Completed job 36
+[05/08/2026, 10:14:39] [INFO] [EmbeddingWorker.Worker] Processing job 37 for file cmsg3zfjm0003om9kp2fjo3nr
+[05/08/2026, 10:14:39] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 10:14:40] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:14:40] [INFO] [EmbeddingWorker.Worker] Job 37 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 10:14:40] [INFO] [EmbeddingWorker.Worker] Completed job 37
+[05/08/2026, 10:14:40] [INFO] [WorkerProcess.Worker] Completed job 37
+[05/08/2026, 10:14:40] [INFO] [EmbeddingWorker.Worker] Processing job 38 for file cmsg3zjfa0004om9kai37k5vf
+[05/08/2026, 10:14:40] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 10:14:41] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:14:42] [INFO] [EmbeddingWorker.Worker] Job 38 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 10:14:42] [INFO] [EmbeddingWorker.Worker] Completed job 38
+[05/08/2026, 10:14:42] [INFO] [WorkerProcess.Worker] Completed job 38
+[05/08/2026, 10:17:58] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 10:18:11] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 10:18:12] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:18:12] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 10:19:59] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmsg3za5w0001om9klhn2wq7a"}
+[05/08/2026, 10:22:26] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q","title":"Diferença entre IPV4 e IPV6 ?","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 10:22:59] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg49xtg0003omg4mt6fox10","mimeType":"application/pdf"}
+[05/08/2026, 10:23:00] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg49xtg0003omg4mt6fox10"}
+[05/08/2026, 10:23:00] [INFO] [EmbeddingWorker.Worker] Started processing job 39
+[05/08/2026, 10:23:00] [INFO] [WorkerProcess.Worker] Started processing job 39
+[05/08/2026, 10:23:00] [INFO] [EmbeddingWorker.Worker] Processing job 39 for file cmsg49xtg0003omg4mt6fox10
+[05/08/2026, 10:23:00] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 10:23:01] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg49vaq0002omg4vr0357m8","mimeType":"application/pdf"}
+[05/08/2026, 10:23:01] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg49vaq0002omg4vr0357m8"}
+[05/08/2026, 10:23:01] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:23:01] [INFO] [EmbeddingWorker.Worker] Job 39 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 10:23:01] [INFO] [EmbeddingWorker.Worker] Completed job 39
+[05/08/2026, 10:23:01] [INFO] [WorkerProcess.Worker] Completed job 39
+[05/08/2026, 10:23:01] [INFO] [EmbeddingWorker.Worker] Processing job 40 for file cmsg49vaq0002omg4vr0357m8
+[05/08/2026, 10:23:01] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 10:23:02] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:23:02] [INFO] [EmbeddingWorker.Worker] Job 40 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 10:23:02] [INFO] [EmbeddingWorker.Worker] Completed job 40
+[05/08/2026, 10:23:02] [INFO] [WorkerProcess.Worker] Completed job 40
+[05/08/2026, 10:23:02] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg4a1c50004omg49xnlsfqj","mimeType":"application/pdf"}
+[05/08/2026, 10:23:02] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg4a1c50004omg49xnlsfqj"}
+[05/08/2026, 10:23:02] [INFO] [EmbeddingWorker.Worker] Started processing job 41
+[05/08/2026, 10:23:02] [INFO] [WorkerProcess.Worker] Started processing job 41
+[05/08/2026, 10:23:02] [INFO] [EmbeddingWorker.Worker] Processing job 41 for file cmsg4a1c50004omg49xnlsfqj
+[05/08/2026, 10:23:03] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 10:23:04] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:23:04] [INFO] [EmbeddingWorker.Worker] Job 41 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 10:23:04] [INFO] [EmbeddingWorker.Worker] Completed job 41
+[05/08/2026, 10:23:04] [INFO] [WorkerProcess.Worker] Completed job 41
+[05/08/2026, 10:24:35] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q"}
+[05/08/2026, 10:24:38] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 10:24:39] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":400,"message":"Request contains an invalid argument.","status":"INVALID_ARGUMENT"}} | Meta: {"error":"{\"error\":{\"code\":400,\"message\":\"Request contains an invalid argument.\",\"status\":\"INVALID_ARGUMENT\"}}"}
+[05/08/2026, 10:24:39] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[05/08/2026, 10:24:43] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 2834 | Output: 1397 | Total: 4231 | Meta: {"promptTokens":2834,"completionTokens":1397,"totalTokens":4231}
+[05/08/2026, 10:24:43] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q"}
+[05/08/2026, 10:31:19] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q"}
+[05/08/2026, 10:31:21] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 10:31:43] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":22686}
+[05/08/2026, 10:31:43] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 2569 | Output: 2395 | Total: 4964 | Meta: {"promptTokens":2569,"completionTokens":2395,"totalTokens":4964}
+[05/08/2026, 10:31:43] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q"}
+[05/08/2026, 10:32:26] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q","title":"Diferença entre IPV4 e IPV6 ?","description":"Diferença entre IPv4 e IPv6."}
+[05/08/2026, 10:33:31] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg49q0b0001omg4k117kd1q","title":"Diferença entre IPV4 e IPV6 ?","description":"Diferença entre IPv4 e IPv6."}
+[05/08/2026, 10:45:00] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg52r2f000aomg43fssgtsu","title":"Diferença entre IPV4 e IPV6 ?","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 10:45:49] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg52y24000domg4axl73ch1","mimeType":"application/pdf"}
+[05/08/2026, 10:45:49] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg52y24000domg4axl73ch1"}
+[05/08/2026, 10:45:49] [INFO] [EmbeddingWorker.Worker] Started processing job 42
+[05/08/2026, 10:45:49] [INFO] [WorkerProcess.Worker] Started processing job 42
+[05/08/2026, 10:45:49] [INFO] [EmbeddingWorker.Worker] Processing job 42 for file cmsg52y24000domg4axl73ch1
+[05/08/2026, 10:45:49] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 10:45:49] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg52wei000comg4i2r7ntyd","mimeType":"application/pdf"}
+[05/08/2026, 10:45:49] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg52wei000comg4i2r7ntyd"}
+[05/08/2026, 10:45:51] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg52un5000bomg404rn2rxr","mimeType":"application/pdf"}
+[05/08/2026, 10:45:51] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg52un5000bomg404rn2rxr"}
+[05/08/2026, 10:45:51] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:45:52] [INFO] [EmbeddingWorker.Worker] Job 42 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 10:45:52] [INFO] [EmbeddingWorker.Worker] Completed job 42
+[05/08/2026, 10:45:52] [INFO] [WorkerProcess.Worker] Completed job 42
+[05/08/2026, 10:45:52] [INFO] [EmbeddingWorker.Worker] Processing job 43 for file cmsg52wei000comg4i2r7ntyd
+[05/08/2026, 10:45:52] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 10:45:53] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:45:53] [INFO] [EmbeddingWorker.Worker] Job 43 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 10:45:53] [INFO] [EmbeddingWorker.Worker] Completed job 43
+[05/08/2026, 10:45:53] [INFO] [WorkerProcess.Worker] Completed job 43
+[05/08/2026, 10:45:53] [INFO] [EmbeddingWorker.Worker] Processing job 44 for file cmsg52un5000bomg404rn2rxr
+[05/08/2026, 10:45:53] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 10:45:54] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 10:45:54] [INFO] [EmbeddingWorker.Worker] Job 44 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 10:45:54] [INFO] [EmbeddingWorker.Worker] Completed job 44
+[05/08/2026, 10:45:54] [INFO] [WorkerProcess.Worker] Completed job 44
+[05/08/2026, 10:46:01] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg52r2f000aomg43fssgtsu"}
+[05/08/2026, 10:46:02] [INFO] [LlmRouter.generateText] Cache hit — retornando resposta cacheada | Meta: {"pipeline":"CONTENT_GEN"}
+[05/08/2026, 10:46:02] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg52r2f000aomg43fssgtsu"}
+[05/08/2026, 10:46:06] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg52r2f000aomg43fssgtsu","title":"Diferença entre IPV4 e IPV6 ?","description":"Diferença entre IPv4 e IPv6."}
+[05/08/2026, 10:46:39] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 11:01:58] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 11:01:58] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:01:58] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:02:17] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg5oz2g0001om2ov6qderqs","title":"Diferença entre IPV4 e IPV6 ?","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 11:02:36] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5p3030002om2osa5qzcl8","mimeType":"application/pdf"}
+[05/08/2026, 11:02:36] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5p3030002om2osa5qzcl8"}
+[05/08/2026, 11:02:36] [INFO] [EmbeddingWorker.Worker] Started processing job 45
+[05/08/2026, 11:02:36] [INFO] [WorkerProcess.Worker] Started processing job 45
+[05/08/2026, 11:02:36] [INFO] [EmbeddingWorker.Worker] Processing job 45 for file cmsg5p3030002om2osa5qzcl8
+[05/08/2026, 11:02:37] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 11:02:38] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:02:38] [INFO] [EmbeddingWorker.Worker] Job 45 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 11:02:38] [INFO] [EmbeddingWorker.Worker] Completed job 45
+[05/08/2026, 11:02:38] [INFO] [WorkerProcess.Worker] Completed job 45
+[05/08/2026, 11:02:42] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5p5jx0003om2oiztlrfot","mimeType":"application/pdf"}
+[05/08/2026, 11:02:42] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5p5jx0003om2oiztlrfot"}
+[05/08/2026, 11:02:42] [INFO] [EmbeddingWorker.Worker] Started processing job 46
+[05/08/2026, 11:02:42] [INFO] [WorkerProcess.Worker] Started processing job 46
+[05/08/2026, 11:02:42] [INFO] [EmbeddingWorker.Worker] Processing job 46 for file cmsg5p5jx0003om2oiztlrfot
+[05/08/2026, 11:02:42] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 11:02:42] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5p87t0004om2owra40r2l","mimeType":"application/pdf"}
+[05/08/2026, 11:02:42] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5p87t0004om2owra40r2l"}
+[05/08/2026, 11:02:43] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:02:43] [INFO] [EmbeddingWorker.Worker] Job 46 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 11:02:43] [INFO] [EmbeddingWorker.Worker] Completed job 46
+[05/08/2026, 11:02:43] [INFO] [WorkerProcess.Worker] Completed job 46
+[05/08/2026, 11:02:43] [INFO] [EmbeddingWorker.Worker] Processing job 47 for file cmsg5p87t0004om2owra40r2l
+[05/08/2026, 11:02:43] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 11:02:45] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:02:45] [INFO] [EmbeddingWorker.Worker] Job 47 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 11:02:45] [INFO] [EmbeddingWorker.Worker] Completed job 47
+[05/08/2026, 11:02:45] [INFO] [WorkerProcess.Worker] Completed job 47
+[05/08/2026, 11:02:52] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg5oz2g0001om2ov6qderqs"}
+[05/08/2026, 11:02:54] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 11:03:09] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":14519}
+[05/08/2026, 11:03:09] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 2859 | Output: 1023 | Total: 3882 | Meta: {"promptTokens":2859,"completionTokens":1023,"totalTokens":3882}
+[05/08/2026, 11:03:09] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg5oz2g0001om2ov6qderqs"}
+[05/08/2026, 11:03:16] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg5oz2g0001om2ov6qderqs","title":"Diferença entre IPV4 e IPV6 ?","description":"Entenda as diferenças entre IPv4 e IPv6, seus formatos de endereço, limitações e as principais técnicas de transição de rede."}
+[05/08/2026, 11:09:01] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg5xmd80008om2o2trnmxki","title":"Diferença entre IPV4 e IPV6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 11:09:06] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 11:09:17] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 11:09:17] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:09:17] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:09:20] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg5xmd80008om2o2trnmxki","title":"Diferença entre IPV4 e IPV6","description":""}
+[05/08/2026, 11:09:36] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5y3yw0000omrwv10rr64s","mimeType":"application/pdf"}
+[05/08/2026, 11:09:36] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5y5y60001omrwu5vwfb37","mimeType":"application/pdf"}
+[05/08/2026, 11:09:36] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5y3yw0000omrwv10rr64s"}
+[05/08/2026, 11:09:36] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5y5y60001omrwu5vwfb37"}
+[05/08/2026, 11:09:36] [INFO] [EmbeddingWorker.Worker] Started processing job 48
+[05/08/2026, 11:09:36] [INFO] [WorkerProcess.Worker] Started processing job 48
+[05/08/2026, 11:09:36] [INFO] [EmbeddingWorker.Worker] Processing job 48 for file cmsg5y3yw0000omrwv10rr64s
+[05/08/2026, 11:09:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg5y7ni0002omrwlznfhmfd","mimeType":"application/pdf"}
+[05/08/2026, 11:09:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg5y7ni0002omrwlznfhmfd"}
+[05/08/2026, 11:09:37] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 11:09:38] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:09:38] [INFO] [EmbeddingWorker.Worker] Job 48 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 11:09:38] [INFO] [EmbeddingWorker.Worker] Completed job 48
+[05/08/2026, 11:09:38] [INFO] [WorkerProcess.Worker] Completed job 48
+[05/08/2026, 11:09:38] [INFO] [EmbeddingWorker.Worker] Processing job 49 for file cmsg5y5y60001omrwu5vwfb37
+[05/08/2026, 11:09:38] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 11:09:39] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:09:39] [INFO] [EmbeddingWorker.Worker] Job 49 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 11:09:39] [INFO] [EmbeddingWorker.Worker] Completed job 49
+[05/08/2026, 11:09:39] [INFO] [WorkerProcess.Worker] Completed job 49
+[05/08/2026, 11:09:39] [INFO] [EmbeddingWorker.Worker] Processing job 50 for file cmsg5y7ni0002omrwlznfhmfd
+[05/08/2026, 11:09:39] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 11:09:40] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:09:41] [INFO] [EmbeddingWorker.Worker] Job 50 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 11:09:41] [INFO] [EmbeddingWorker.Worker] Completed job 50
+[05/08/2026, 11:09:41] [INFO] [WorkerProcess.Worker] Completed job 50
+[05/08/2026, 11:09:45] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg5xmd80008om2o2trnmxki"}
+[05/08/2026, 11:09:47] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 11:10:27] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":39978}
+[05/08/2026, 11:10:27] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 3379 | Output: 1358 | Total: 4737 | Meta: {"promptTokens":3379,"completionTokens":1358,"totalTokens":4737}
+[05/08/2026, 11:10:27] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg5xmd80008om2o2trnmxki"}
+[05/08/2026, 11:10:31] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg5xmd80008om2o2trnmxki","title":"Diferença entre IPV4 e IPV6","description":"Compreenda as diferenças entre IPv4 e IPv6, o esgotamento de endereços, características técnicas e técnicas de transição de rede."}
+[05/08/2026, 11:21:17] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg6de9r0006omrwq25hbl0r","title":"Diferença entre IPV4 e IPV6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 11:21:27] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg6dgis0007omrwclicto9f","mimeType":"application/pdf"}
+[05/08/2026, 11:21:27] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg6dgis0007omrwclicto9f"}
+[05/08/2026, 11:21:27] [INFO] [EmbeddingWorker.Worker] Started processing job 51
+[05/08/2026, 11:21:27] [INFO] [WorkerProcess.Worker] Started processing job 51
+[05/08/2026, 11:21:27] [INFO] [EmbeddingWorker.Worker] Processing job 51 for file cmsg6dgis0007omrwclicto9f
+[05/08/2026, 11:21:27] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 11:21:27] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg6di4f0008omrwimh67dzk","mimeType":"application/pdf"}
+[05/08/2026, 11:21:27] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg6di4f0008omrwimh67dzk"}
+[05/08/2026, 11:21:28] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg6dl0k0009omrwt1yabb3b","mimeType":"application/pdf"}
+[05/08/2026, 11:21:28] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg6dl0k0009omrwt1yabb3b"}
+[05/08/2026, 11:21:29] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:21:29] [INFO] [EmbeddingWorker.Worker] Job 51 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 11:21:29] [INFO] [EmbeddingWorker.Worker] Completed job 51
+[05/08/2026, 11:21:29] [INFO] [WorkerProcess.Worker] Completed job 51
+[05/08/2026, 11:21:29] [INFO] [EmbeddingWorker.Worker] Processing job 52 for file cmsg6di4f0008omrwimh67dzk
+[05/08/2026, 11:21:29] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 11:21:30] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:21:30] [INFO] [EmbeddingWorker.Worker] Job 52 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 11:21:30] [INFO] [EmbeddingWorker.Worker] Completed job 52
+[05/08/2026, 11:21:30] [INFO] [WorkerProcess.Worker] Completed job 52
+[05/08/2026, 11:21:30] [INFO] [EmbeddingWorker.Worker] Processing job 53 for file cmsg6dl0k0009omrwt1yabb3b
+[05/08/2026, 11:21:30] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 11:21:31] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:21:32] [INFO] [EmbeddingWorker.Worker] Job 53 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 11:21:32] [INFO] [EmbeddingWorker.Worker] Completed job 53
+[05/08/2026, 11:21:32] [INFO] [WorkerProcess.Worker] Completed job 53
+[05/08/2026, 11:21:34] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg6de9r0006omrwq25hbl0r"}
+[05/08/2026, 11:21:36] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 11:22:06] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":29815}
+[05/08/2026, 11:22:06] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 4001 | Output: 625 | Total: 4626 | Meta: {"promptTokens":4001,"completionTokens":625,"totalTokens":4626}
+[05/08/2026, 11:22:06] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg6de9r0006omrwq25hbl0r"}
+[05/08/2026, 11:48:52] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg6de9r0006omrwq25hbl0r","title":"Diferença entre IPV4 e IPV6","description":"Este módulo apresenta as diferenças técnicas, capacidade de endereçamento, mecanismos de coexistência e desempenho entre IPv4 e IPv6."}
+[05/08/2026, 11:53:18] [INFO] [AdminModulesActions.deleteModule] Módulo excluído com sucesso pelo professor | Meta: {"moduleId":"cmsg6de9r0006omrwq25hbl0r"}
+[05/08/2026, 11:55:04] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 11:55:12] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 11:55:12] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:55:12] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 11:55:27] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":"","authorId":"cmpo5p8ic0000oml0fwnrgywq","authorName":"Prof. Gabriel","authorEmail":"professor@lumina.com"}
+[05/08/2026, 11:55:34] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":""}
+[05/08/2026, 11:55:49] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg7lmy80004omrc01z4pcri","mimeType":"application/pdf"}
+[05/08/2026, 11:55:49] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg7ll9g0003omrcb5m3p5i5","mimeType":"application/pdf"}
+[05/08/2026, 11:55:49] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg7lmy80004omrc01z4pcri"}
+[05/08/2026, 11:55:49] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg7ll9g0003omrcb5m3p5i5"}
+[05/08/2026, 11:55:49] [INFO] [EmbeddingWorker.Worker] Started processing job 54
+[05/08/2026, 11:55:49] [INFO] [WorkerProcess.Worker] Started processing job 54
+[05/08/2026, 11:55:49] [INFO] [EmbeddingWorker.Worker] Processing job 54 for file cmsg7lmy80004omrc01z4pcri
+[05/08/2026, 11:55:50] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg7ljk90002omrcyebta5pt","mimeType":"application/pdf"}
+[05/08/2026, 11:55:50] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg7ljk90002omrcyebta5pt"}
+[05/08/2026, 11:55:50] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 11:55:51] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:55:51] [INFO] [EmbeddingWorker.Worker] Job 54 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 11:55:52] [INFO] [EmbeddingWorker.Worker] Completed job 54
+[05/08/2026, 11:55:52] [INFO] [WorkerProcess.Worker] Completed job 54
+[05/08/2026, 11:55:52] [INFO] [EmbeddingWorker.Worker] Processing job 55 for file cmsg7ll9g0003omrcb5m3p5i5
+[05/08/2026, 11:55:52] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 11:55:53] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:55:53] [INFO] [EmbeddingWorker.Worker] Job 55 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 11:55:53] [INFO] [EmbeddingWorker.Worker] Completed job 55
+[05/08/2026, 11:55:53] [INFO] [WorkerProcess.Worker] Completed job 55
+[05/08/2026, 11:55:53] [INFO] [EmbeddingWorker.Worker] Processing job 56 for file cmsg7ljk90002omrcyebta5pt
+[05/08/2026, 11:55:54] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 11:55:56] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 11:55:56] [INFO] [EmbeddingWorker.Worker] Job 56 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 11:55:56] [INFO] [EmbeddingWorker.Worker] Completed job 56
+[05/08/2026, 11:55:56] [INFO] [WorkerProcess.Worker] Completed job 56
+[05/08/2026, 11:56:03] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn"}
+[05/08/2026, 11:56:04] [INFO] [PgVectorStore.searchSimilar] Busca vetorial concluída | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","childChunksEncontrados":20,"embeddingModel":"text-embedding-3-small","durationMs":752}
+[05/08/2026, 11:56:04] [INFO] [PgVectorStore.searchSimilar] Resultados após hierarquia e dedup | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","resultadosFinais":3,"usouReranking":true}
+[05/08/2026, 11:56:05] [INFO] [ModuleContentRagService.generate] Chunks recuperados do vector store | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","totalChunks":3,"chunks":[{"index":1,"fileName":"IPv4 x IPv6 _ Diferença entre as versões do protocolo de internet _ AWS.pdf","section":"—","score":"100.0%","chars":10999},{"index":2,"fileName":"Comparative.pdf","section":"—","score":"100.0%","chars":17773},{"index":3,"fileName":"Artigo-Nelton.pdf","section":"—","score":"100.0%","chars":50018}]}
+[05/08/2026, 11:56:05] [INFO] [ModuleContentRagService.generate] Contexto RAG montado para o prompt | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","contextChars":6391,"chunksUsados":3,"chunksTruncados":3}
+[05/08/2026, 11:56:05] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 11:56:29] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":23540}
+[05/08/2026, 11:56:29] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 4001 | Output: 1259 | Total: 5260 | Meta: {"promptTokens":4001,"completionTokens":1259,"totalTokens":5260}
+[05/08/2026, 11:56:29] [INFO] [LlmRouter.generateText] Custo estimado: $0.015444 USD | Meta: {"model":"gemini-3.6-flash","costUsd":0.015444}
+[05/08/2026, 11:56:29] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn"}
+[05/08/2026, 11:56:32] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":"Entenda as diferenças entre IPv4 e IPv6, a expansão do endereçamento, mecanismos de autoconfiguração, técnicas de transição e desempenho."}
+[05/08/2026, 12:07:38] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":"Entenda as diferenças entre IPv4 e IPv6, a expansão do endereçamento, mecanismos de autoconfiguração, técnicas de transição e desempenho."}
+[05/08/2026, 12:08:12] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":"Entenda as diferenças entre IPv4 e IPv6, a expansão do endereçamento, mecanismos de autoconfiguração, técnicas de transição e desempenho."}
+[05/08/2026, 12:08:18] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg7lc5m0001omrc5p1lz9pn","title":"Diferença entre IPV4 e IPV6","description":"Entenda as diferenças entre IPv4 e IPv6, a expansão do endereçamento, mecanismos de autoconfiguração, técnicas de transição e desempenho."}
+[05/08/2026, 12:20:21] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 12:20:29] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 12:20:29] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 12:20:29] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 12:21:30] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","title":"IPv4 e IPv6: funcionamento, endereçamento e principais diferenças","description":"","authorId":"cmsg809bx000comrc30fv8gnt","authorName":"professor","authorEmail":"professor@lumina.edu"}
+[05/08/2026, 12:21:38] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","title":"IPv4 e IPv6: funcionamento, endereçamento e principais diferenças","description":"Este módulo deve apresentar o funcionamento dos protocolos IPv4 e IPv6, explicando como eles identificam dispositivos e permitem a comunicação pela internet.  O conteúdo deve comparar o tamanho e a representação dos endereços IPv4 e IPv6, o espaço de endereçamento disponível, o esgotamento dos endereços IPv4 e a utilização de NAT.  Também devem ser abordados os tipos de comunicação unicast, broadcast, multicast e anycast, as formas de configuração de endereço por DHCP, DHCPv6 e SLAAC, as diferenças de cabeçalho, fragmentação, roteamento, resolução DNS, segurança, privacidade e suporte à mobilidade.  O módulo também deve explicar quando utilizar IPv6, os desafios de migração do IPv4 e como a AWS oferece suporte a redes IPv4, IPv6, dual stack e somente IPv6 por meio de serviços como Amazon VPC, Amazon EC2, gateways NAT, Elastic Load Balancing e Amazon EKS."}
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg8lvop0004omjkzdfbx390","mimeType":"application/pdf"}
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg8lsp70003omjkvfmgnonz","mimeType":"application/pdf"}
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg8lvop0004omjkzdfbx390"}
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg8lsp70003omjkvfmgnonz"}
+[05/08/2026, 12:23:55] [INFO] [EmbeddingWorker.Worker] Started processing job 57
+[05/08/2026, 12:23:55] [INFO] [WorkerProcess.Worker] Started processing job 57
+[05/08/2026, 12:23:55] [INFO] [EmbeddingWorker.Worker] Processing job 57 for file cmsg8lvop0004omjkzdfbx390
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg8lr240002omjku7nhch8o","mimeType":"application/pdf"}
+[05/08/2026, 12:23:55] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg8lr240002omjku7nhch8o"}
+[05/08/2026, 12:23:56] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 12:23:58] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:23:59] [INFO] [EmbeddingWorker.Worker] Job 57 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 12:23:59] [INFO] [EmbeddingWorker.Worker] Completed job 57
+[05/08/2026, 12:23:59] [INFO] [WorkerProcess.Worker] Completed job 57
+[05/08/2026, 12:23:59] [INFO] [EmbeddingWorker.Worker] Processing job 58 for file cmsg8lsp70003omjkvfmgnonz
+[05/08/2026, 12:23:59] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 12:24:00] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:24:00] [INFO] [EmbeddingWorker.Worker] Job 58 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 12:24:00] [INFO] [EmbeddingWorker.Worker] Completed job 58
+[05/08/2026, 12:24:00] [INFO] [WorkerProcess.Worker] Completed job 58
+[05/08/2026, 12:24:00] [INFO] [EmbeddingWorker.Worker] Processing job 59 for file cmsg8lr240002omjku7nhch8o
+[05/08/2026, 12:24:00] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 12:24:01] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:24:01] [INFO] [EmbeddingWorker.Worker] Job 59 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 12:24:01] [INFO] [EmbeddingWorker.Worker] Completed job 59
+[05/08/2026, 12:24:01] [INFO] [WorkerProcess.Worker] Completed job 59
+[05/08/2026, 12:24:08] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz"}
+[05/08/2026, 12:24:09] [INFO] [PgVectorStore.searchSimilar] Busca vetorial concluída | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","childChunksEncontrados":20,"embeddingModel":"text-embedding-3-small","durationMs":912}
+[05/08/2026, 12:24:09] [INFO] [PgVectorStore.searchSimilar] Resultados após hierarquia e dedup | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","resultadosFinais":3,"usouReranking":true}
+[05/08/2026, 12:24:11] [INFO] [ModuleContentRagService.generate] Chunks recuperados do vector store | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","totalChunks":3,"chunks":[{"index":1,"fileName":"IPv4 x IPv6 _ Diferença entre as versões do protocolo de internet _ AWS.pdf","section":"—","score":"100.0%","chars":10999},{"index":2,"fileName":"Comparative.pdf","section":"—","score":"100.0%","chars":17773},{"index":3,"fileName":"Artigo-Nelton.pdf","section":"—","score":"100.0%","chars":50018}]}
+[05/08/2026, 12:24:11] [INFO] [ModuleContentRagService.generate] Contexto RAG montado para o prompt | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","contextChars":6391,"chunksUsados":3,"chunksTruncados":3}
+[05/08/2026, 12:24:11] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 12:24:31] [ERROR] [LlmRouter.generateText] gemini falhou (tentando fallback). Erro original: {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.","status":"UNAVAILABLE"}} | Meta: {"error":"{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"}
+[05/08/2026, 12:24:31] [INFO] [LlmRouter.generateText] Tentando fallback para groq
+[05/08/2026, 12:24:34] [INFO] [LlmRouter.generateText] Consumo de Tokens (Fallback) — Modelo: llama-3.3-70b-versatile | Input: 4690 | Output: 669 | Total: 5359 | Meta: {"promptTokens":4690,"completionTokens":669,"totalTokens":5359}
+[05/08/2026, 12:24:34] [INFO] [LlmRouter.generateText] Custo estimado (Fallback): $0.003296 USD | Meta: {"model":"llama-3.3-70b-versatile","costUsd":0.00329561}
+[05/08/2026, 12:24:34] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz"}
+[05/08/2026, 12:24:51] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg8iusp0001omjkvibgpkxz","title":"IPv4 e IPv6: funcionamento, endereçamento e principais diferenças","description":"Este módulo deve apresentar o funcionamento dos protocolos IPv4 e IPv6, explicando como eles identificam dispositivos e permitem a comunicação pela internet.  O conteúdo deve comparar o tamanho e a representação dos endereços IPv4 e IPv6, o espaço de endereçamento disponível, o esgotamento dos endereços IPv4 e a utilização de NAT.  Também devem ser abordados os tipos de comunicação unicast, broadcast, multicast e anycast, as formas de configuração de endereço por DHCP, DHCPv6 e SLAAC, as diferenças de cabeçalho, fragmentação, roteamento, resolução DNS, segurança, privacidade e suporte à mobilidade.  O módulo também deve explicar quando utilizar IPv6, os desafios de migração do IPv4 e como a AWS oferece suporte a redes IPv4, IPv6, dual stack e somente IPv6 por meio de serviços como Amazon VPC, Amazon EC2, gateways NAT, Elastic Load Balancing e Amazon EKS."}
+[05/08/2026, 12:40:37] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 12:45:04] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 12:45:04] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 12:45:04] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 12:46:19] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","title":"IPv4 e IPv6","description":"Principais diferenças entre as versões IPv4 e IPv6 do Protocolo de Internet.","authorId":"cmsg809bx000comrc30fv8gnt","authorName":"professor","authorEmail":"professor@lumina.edu"}
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg9ezjl0002omr0pcdz5trq","mimeType":"application/pdf"}
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg9f16o0003omr01eost8yv","mimeType":"application/pdf"}
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsg9f30l0004omr0zogodoe7","mimeType":"application/pdf"}
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg9ezjl0002omr0pcdz5trq"}
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg9f16o0003omr01eost8yv"}
+[05/08/2026, 12:46:37] [INFO] [EmbeddingWorker.Worker] Started processing job 60
+[05/08/2026, 12:46:37] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsg9f30l0004omr0zogodoe7"}
+[05/08/2026, 12:46:37] [INFO] [WorkerProcess.Worker] Started processing job 60
+[05/08/2026, 12:46:37] [INFO] [EmbeddingWorker.Worker] Processing job 60 for file cmsg9ezjl0002omr0pcdz5trq
+[05/08/2026, 12:46:38] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":6,"parents":1,"children":5}
+[05/08/2026, 12:46:39] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:46:39] [INFO] [EmbeddingWorker.Worker] Job 60 concluído com sucesso | Meta: {"parents":1,"children":5}
+[05/08/2026, 12:46:39] [INFO] [EmbeddingWorker.Worker] Completed job 60
+[05/08/2026, 12:46:39] [INFO] [WorkerProcess.Worker] Completed job 60
+[05/08/2026, 12:46:39] [INFO] [EmbeddingWorker.Worker] Processing job 61 for file cmsg9f16o0003omr01eost8yv
+[05/08/2026, 12:46:39] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":5,"parents":1,"children":4}
+[05/08/2026, 12:46:40] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:46:40] [INFO] [EmbeddingWorker.Worker] Job 61 concluído com sucesso | Meta: {"parents":1,"children":4}
+[05/08/2026, 12:46:40] [INFO] [EmbeddingWorker.Worker] Completed job 61
+[05/08/2026, 12:46:40] [INFO] [WorkerProcess.Worker] Completed job 61
+[05/08/2026, 12:46:40] [INFO] [EmbeddingWorker.Worker] Processing job 62 for file cmsg9f30l0004omr0zogodoe7
+[05/08/2026, 12:46:41] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":18,"parents":1,"children":17}
+[05/08/2026, 12:46:42] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/1 concluído
+[05/08/2026, 12:46:42] [INFO] [EmbeddingWorker.Worker] Job 62 concluído com sucesso | Meta: {"parents":1,"children":17}
+[05/08/2026, 12:46:42] [INFO] [EmbeddingWorker.Worker] Completed job 62
+[05/08/2026, 12:46:42] [INFO] [WorkerProcess.Worker] Completed job 62
+[05/08/2026, 12:46:52] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5"}
+[05/08/2026, 12:46:56] [INFO] [PgVectorStore.searchSimilar] Busca vetorial concluída | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","childChunksEncontrados":20,"embeddingModel":"text-embedding-3-small","durationMs":3855}
+[05/08/2026, 12:46:56] [INFO] [PgVectorStore.searchSimilar] Resultados após hierarquia e dedup | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","resultadosFinais":3,"usouReranking":true}
+[05/08/2026, 12:46:58] [INFO] [ModuleContentRagService.generate] Chunks recuperados do vector store | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","totalChunks":3,"chunks":[{"index":1,"fileName":"IPv4 x IPv6 _ Diferença entre as versões do protocolo de internet _ AWS.pdf","section":"—","score":"100.0%","chars":10999},{"index":2,"fileName":"Comparative.pdf","section":"—","score":"100.0%","chars":17773},{"index":3,"fileName":"Artigo-Nelton.pdf","section":"—","score":"100.0%","chars":50018}]}
+[05/08/2026, 12:46:58] [INFO] [ModuleContentRagService.generate] Contexto RAG montado para o prompt | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","contextChars":6391,"chunksUsados":3,"chunksTruncados":3}
+[05/08/2026, 12:46:58] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[05/08/2026, 12:47:19] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":20927}
+[05/08/2026, 12:47:19] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 4012 | Output: 1795 | Total: 5807 | Meta: {"promptTokens":4012,"completionTokens":1795,"totalTokens":5807}
+[05/08/2026, 12:47:19] [INFO] [LlmRouter.generateText] Custo estimado: $0.019480 USD | Meta: {"model":"gemini-3.6-flash","costUsd":0.019480499999999998}
+[05/08/2026, 12:47:19] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5"}
+[05/08/2026, 12:54:01] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","title":"IPv4 e IPv6","description":"Principais diferenças entre as versões IPv4 e IPv6 do Protocolo de Internet."}

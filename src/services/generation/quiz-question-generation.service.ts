@@ -34,10 +34,10 @@ export class QuizQuestionGenerationService {
 
         const raw = await LlmRouter.generateJson<Record<string, unknown>>(prompt, {
             modelName: env.QUESTION_GENERATION_MODEL,
-            temperature: 0.6,
+            temperature: env.QUESTION_GENERATION_TEMPERATURE,
             pipeline: "QUIZ_GEN",
             fallbackEnabled: true,
-            maxTokens: 1024,
+            maxTokens: env.QUESTION_GENERATION_MAX_TOKENS,
             moduleId,
             sessionId,
             responseSchema: {

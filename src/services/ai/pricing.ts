@@ -29,6 +29,18 @@ const PRICING_TABLE: Record<string, ModelPricing> = {
         inputPer1M: 1.25,
         outputPer1M: 5.00,
     },
+    "gemini-3.5-flash-lite": {
+        inputPer1M: 0.30,
+        outputPer1M: 2.50,
+    },
+    "gemini-3.6-flash": {
+        inputPer1M: 1.50,
+        outputPer1M: 7.50,
+    },
+    "gpt-5.6-terra": {
+        inputPer1M: 2.50,
+        outputPer1M: 10.00,
+    },
     "llama-3.1-8b-instant": {
         inputPer1M: 0.05,
         outputPer1M: 0.08,

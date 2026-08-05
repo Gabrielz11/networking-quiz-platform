@@ -37,7 +37,7 @@ const MAX_CONTEXT_CHARS_PER_CHUNK = 2_000;
 
 
 export class ModuleContentRagService {
-    constructor(private moduleRepo: ModuleRepository) {}
+    constructor(private moduleRepo: ModuleRepository) { }
 
     async generateModuleContentWithRag(input: { moduleId: string }) {
         const { moduleId } = input;
@@ -62,6 +62,18 @@ export class ModuleContentRagService {
             throw new Error("Não há material processado para este módulo.");
         }
 
+        logger.info("generate", "Chunks recuperados do vector store", {
+            moduleId,
+            totalChunks: contextChunks.length,
+            chunks: contextChunks.map((c, i) => ({
+                index: i + 1,
+                fileName: c.fileName,
+                section: c.sectionTitle ?? "—",
+                score: `${(c.score * 100).toFixed(1)}%`,
+                chars: c.content.length,
+            })),
+        });
+
         const contextText = contextChunks
             .map((c) => {
                 const sectionLabel = c.sectionTitle
@@ -77,6 +89,14 @@ export class ModuleContentRagService {
             })
             .join("\n\n---\n\n");
 
+        const truncatedCount = contextChunks.filter(c => c.content.length > MAX_CONTEXT_CHARS_PER_CHUNK).length;
+        logger.info("generate", "Contexto RAG montado para o prompt", {
+            moduleId,
+            contextChars: contextText.length,
+            chunksUsados: contextChunks.length,
+            chunksTruncados: truncatedCount,
+        });
+
         const prompt = RAG_CONTENT_PROMPT
             .replace("{{MODULE_TITLE}}", moduleRecord.title)
             .replace("{{MODULE_DESCRIPTION}}", moduleRecord.description ?? "Não fornecida")
@@ -85,10 +105,10 @@ export class ModuleContentRagService {
         const resultText = await LlmRouter.generateText(prompt, {
             pipeline: "CONTENT_GEN",
             modelName: env.CONTENT_GENERATION_MODEL,
-            temperature: 0.6,
+            temperature: env.CONTENT_GENERATION_TEMPERATURE,
             timeoutMs: CONTENT_TIMEOUT_MS,
-            thinkingBudget: 0,
-            maxTokens: 4096,
+            //thinkingBudget: 0,
+            maxTokens: env.CONTENT_GENERATION_MAX_TOKENS,
             moduleId,
         });
 

@@ -96,6 +96,7 @@ export class PgVectorStore {
      * Chunks sem parentChunkId (legados) são retornados com seu próprio conteúdo.
      */
     async searchSimilar(input: SearchSimilarInput): Promise<RetrievedChunk[]> {
+        const searchStart = Date.now();
         const provider = getEmbeddingProvider();
         const queryEmbedding = await provider.embedText(input.query);
         const limit = input.limit ?? env.RAG_FINAL_CONTEXT_LIMIT;
@@ -138,6 +139,13 @@ export class PgVectorStore {
         );
 
         if (childRows.length === 0) return [];
+
+        logger.info("searchSimilar", "Busca vetorial concluída", {
+            moduleId: input.moduleId,
+            childChunksEncontrados: childRows.length,
+            embeddingModel: provider.modelName,
+            durationMs: Date.now() - searchStart,
+        });
 
         // P1.1 — Verificar divergência de modelo entre provider ativo e chunks armazenados
         const storedModel = childRows[0]?.embeddingModel;
@@ -188,6 +196,12 @@ export class PgVectorStore {
                 sectionTitle: row.sectionTitle ?? undefined,
             });
         }
+
+        logger.info("searchSimilar", "Resultados após hierarquia e dedup", {
+            moduleId: input.moduleId,
+            resultadosFinais: rawResults.length,
+            usouReranking: !!reranker && rawResults.length > 1,
+        });
 
         // ── Reranking (Cohere Cross-Encoder) ──────────────────────────────
         if (reranker && rawResults.length > 1) {

@@ -1,6 +1,7 @@
 import { LlmRouter } from "@/services/ai/llm-router";
 import { Logger } from "@/lib/logger";
 import { buildBatchQuizPrompt } from "./prompts/batch-quiz.prompt";
+import { env } from "@/lib/env";
 
 const logger = new Logger("BatchQuizGenerationService");
 
@@ -31,7 +32,8 @@ export class BatchQuizGenerationService {
 
         const data = await LlmRouter.generateJson<BatchResponse>(prompt, {
             pipeline: "QUIZ_GEN",
-            maxTokens: 3000,
+            temperature: env.QUESTION_GENERATION_TEMPERATURE,
+            maxTokens: env.QUESTION_GENERATION_MAX_TOKENS,
             moduleId,
             responseSchema: {
                 type: "object",
