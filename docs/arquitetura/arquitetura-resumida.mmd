@@ -1,0 +1,75 @@
+flowchart LR
+
+    subgraph Interface["Camada de Interface"]
+        UI_Prof["Painel de Gestão de Módulos"]
+        UI_Quiz["Interface do Questionário Adaptativo"]
+        UI_Tutor["Tutor Virtual (Explicação)"]
+        UI_Dash["Painel de Desempenho do Aluno"]
+    end
+
+    subgraph GestaoModulo["Gestão de Módulos & Documentos"]
+        ModManager["Cadastro de Módulo & Orientação"]
+        DocIngest["Envio e Extração de PDFs"]
+    end
+
+    subgraph PipelineRAG["Pipeline RAG (Geração de Conteúdo Base)"]
+        Queue["Fila de Processamento Assíncrono"]
+        Chunker["Divisão Semântica (Parent-Child)"]
+        VectorStore["Busca Vetorial por Similaridade"]
+        Reranker["Reordenador Semântico (Reranking)"]
+        LLM_Content["Roteador LLM (Geração de Conteúdo)"]
+    end
+
+    subgraph Quiz["Geração & Execução do Quiz"]
+        QuizEngine["Motor de Avaliação Adaptativa"]
+        LLM_Quiz["Roteador LLM (Geração de Questão)"]
+        Adaptivity["Ajuste de Dificuldade (Easy/Med/Hard)"]
+        BatchQuiz["Geração em Lote (Uso Futuro)"]
+        LLM_Tutor["Roteador LLM (Streaming de Explicação)"]
+    end
+
+    subgraph PersistenciaInfra["Persistência & Infraestrutura"]
+        PostgresDB[("Banco Relacional & Vetorial (PostgreSQL + pgvector)")]
+        RedisMem[("Armazenamento em Memória (Redis - Cache & Taxa)")]
+    end
+
+    subgraph Historico["Histórico & Telemetria"]
+        ScoreWindow["Registro de Notas (Janela Deslizante)"]
+        AuditLogs["Registro de Telemetria e Auditoria"]
+        FutureMetrics["Retenção e Percepção (Uso Futuro)"]
+    end
+
+    %% Relacionamentos do Docente
+    UI_Prof --> ModManager
+    ModManager --> DocIngest
+    DocIngest --> Queue
+
+    %% Processamento RAG
+    Queue --> Chunker
+    Chunker --> PostgresDB
+    ModManager -->|"Geração de Conteúdo"| VectorStore
+    PostgresDB -->|"Recuperação Vetorial"| VectorStore
+    VectorStore --> Reranker
+    Reranker --> LLM_Content
+    LLM_Content --> PostgresDB
+
+    %% Relacionamentos do Estudo / Quiz
+    UI_Quiz --> QuizEngine
+    PostgresDB -->|"Conteúdo Consolidado (Fonte Única)"| QuizEngine
+    QuizEngine --> LLM_Quiz
+    LLM_Quiz --> Adaptivity
+    Adaptivity --> PostgresDB
+    QuizEngine -->|"Em caso de erro"| LLM_Tutor
+    LLM_Tutor --> UI_Tutor
+
+    %% Infraestrutura & Cache
+    LLM_Content --> RedisMem
+    QuizEngine --> RedisMem
+
+    %% Encerramento e Analytics
+    QuizEngine -->|"Quiz Finalizado"| ScoreWindow
+    QuizEngine --> AuditLogs
+    ScoreWindow --> PostgresDB
+    AuditLogs --> PostgresDB
+    AuditLogs -.-> FutureMetrics
+    PostgresDB --> UI_Dash

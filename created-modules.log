@@ -1124,3 +1124,60 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [05/08/2026, 12:47:19] [INFO] [LlmRouter.generateText] Custo estimado: $0.019480 USD | Meta: {"model":"gemini-3.6-flash","costUsd":0.019480499999999998}
 [05/08/2026, 12:47:19] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5"}
 [05/08/2026, 12:54:01] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsg9erd20001omr0lt9m4cx5","title":"IPv4 e IPv6","description":"Principais diferenças entre as versões IPv4 e IPv6 do Protocolo de Internet."}
+[05/08/2026, 14:48:12] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 14:48:13] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 14:48:13] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 14:48:13] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[05/08/2026, 14:48:24] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[05/08/2026, 14:48:25] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 14:48:25] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[05/08/2026, 14:49:23] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 14:49:25] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1490}
+[05/08/2026, 14:49:25] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4187 | Output: 143 | Total: 4330 | Meta: {"promptTokens":4187,"completionTokens":143,"totalTokens":4330}
+[05/08/2026, 14:49:25] [INFO] [LlmRouter.generateJson] Custo estimado: $0.001614 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0016135999999999998}
+[05/08/2026, 14:52:29] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[05/08/2026, 15:01:01] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:01:03] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1954}
+[05/08/2026, 15:01:03] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4276 | Output: 272 | Total: 4548 | Meta: {"promptTokens":4276,"completionTokens":272,"totalTokens":4548}
+[05/08/2026, 15:01:03] [INFO] [LlmRouter.generateJson] Custo estimado: $0.001963 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0019628}
+[05/08/2026, 15:13:55] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:13:57] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2082}
+[05/08/2026, 15:13:57] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4340 | Output: 303 | Total: 4643 | Meta: {"promptTokens":4340,"completionTokens":303,"totalTokens":4643}
+[05/08/2026, 15:13:57] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002059 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0020594999999999997}
+[05/08/2026, 15:14:59] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:15:02] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2292}
+[05/08/2026, 15:15:02] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4410 | Output: 380 | Total: 4790 | Meta: {"promptTokens":4410,"completionTokens":380,"totalTokens":4790}
+[05/08/2026, 15:15:02] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002273 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.002273}
+[05/08/2026, 15:15:37] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:15:39] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2282}
+[05/08/2026, 15:15:39] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4520 | Output: 388 | Total: 4908 | Meta: {"promptTokens":4520,"completionTokens":388,"totalTokens":4908}
+[05/08/2026, 15:15:39] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002326 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.002326}
+[05/08/2026, 15:16:31] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[05/08/2026, 15:17:46] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:17:48] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2448}
+[05/08/2026, 15:17:48] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4616 | Output: 395 | Total: 5011 | Meta: {"promptTokens":4616,"completionTokens":395,"totalTokens":5011}
+[05/08/2026, 15:17:48] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002372 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0023723}
+[05/08/2026, 15:17:55] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:17:58] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2400}
+[05/08/2026, 15:17:58] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4723 | Output: 397 | Total: 5120 | Meta: {"promptTokens":4723,"completionTokens":397,"totalTokens":5120}
+[05/08/2026, 15:17:58] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002409 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0024094}
+[05/08/2026, 15:18:00] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[05/08/2026, 15:18:04] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:18:06] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2352}
+[05/08/2026, 15:18:06] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4841 | Output: 368 | Total: 5209 | Meta: {"promptTokens":4841,"completionTokens":368,"totalTokens":5209}
+[05/08/2026, 15:18:06] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002372 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0023723}
+[05/08/2026, 15:18:08] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[05/08/2026, 15:18:10] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:18:12] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1923}
+[05/08/2026, 15:18:12] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 4959 | Output: 343 | Total: 5302 | Meta: {"promptTokens":4959,"completionTokens":343,"totalTokens":5302}
+[05/08/2026, 15:18:12] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002345 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0023452}
+[05/08/2026, 15:18:13] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[05/08/2026, 15:18:14] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:18:16] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1954}
+[05/08/2026, 15:18:16] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 5059 | Output: 326 | Total: 5385 | Meta: {"promptTokens":5059,"completionTokens":326,"totalTokens":5385}
+[05/08/2026, 15:18:16] [INFO] [LlmRouter.generateJson] Custo estimado: $0.002333 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0023327}
+[05/08/2026, 15:20:49] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[05/08/2026, 15:20:50] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1378}
+[05/08/2026, 15:20:50] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 664 | Output: 149 | Total: 813 | Meta: {"promptTokens":664,"completionTokens":149,"totalTokens":813}
+[05/08/2026, 15:20:50] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000572 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0005717}
+[05/08/2026, 16:28:32] [INFO] [WorkerProcess.Shutdown] Closing workers...

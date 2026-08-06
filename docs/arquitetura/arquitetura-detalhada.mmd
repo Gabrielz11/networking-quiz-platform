@@ -1,0 +1,111 @@
+flowchart LR
+
+    subgraph Interface["1. Camada de Apresentação (Next.js App Router)"]
+        UI_Prof_Mod["Gestão de Módulos\n(src/app/(admin)/dashboard/modules/page.tsx)"]
+        UI_Prof_Src["Envio de Fontes PDF\n(src/app/(admin)/dashboard/modules/[id]/sources)"]
+        UI_Prof_Content["Visualizador do Conteúdo RAG\n(src/app/(admin)/dashboard/modules/[id]/content)"]
+        UI_Aluno_Quiz["Interface do Quiz Adaptativo\n(src/app/(student)/quiz/[id]/page.tsx)"]
+        UI_Aluno_Explain["Modal de Tutoria Virtual\n(src/app/(student)/quiz/[id]/_components/explanation-modal.tsx)"]
+        UI_Aluno_Dash["Painel Analítico do Aluno\n(src/app/(student)/student/page.tsx)"]
+    end
+
+    subgraph Handlers["2. Rotas de API (/api)"]
+        API_Src["Upload de Fontes\n(src/app/api/modules/[moduleId]/sources/route.ts)"]
+        API_RAG["Geração RAG de Conteúdo\n(src/app/api/modules/[moduleId]/generate-content-rag/route.ts)"]
+        API_Start["Início da Sessão de Quiz\n(src/app/api/quiz/session/start/route.ts)"]
+        API_GenQ["Geração Adaptativa de Questão\n(src/app/api/quiz/generate-question/route.ts)"]
+        API_Ans["Processamento de Resposta\n(src/app/api/quiz/answer/route.ts)"]
+        API_Exp["Streaming de Explicação\n(src/app/api/explain/route.ts)"]
+    end
+
+    subgraph PipelineRAG["3. Ingestão & Pipeline RAG Assíncrono"]
+        RagIngest["Enfileirador de Ingestão\n(src/lib/rag/services/ingestion.service.ts)"]
+        BullQueue["Fila Redis BullMQ\n(src/lib/rag/jobs/queues/embedding-queue.ts)"]
+        EmpWorker["Worker de Vetorização Assíncrona\n(src/lib/rag/jobs/workers/embedding-worker.ts)"]
+        DocParse["Extrator de Texto PDF\n(src/lib/rag/core/document-parser.ts)"]
+        SemChunk["Divisão em Chunks Parent-Child\n(src/lib/rag/core/chunking/semantic-chunker.ts)"]
+        EmbedProv["Gerador de Vetores Embeddings\n(src/lib/rag/core/providers/embedding-provider.ts)"]
+        VectorStore["Repositório Vetorial & Hierarquia\n(src/lib/rag/core/vector-store.ts)"]
+        CohereRerank["Reordenador Semântico Cohere\n(src/lib/rag/core/providers/reranker.ts)"]
+        RagService["Serviço de Síntese RAG\n(src/services/generation/module-content-rag.service.ts)"]
+    end
+
+    subgraph QuizDomain["4. Domínio do Quiz & Serviços de IA"]
+        QGenService["Geração de Questão Adaptativa\n(src/services/generation/quiz-question-generation.service.ts)"]
+        BatchGenService["Geração em Lote (Uso Futuro)\n(src/services/generation/batch-quiz-generation.service.ts)"]
+        AnsService["Serviço de Avaliação de Resposta\n(src/services/learning/submit-quiz-answer.service.ts)"]
+        ProgService["Calculador de Dificuldade Easy/Med/Hard\n(src/services/quiz-progression.service.ts)"]
+        ExpServiceStream["Geração de Explicação em Streaming\n(src/services/learning/explain-student-question.service.ts)"]
+        ExpServiceSync["Explicação Síncrona (Uso Futuro)\n(src/services/generation/explanation-generation.service.ts)"]
+        LlmRouterService["Roteador de Modelos LLM\n(src/services/ai/llm-router.ts)"]
+        SemCacheService["Cache de Respostas de IA\n(src/lib/semantic-cache.ts)"]
+    end
+
+    subgraph PersistenciaInfra["5. Banco de Dados & Infraestrutura"]
+        PrismaORM["Cliente de Persistência Prisma ORM\n(src/lib/prisma.ts)"]
+        PG_DB[("PostgreSQL\n(prisma/schema.prisma)")]
+        PG_Vec[("Extensão pgvector\n(ModuleSourceChunk.embedding)")]
+        Redis_Store[("Armazenamento Redis\n(Cache, RateLimit & Idempotência)")]
+    end
+
+    subgraph AnalyticsDomain["6. Histórico & Telemetria"]
+        ScoreSvc["Registro de Notas em Janela Deslizante\n(src/services/score.service.ts)"]
+        ActSvc["Auditoria de Atividades\n(src/services/activity.service.ts)"]
+        TelemetryRepo["Métricas de Tempo e Dificuldade\n(src/repositories/ai-metrics.repository.ts)"]
+        FutureTelemetry["Métricas de Retenção e Percepção (Uso Futuro)\n(StudentQuizTelemetry.retentionScore)"]
+    end
+
+    %% Conexões Interface -> APIs
+    UI_Prof_Src --> API_Src
+    UI_Prof_Content --> API_RAG
+    UI_Aluno_Quiz --> API_Start
+    UI_Aluno_Quiz --> API_GenQ
+    UI_Aluno_Quiz --> API_Ans
+    UI_Aluno_Explain --> API_Exp
+
+    %% Conexões Ingestão RAG
+    API_Src --> RagIngest
+    RagIngest --> BullQueue
+    BullQueue --> EmpWorker
+    EmpWorker --> DocParse
+    DocParse --> SemChunk
+    SemChunk --> EmbedProv
+    EmbedProv --> VectorStore
+    VectorStore --> PrismaORM
+    PrismaORM --> PG_Vec
+
+    %% Conexões Síntese RAG
+    API_RAG --> RagService
+    RagService --> VectorStore
+    VectorStore --> CohereRerank
+    CohereRerank --> LlmRouterService
+    LlmRouterService --> SemCacheService
+    SemCacheService --> Redis_Store
+    LlmRouterService --> PrismaORM
+    PrismaORM --> PG_DB
+
+    %% Execução do Quiz
+    API_Start --> PrismaORM
+    API_GenQ --> QGenService
+    QGenService --> LlmRouterService
+    QGenService --> PrismaORM
+    BatchGenService -.-> PrismaORM
+
+    API_Ans --> AnsService
+    AnsService --> ProgService
+    AnsService --> PrismaORM
+    AnsService --> ScoreSvc
+    AnsService --> ActSvc
+
+    API_Exp --> ExpServiceStream
+    ExpServiceStream --> LlmRouterService
+    ExpServiceStream --> PrismaORM
+    ExpServiceSync -.-> LlmRouterService
+
+    %% Telemetria e Painel
+    ScoreSvc --> PG_DB
+    ActSvc --> PG_DB
+    LlmRouterService --> TelemetryRepo
+    TelemetryRepo --> PG_DB
+    TelemetryRepo -.-> FutureTelemetry
+    PG_DB --> UI_Aluno_Dash

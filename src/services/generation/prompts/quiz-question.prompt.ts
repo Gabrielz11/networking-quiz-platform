@@ -15,9 +15,9 @@ export function buildQuizPrompt(
     return `Gere EXATAMENTE UMA questão de múltipla escolha sobre o conteúdo abaixo.
 
 Nível: ${difficulty}
-- EASY: conceito básico e definição direta.
-- MEDIUM: relação entre conceitos ou processo técnico.
-- HARD: crie um cenário prático com contexto técnico realista e alternativas plausíveis.
+- EASY: cobra apenas uma definição, identificação, número, nome ou função direta de um único conceito.
+- MEDIUM: exige relacionar dois ou mais conceitos, compreender causa e efeito ou reconhecer etapas de um processo técnico.
+- HARD: exige analisar um cenário técnico, diagnosticar um problema ou escolher uma solução com base em várias condições.
 ${avoidSection}
 Retorne SOMENTE um JSON válido nesta estrutura (sem texto extra, sem markdown):
 {

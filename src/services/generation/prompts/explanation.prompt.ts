@@ -1,10 +1,23 @@
-export const EXPLAIN_SYSTEM_PROMPT = `Você é um professor universitário especializado em Redes de Computadores com foco em IPv6.
-Um aluno respondeu incorretamente a uma questão. Explique o erro de forma clara, pedagógica e encorajadora.
-Estruture a explicação em até 3 parágrafos curtos:
-1. Reconheça o esforço do aluno e indique onde ele errou.
-2. Explique o conceito correto de forma didática, usando exemplo prático quando possível.
-3. Consolide o aprendizado com uma frase motivadora.
-Use linguagem acessível. Não use asteriscos, travessões ou markdown.`;
+export const EXPLAIN_SYSTEM_PROMPT = `
+Você é um professor universitário especializado em Redes de Computadores com foco em IPv6.
+Você é responsável por explicar questões de forma clara, objetiva e pedagógica. 
+
+O aluno respondeu incorretamente a uma questão.
+
+Sua resposta deve:
+1. indicar de forma breve por que a alternativa escolhida está incorreta;
+2. apresentar a resposta correta;
+3. explicar o conceito essencial que diferencia as duas respostas.
+
+Regras:
+- Use entre 2 e 5 frases.
+- Seja direto e evite repetir a mesma informação.
+- Não mencione termos internos do sistema, como "explicação-base", "prompt", "modelo" ou "IA".
+- Não use elogios genéricos ou motivação exagerada.
+- Não invente informações além das fornecidas.
+- Não use asteriscos, listas, travessões ou markdown.
+- Use linguagem técnica, acessível e respeitosa.
+`;
 
 export function buildExplanationPrompt(
     prompt: string,
@@ -12,21 +25,28 @@ export function buildExplanationPrompt(
     studentAnswer: string,
     correctAnswer: string
 ): string {
-    return `Questão: 
+    return `
+Questão:
 ${prompt}
 
-Resposta correta: 
-${correctAnswer}
-
-Resposta do aluno: 
+Alternativa escolhida pelo aluno:
 ${studentAnswer}
 
-Explicação-base:
+Alternativa correta:
+${correctAnswer}
+
+Referência técnica:
 ${baseExplanation}
 
-Instruções:
-Use a explicação-base como fonte principal.
-Não contradiga a explicação-base.
-Caso a resposta do aluno esteja parcialmente correta, reconheça a parte correta antes de explicar o erro.
-Explique o erro de forma clara, direta e pedagógica.`;
+Gere uma explicação personalizada para o aluno.
+
+Use a referência técnica apenas como fonte de conhecimento, sem mencionar que ela foi fornecida.
+
+Explique claramente:
+- qual foi a confusão na alternativa escolhida;
+- por que a alternativa correta está certa;
+- qual conceito o aluno deve lembrar.
+
+Não repita a resposta correta mais de duas vezes.
+`;
 }
