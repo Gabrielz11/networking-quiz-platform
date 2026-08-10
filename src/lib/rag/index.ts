@@ -3,5 +3,4 @@ export * from "./core/providers/embedding-provider";
 export * from "./core/vector-store";
 export * from "./core/document-parser";
 export * from "./services/ingestion.service";
-export * from "./services/generation.service";
-export * from "./services/quiz-context.service";
+
