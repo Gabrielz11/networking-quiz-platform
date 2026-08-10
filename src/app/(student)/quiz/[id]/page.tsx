@@ -8,6 +8,7 @@ import { QuizProgressBar } from "./_components/QuizProgressBar";
 import { QuizQuestionCard, QuizFeedbackPanel } from "./_components/QuizQuestionCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useStreamingExplanation } from "@/hooks/useStreamingExplanation";
 
 interface Question {
     id: string;
@@ -49,11 +50,19 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     const [finished, setFinished] = useState(false);
     const [idempotencyKey, setIdempotencyKey] = useState<string>("");
 
-    const [streamedText, setStreamedText] = useState("");
-    const [isStreaming, setIsStreaming] = useState(false);
+    // Hook customizado com suporte a AbortController, cancelamento e controle de estado
+    const { streamedText, streamingState, startStream, reset } = useStreamingExplanation();
+    const isStreaming = streamingState === "streaming";
 
     const initQuizRef = useRef(false);
     const isFetchingRef = useRef(false);
+
+    // Cancelamento automático do stream ao desmontar o componente da página
+    useEffect(() => {
+        return () => {
+            reset();
+        };
+    }, [reset]);
 
     // ── 1. Inicia ou retoma sessão ──────────────────────────────────────────
 
@@ -62,6 +71,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         initQuizRef.current = true;
 
         const initQuiz = async () => {
+            reset();
             try {
                 const res = await fetch("/api/quiz/session/start", {
                     method: "POST",
@@ -108,7 +118,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                                 setSelectedOption(lastQuestion.studentAnswer);
                                 setCorrectIndex(lastQuestion.correctOptionIndex);
                                 setShowingFeedback(true);
-                                setStreamedText(lastQuestion.explanation || "");
                                 setQuestionsAnswered(Math.max(0, session.currentQuestionIndex - 1));
                             } else {
                                 // A última questão ainda não foi respondida
@@ -148,8 +157,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         if (isFetchingRef.current) return;
         isFetchingRef.current = true;
         setGeneratingQuestion(true);
-        setStreamedText("");
-        setIsStreaming(false);
+        reset();
 
         try {
             const res = await fetch("/api/quiz/generate-question", {
@@ -204,48 +212,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         []
     );
 
-    // ── 4. Busca explicação personalizada via SSE (/api/explain) ────────────
-
-    const fetchExplanation = useCallback(
-        async (question: Question, studentAnswerIndex: number) => {
-            setIsStreaming(true);
-            setStreamedText("");
-
-            try {
-                const res = await fetch("/api/explain", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        sessionId,
-                        questionId: question.id,
-                        studentAnswerIndex,
-                    }),
-                });
-
-                if (!res.ok || !res.body) {
-                    setIsStreaming(false);
-                    return;
-                }
-
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    setStreamedText((prev) => prev + chunk);
-                }
-            } catch {
-                // Falha silenciosa — a explicação base já foi exibida pelo JSON
-            } finally {
-                setIsStreaming(false);
-            }
-        },
-        [sessionId]
-    );
-
-    // ── 5. Envia resposta do aluno ──────────────────────────────────────────
+    // ── 4. Envia resposta do aluno ──────────────────────────────────────────
 
     const handleAnswer = async () => {
         if (selectedOption === null || !currentQuestion || !sessionId) return;
@@ -276,9 +243,13 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
             const snapshot = { question: currentQuestion, chosen: selectedOption, difficulty: currentDifficulty };
             processAnswerResult(data, snapshot.question, snapshot.chosen, snapshot.difficulty);
 
-            // Se errou, dispara SSE de explicação personalizada em paralelo
+            // Se errou, dispara SSE de explicação personalizada via hook com AbortController
             if (!data.isCorrect) {
-                fetchExplanation(currentQuestion, selectedOption);
+                startStream({
+                    sessionId,
+                    questionId: currentQuestion.id,
+                    studentAnswerIndex: selectedOption,
+                });
             }
         } catch {
             toast.error("Erro ao enviar resposta.");
@@ -289,6 +260,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
     const handleProceedAfterFeedback = () => {
         if (isStreaming) return;
+        reset();
         const isCompleted = questionsAnswered + 1 >= 10;
 
         if (isCompleted) {
@@ -297,7 +269,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
             setShowingFeedback(false);
             setSelectedOption(null);
             setCorrectIndex(null);
-            setStreamedText("");
             setQuestionsAnswered((prev) => prev + 1);
             if (sessionId) fetchNextQuestion(sessionId);
         }
