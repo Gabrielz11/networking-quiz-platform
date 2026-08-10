@@ -1181,3 +1181,97 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 [05/08/2026, 15:20:50] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 664 | Output: 149 | Total: 813 | Meta: {"promptTokens":664,"completionTokens":149,"totalTokens":813}
 [05/08/2026, 15:20:50] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000572 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0005717}
 [05/08/2026, 16:28:32] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[07/08/2026, 10:57:32] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[07/08/2026, 11:00:54] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[07/08/2026, 11:00:54] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[07/08/2026, 15:50:23] [INFO] [WorkerProcess.Shutdown] Closing workers...
+[09/08/2026, 21:08:39] [INFO] [WorkerProcess.Startup] Starting BullMQ workers...
+[09/08/2026, 21:08:40] [INFO] [EmbeddingWorker.Worker] Embedding worker is ready and waiting for jobs
+[09/08/2026, 21:08:40] [INFO] [WorkerProcess.Worker] Embedding worker is ready and waiting for jobs
+[10/08/2026, 12:16:46] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:16:48] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1757}
+[10/08/2026, 12:16:48] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 756 | Output: 210 | Total: 966 | Meta: {"promptTokens":756,"completionTokens":210,"totalTokens":966}
+[10/08/2026, 12:16:48] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000752 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0007518000000000001}
+[10/08/2026, 12:18:01] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:18:03] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":2183}
+[10/08/2026, 12:18:03] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 815 | Output: 264 | Total: 1079 | Meta: {"promptTokens":815,"completionTokens":264,"totalTokens":1079}
+[10/08/2026, 12:18:03] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000904 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0009044999999999999}
+[10/08/2026, 12:18:28] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:20:12] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:20:22] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":10044}
+[10/08/2026, 12:20:22] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 876 | Output: 236 | Total: 1112 | Meta: {"promptTokens":876,"completionTokens":236,"totalTokens":1112}
+[10/08/2026, 12:20:22] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000853 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0008528}
+[10/08/2026, 12:20:27] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:20:41] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:20:43] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1562}
+[10/08/2026, 12:20:43] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 944 | Output: 219 | Total: 1163 | Meta: {"promptTokens":944,"completionTokens":219,"totalTokens":1163}
+[10/08/2026, 12:20:43] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000831 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0008307}
+[10/08/2026, 12:20:45] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:20:47] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:20:48] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1554}
+[10/08/2026, 12:20:48] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 1021 | Output: 238 | Total: 1259 | Meta: {"promptTokens":1021,"completionTokens":238,"totalTokens":1259}
+[10/08/2026, 12:20:48] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000901 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0009013000000000001}
+[10/08/2026, 12:20:50] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:20:53] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:20:55] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1322}
+[10/08/2026, 12:20:55] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 1107 | Output: 168 | Total: 1275 | Meta: {"promptTokens":1107,"completionTokens":168,"totalTokens":1275}
+[10/08/2026, 12:20:55] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000752 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0007520999999999999}
+[10/08/2026, 12:20:58] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:20:59] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1544}
+[10/08/2026, 12:20:59] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 1148 | Output: 222 | Total: 1370 | Meta: {"promptTokens":1148,"completionTokens":222,"totalTokens":1370}
+[10/08/2026, 12:20:59] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000899 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0008994000000000001}
+[10/08/2026, 12:21:01] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:21:04] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:21:05] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1393}
+[10/08/2026, 12:21:05] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 1228 | Output: 205 | Total: 1433 | Meta: {"promptTokens":1228,"completionTokens":205,"totalTokens":1433}
+[10/08/2026, 12:21:05] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000881 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0008808999999999999}
+[10/08/2026, 12:21:07] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:21:09] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:21:54] [ERROR] [LlmRouter.generateJson] gemini falhou (tentando fallback). Erro original: Gemini timeout após 45000ms | Meta: {"error":"Gemini timeout após 45000ms"}
+[10/08/2026, 12:21:54] [INFO] [LlmRouter.generateJson] Tentando fallback para openai
+[10/08/2026, 12:21:55] [ERROR] [LlmRouter.generateJson] openai (fallback) também falhou. Erro original: 400 Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead. | Meta: {"error":"400 Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead."}
+[10/08/2026, 12:22:03] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:22:21] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":18407}
+[10/08/2026, 12:22:21] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 1302 | Output: 167 | Total: 1469 | Meta: {"promptTokens":1302,"completionTokens":167,"totalTokens":1469}
+[10/08/2026, 12:22:21] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000808 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0008081}
+[10/08/2026, 12:22:36] [INFO] [LlmRouter.generateTextStream] Iniciando stream com groq | Meta: {"model":"llama-3.1-8b-instant"}
+[10/08/2026, 12:23:04] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:23:07] [INFO] [LlmRouter.generateJson] Chamando gemini | Meta: {"model":"gemini-3.5-flash-lite"}
+[10/08/2026, 12:23:08] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":1374}
+[10/08/2026, 12:23:08] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 664 | Output: 162 | Total: 826 | Meta: {"promptTokens":664,"completionTokens":162,"totalTokens":826}
+[10/08/2026, 12:23:08] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000604 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0006042}
+[10/08/2026, 12:23:17] [INFO] [LlmRouter.generateJson] gemini respondeu | Meta: {"durationMs":13004}
+[10/08/2026, 12:23:17] [INFO] [LlmRouter.generateJson] Consumo de Tokens — Modelo: gemini-3.5-flash-lite | Input: 664 | Output: 183 | Total: 847 | Meta: {"promptTokens":664,"completionTokens":183,"totalTokens":847}
+[10/08/2026, 12:23:17] [INFO] [LlmRouter.generateJson] Custo estimado: $0.000657 USD | Meta: {"model":"gemini-3.5-flash-lite","costUsd":0.0006567}
+[10/08/2026, 12:26:09] [INFO] [AdminModulesActions.createModule] Novo módulo criado com sucesso pelo professor | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","title":"Introdução a IPV6","description":"","authorId":"cmsg809bx000comrc30fv8gnt","authorName":"professor","authorEmail":"professor@lumina.edu"}
+[10/08/2026, 12:27:19] [INFO] [RagIngestionService.processSourceFile] Enfileirando arquivo para processamento | Meta: {"fileId":"cmsndxezc0022omrofmfz2r9d","mimeType":"application/pdf"}
+[10/08/2026, 12:27:19] [INFO] [RagIngestionService.processSourceFile] Arquivo enfileirado com sucesso | Meta: {"fileId":"cmsndxezc0022omrofmfz2r9d"}
+[10/08/2026, 12:27:19] [INFO] [EmbeddingWorker.Worker] Started processing job 63
+[10/08/2026, 12:27:19] [INFO] [WorkerProcess.Worker] Started processing job 63
+[10/08/2026, 12:27:19] [INFO] [EmbeddingWorker.Worker] Processing job 63 for file cmsndxezc0022omrofmfz2r9d
+[10/08/2026, 12:27:22] [INFO] [EmbeddingWorker.Worker] Chunks gerados pelo SemanticChunker | Meta: {"totalChunks":915,"parents":433,"children":482}
+[10/08/2026, 12:27:23] [INFO] [EmbeddingWorker.Worker] Embeddings batch 1/10 concluído
+[10/08/2026, 12:27:24] [INFO] [EmbeddingWorker.Worker] Embeddings batch 2/10 concluído
+[10/08/2026, 12:27:25] [INFO] [EmbeddingWorker.Worker] Embeddings batch 3/10 concluído
+[10/08/2026, 12:27:25] [INFO] [EmbeddingWorker.Worker] Embeddings batch 4/10 concluído
+[10/08/2026, 12:27:26] [INFO] [EmbeddingWorker.Worker] Embeddings batch 5/10 concluído
+[10/08/2026, 12:27:26] [INFO] [EmbeddingWorker.Worker] Embeddings batch 6/10 concluído
+[10/08/2026, 12:27:28] [INFO] [EmbeddingWorker.Worker] Embeddings batch 7/10 concluído
+[10/08/2026, 12:27:28] [INFO] [EmbeddingWorker.Worker] Embeddings batch 8/10 concluído
+[10/08/2026, 12:27:29] [INFO] [EmbeddingWorker.Worker] Embeddings batch 9/10 concluído
+[10/08/2026, 12:27:30] [INFO] [EmbeddingWorker.Worker] Embeddings batch 10/10 concluído
+[10/08/2026, 12:27:35] [INFO] [EmbeddingWorker.Worker] Job 63 concluído com sucesso | Meta: {"parents":433,"children":482}
+[10/08/2026, 12:27:35] [INFO] [EmbeddingWorker.Worker] Completed job 63
+[10/08/2026, 12:27:35] [INFO] [WorkerProcess.Worker] Completed job 63
+[10/08/2026, 12:28:14] [INFO] [ModuleContentRagService.generate] Iniciando geração RAG | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct"}
+[10/08/2026, 12:28:14] [INFO] [PgVectorStore.searchSimilar] Busca vetorial concluída | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","childChunksEncontrados":20,"embeddingModel":"text-embedding-3-small","durationMs":626}
+[10/08/2026, 12:28:14] [INFO] [PgVectorStore.searchSimilar] Resultados após hierarquia e dedup | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","resultadosFinais":10,"usouReranking":true}
+[10/08/2026, 12:28:16] [INFO] [ModuleContentRagService.generate] Chunks recuperados do vector store | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","totalChunks":8,"chunks":[{"index":1,"fileName":"INTRO IPV6.pdf","section":"—","score":"99.2%","chars":39960},{"index":2,"fileName":"INTRO IPV6.pdf","section":"# ip -6 route add 2001:db8::abcd dev toABCD","score":"65.6%","chars":5162},{"index":3,"fileName":"INTRO IPV6.pdf","section":"# ping6 -s 1500 -M want -c 4 2001:db8:2::10","score":"46.9%","chars":7526},{"index":4,"fileName":"INTRO IPV6.pdf","section":"# thcping6 -d 64 eth0 2001:db8:abcd::10 2001:db8:1234::10","score":"33.2%","chars":4557},{"index":5,"fileName":"INTRO IPV6.pdf","section":"# ping6 -c 4 [endereco-n4HostB]","score":"29.4%","chars":12620},{"index":6,"fileName":"INTRO IPV6.pdf","section":"# nano <nome do arquivo>","score":"20.2%","chars":15653},{"index":7,"fileName":"INTRO IPV6.pdf","section":"# ping -c 4 198.51.100.10","score":"7.2%","chars":4832},{"index":8,"fileName":"INTRO IPV6.pdf","section":"# ipv6 prefix-list PREFIXO-DO-64501","score":"0.3%","chars":69}]}
+[10/08/2026, 12:28:16] [INFO] [ModuleContentRagService.generate] Contexto RAG montado para o prompt | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","contextChars":15193,"chunksUsados":8,"chunksTruncados":7}
+[10/08/2026, 12:28:16] [INFO] [LlmRouter.generateText] Chamando gemini | Meta: {"model":"gemini-3.6-flash"}
+[10/08/2026, 12:28:38] [INFO] [LlmRouter.generateText] gemini respondeu | Meta: {"durationMs":21939}
+[10/08/2026, 12:28:38] [INFO] [LlmRouter.generateText] Consumo de Tokens — Modelo: gemini-3.6-flash | Input: 7241 | Output: 1691 | Total: 8932 | Meta: {"promptTokens":7241,"completionTokens":1691,"totalTokens":8932}
+[10/08/2026, 12:28:38] [INFO] [LlmRouter.generateText] Custo estimado: $0.023544 USD | Meta: {"model":"gemini-3.6-flash","costUsd":0.023544}
+[10/08/2026, 12:28:38] [INFO] [ModuleContentRagService.generate] Conteúdo gerado e salvo | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct"}
+[10/08/2026, 12:29:26] [INFO] [AdminModulesActions.updateModule] Módulo atualizado com sucesso pelo professor | Meta: {"moduleId":"cmsndw2x70021omroy1ze7tct","title":"Introdução a IPV6","description":"Visão geral do IPv6 abordando conceitos práticos como PMTUD, mensagens DHCPv6, serviços DNS e mecanismos de transição como 6in4 e 464XLAT."}
+[10/08/2026, 15:09:02] [INFO] [WorkerProcess.Shutdown] Closing workers...
