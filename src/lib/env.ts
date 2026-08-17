@@ -35,6 +35,21 @@ const temperatureFromEnv = (defaultValue: number) =>
             }
         );
 
+const positiveFloatFromEnv = (defaultValue: number) =>
+    z
+        .string()
+        .default(String(defaultValue))
+        .transform((value) => Number(value))
+        .refine(
+            (value) =>
+                Number.isFinite(value) &&
+                value >= 0 &&
+                value <= 1,
+            {
+                message: "O valor deve ser um número entre 0 e 1",
+            }
+        );
+
 const envSchema = z
     .object({
         // App
@@ -166,6 +181,29 @@ const envSchema = z
 
         RAG_RETRIEVAL_LIMIT:
             positiveIntegerFromEnv(10),
+
+        // RAG Evaluation (RAGAS Faithfulness)
+        RAG_EVALUATION_ENABLED: booleanFromEnv,
+
+        RAG_EVALUATION_PROVIDER: z
+            .enum(["google", "openai"])
+            .default("google"),
+
+        RAG_EVALUATION_MODEL: z
+            .string()
+            .min(1)
+            .default("gemini-3.6-flash"),
+
+        RAG_EVALUATION_SERVICE_URL: z
+            .string()
+            .url()
+            .default("http://127.0.0.1:8000"),
+
+        RAG_EVALUATION_TRUSTED_THRESHOLD:
+            positiveFloatFromEnv(0.90),
+
+        RAG_EVALUATION_REVIEW_THRESHOLD:
+            positiveFloatFromEnv(0.80),
 
     })
     .superRefine((data, ctx) => {

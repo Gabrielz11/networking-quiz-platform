@@ -6,7 +6,7 @@ import { cleanMarkdownCodeFences, safeJsonParse, validateSchemaRequirements } fr
 
 const logger = new Logger("GeminiProvider");
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 const DEFAULT_TIMEOUT_MS = 45_000;
 
 export class GeminiProvider implements AiProvider {

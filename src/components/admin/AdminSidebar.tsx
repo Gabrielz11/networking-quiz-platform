@@ -21,7 +21,8 @@ import {
   LogOut,
   FolderOpen,
   BarChart,
-  BrainCircuit
+  BrainCircuit,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -121,6 +122,13 @@ export function AdminSidebar() {
           href: "/dashboard/ai-metrics",
           icon: BrainCircuit,
           active: pathname.startsWith("/dashboard/ai-metrics"),
+          disabled: false,
+        },
+        {
+          name: "Qualidade da IA",
+          href: "/dashboard/ai-quality",
+          icon: ShieldCheck,
+          active: pathname.startsWith("/dashboard/ai-quality"),
           disabled: false,
         },
       ],

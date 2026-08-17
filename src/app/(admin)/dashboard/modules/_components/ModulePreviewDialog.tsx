@@ -2,22 +2,35 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { renderModuleMarkdown } from "@/lib/markdown";
 import DOMPurify from "isomorphic-dompurify";
-import { X } from "lucide-react";
+import { X, RefreshCw, ShieldCheck, Cpu, Calendar } from "lucide-react";
+import { QualityBadge } from "@/components/admin/modules/QualityBadge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ModulePreviewDialogProps {
+    moduleId?: string;
     title: string;
     description: string;
     content: string;
+    evaluation?: any;
     children: React.ReactNode;
 }
 
 export function ModulePreviewDialog({
+    moduleId,
     title,
     description,
     content,
+    evaluation: initialEval,
     children,
 }: ModulePreviewDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [evalState, setEvalState] = useState<any>(initialEval);
+    const [isReevaluating, setIsReevaluating] = useState(false);
+
+    useEffect(() => {
+        setEvalState(initialEval);
+    }, [initialEval]);
 
     useEffect(() => {
         if (isOpen) {
@@ -27,6 +40,29 @@ export function ModulePreviewDialog({
         }
         return () => { document.body.style.overflow = "unset"; };
     }, [isOpen]);
+
+    const handleReevaluate = async () => {
+        if (!moduleId) return;
+        setIsReevaluating(true);
+        try {
+            const res = await fetch(`/api/modules/${moduleId}/evaluate-rag`, {
+                method: "POST",
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            toast.success("Reavaliação enfileirada! O resultado será atualizado em instantes.");
+            setEvalState((prev: any) => ({
+                ...prev,
+                status: "PENDING",
+                score: null,
+            }));
+        } catch (err: any) {
+            toast.error("Erro ao solicitar reavaliação: " + err.message);
+        } finally {
+            setIsReevaluating(false);
+        }
+    };
 
     const htmlContent = renderModuleMarkdown(content || "");
     const sanitizedHtml = DOMPurify.sanitize(htmlContent, {
@@ -71,8 +107,52 @@ export function ModulePreviewDialog({
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#003366] leading-[1.1] mb-8 tracking-tighter">
                             {title}
                         </h1>
-                        <div className="border-l-4 border-blue-600 pl-6 italic text-xl text-gray-600 max-w-4xl">
+                        <div className="border-l-4 border-blue-600 pl-6 italic text-xl text-gray-600 max-w-4xl mb-8">
                             {description || "Conteúdo didático estruturado."}
+                        </div>
+
+                        {/* Bloco de Qualidade da IA */}
+                        <div className="mt-8 pt-6 border-t border-gray-200/60 flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600">
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Qualidade da IA (RAGAS)</div>
+                                    <div className="mt-1 flex items-center gap-2">
+                                        <QualityBadge
+                                            score={evalState?.score}
+                                            status={evalState?.status}
+                                        />
+                                        {evalState?.updatedAt && (
+                                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                                                <Calendar className="w-3 h-3" />
+                                                {new Date(evalState.updatedAt).toLocaleDateString("pt-BR")}
+                                            </span>
+                                        )}
+                                        {evalState?.model && (
+                                            <span className="text-xs text-gray-400 flex items-center gap-1 font-mono">
+                                                <Cpu className="w-3 h-3" />
+                                                {evalState.model}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {moduleId && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleReevaluate}
+                                    disabled={isReevaluating}
+                                    className="gap-2 text-xs font-bold rounded-xl border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-600"
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${isReevaluating ? "animate-spin" : ""}`} />
+                                    {isReevaluating ? "Enfileirando..." : "Reavaliar Conteúdo"}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

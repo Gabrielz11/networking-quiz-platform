@@ -7,9 +7,17 @@ import { Logger } from "@/lib/logger";
 
 const logger = new Logger("AdminModulesActions");
 
+import { computeContentHash } from "@/lib/rag/eval/hash.utils";
+
 export async function getModules() {
   return await prisma.module.findMany({
     orderBy: { createdAt: "desc" },
+    include: {
+      evaluations: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
   });
 }
 
@@ -42,6 +50,18 @@ export async function createModule(data: { title: string; content: string; descr
 }
 
 export async function updateModule(id: string, data: { title: string; content: string; description?: string }) {
+  const newHash = computeContentHash(data.content || "");
+
+  // Se o conteúdo foi alterado manualmente pelo professor, marcar avaliações com hash diferente como OUTDATED
+  await prisma.ragEvaluation.updateMany({
+    where: {
+      moduleId: id,
+      metric: "faithfulness",
+      NOT: { contentHash: newHash },
+    },
+    data: { status: "OUTDATED" },
+  });
+
   await prisma.module.update({
     where: { id },
     data: {
@@ -55,6 +75,7 @@ export async function updateModule(id: string, data: { title: string; content: s
     moduleId: id,
     title: data.title,
     description: data.description,
+    newHash: newHash.slice(0, 12),
   });
 
   revalidatePath("/dashboard/modules");

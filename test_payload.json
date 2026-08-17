@@ -1,0 +1,13 @@
+{
+  "evaluation_id": "eval_real_002",
+  "module_id": "mod_real_002",
+  "user_input": "Endereçamento IPv6 e estrutura de cabeçalho",
+  "generated_content": "O protocolo IPv6 utiliza um espaço de endereçamento de 128 bits, permitindo 2^128 endereços únicos. Os endereços são representados em hexadecimal separados por dois pontos. O cabeçalho fixo tem 40 bytes.",
+  "retrieved_contexts": [
+    "O IPv6 foi desenvolvido para substituir o IPv4 e usa 128 bits de endereçamento.",
+    "A notação do IPv6 é feita em 8 grupos de 4 dígitos hexadecimais separados por caractere de dois-pontos (:).",
+    "O cabeçalho base do IPv6 possui tamanho fixo de 40 bytes para aceleração do roteamento."
+  ],
+  "provider": "google",
+  "model": "gemini-2.5-flash"
+}

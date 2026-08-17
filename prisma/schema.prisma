@@ -38,6 +38,14 @@ enum SourceFileStatus {
   FAILED
 }
 
+enum RagEvaluationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  OUTDATED
+}
+
 model User {
   id           String               @id @default(cuid())
   email        String               @unique
@@ -70,6 +78,7 @@ model Module {
   scores       StudentModuleScore[]
   aiGenerations AiGenerationMetadata[]
   telemetries   StudentQuizTelemetry[]
+  evaluations   RagEvaluation[]
 }
 
 model Question {
@@ -268,4 +277,40 @@ model SemanticCacheEntry {
   @@index([pipeline])
   @@index([promptHash])
   @@index([ttlExpiresAt])
+}
+
+// ── Avaliação de confiabilidade do conteúdo gerado via RAG (RAGAS) ──────────
+// Armazena o resultado da métrica Faithfulness para cada versão de conteúdo.
+// A unique constraint [moduleId, metric, contentHash] garante idempotência.
+model RagEvaluation {
+  id               String              @id @default(cuid())
+
+  moduleId         String
+  module           Module              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  metric           String              @default("faithfulness")
+  score            Float?
+
+  status           RagEvaluationStatus @default(PENDING)
+
+  evaluator        String              @default("ragas")
+  evaluatorVersion String?             // Dinâmico: ragas.__version__ (ex: "0.4.3")
+
+  provider         String?             // Ex: "google"
+  model            String?             // Ex: "gemini-2.5-flash"
+
+  contentHash      String              // SHA-256 do conteúdo avaliado
+
+  details          Json?               // { sourceChunkIds: [...], claimsCount: N }
+  error            String?
+
+  startedAt        DateTime?
+  finishedAt       DateTime?
+
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([moduleId, metric, contentHash])
+  @@index([moduleId])
+  @@index([status])
 }

@@ -25,6 +25,24 @@ services:
     networks:
       - lumina_network
 
+  rag-evaluation:
+    build:
+      context: ./services/rag-evaluation
+      dockerfile: Dockerfile
+    container_name: lumina_rag_evaluation
+    restart: always
+    ports:
+      - '8000:8000'
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - lumina_network
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 volumes:
   lumina_postgres_data:
   lumina_redis_data:
