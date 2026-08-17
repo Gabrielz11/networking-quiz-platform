@@ -275,13 +275,6 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     };
 
     const handleFinish = async () => {
-        if (sessionId) {
-            await fetch("/api/quiz/session/cleanup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId }),
-            }).catch(() => {});
-        }
         router.push("/student");
     };
 

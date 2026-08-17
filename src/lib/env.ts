@@ -192,7 +192,7 @@ const envSchema = z
         RAG_EVALUATION_MODEL: z
             .string()
             .min(1)
-            .default("gemini-3.6-flash"),
+            .default("gemini-2.5-flash"),
 
         RAG_EVALUATION_SERVICE_URL: z
             .string()

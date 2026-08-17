@@ -108,7 +108,6 @@ model QuizSession {
   updatedAt            DateTime           @updatedAt
   questions            QuestionInstance[]
   aiGenerations        AiGenerationMetadata[]
-  telemetries          StudentQuizTelemetry[]
 
   // P3.2 — Índice composto para a query de sessão ativa em session/start
   @@index([userId, moduleId, status])
@@ -237,14 +236,15 @@ model AiGenerationMetadata {
 }
 
 // ── Telemetria avançada de performance dos alunos no Quiz ──────────────────────
+// sessionId é String simples (sem FK) para evitar deleção em cascata
+// quando a QuizSession for manipulada ou limpa.
 model StudentQuizTelemetry {
   id                  String       @id @default(cuid())
   userId              String
   user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   moduleId            String
   module              Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  sessionId           String
-  session             QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId           String       // referência simples de sessão (sem FK cascade)
   questionId          String       // referência a QuestionInstance
 
   // Métricas capturadas

@@ -38,6 +38,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
         }
 
+        // Sessões concluídas nunca devem ser deletadas (preserva histórico e telemetria)
+        if (quizSession.status === "COMPLETED") {
+            logger.info("POST", "Sessão concluída mantida no histórico de analytics", {
+                userId: authSession.user.id,
+                sessionId,
+            });
+            return NextResponse.json({ success: true, message: "Sessão concluída mantida no histórico." });
+        }
+
         await prisma.quizSession.delete({
             where: { id: sessionId }
         });

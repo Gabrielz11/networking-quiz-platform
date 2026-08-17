@@ -28,7 +28,7 @@ app = FastAPI(
 )
 
 # Timeout interno para a avaliação (segundos)
-EVALUATION_TIMEOUT_SECONDS = 180
+EVALUATION_TIMEOUT_SECONDS = 300
 
 
 @app.get("/health")

@@ -25,6 +25,15 @@ export async function createModule(data: { title: string; content: string; descr
   const session = await auth();
   if (!session?.user?.id) throw new Error("Não autorizado");
 
+  const author = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+
+  if (!author) {
+    throw new Error("Sua sessão expirou ou o usuário não existe mais no banco de dados. Por favor, faça login novamente.");
+  }
+
   const module = await prisma.module.create({
     data: {
       title: data.title,

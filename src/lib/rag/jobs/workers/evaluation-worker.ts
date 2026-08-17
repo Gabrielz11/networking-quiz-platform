@@ -120,9 +120,9 @@ if (!workerInstance) {
         // 5. Montar user_input (query usada na geração)
         const userInput = `${currentModule.title} ${currentModule.description ?? ""}`.trim();
 
-        // 6. Chamar o serviço Python (FastAPI)
+        // 6. Chamar o serviço Python (FastAPI) com timeout de 315s (maior que os 300s do backend Python)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 180_000);
+        const timeoutId = setTimeout(() => controller.abort(), 315_000);
 
         try {
             const response = await fetch(`${env.RAG_EVALUATION_SERVICE_URL}/evaluate`, {
@@ -205,7 +205,7 @@ if (!workerInstance) {
 
             throw error; // BullMQ fará retry se houver tentativas restantes
         }
-    }, { connection });
+    }, { connection, lockDuration: 360_000 });
 
     workerInstance.on("ready", () => {
         logger.info("Worker", "Evaluation worker is ready and waiting for jobs");

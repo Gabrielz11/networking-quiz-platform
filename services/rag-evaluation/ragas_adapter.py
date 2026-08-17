@@ -2,8 +2,9 @@
 #
 # Adaptador isolado para a métrica Faithfulness do RAGAS 0.4.3.
 # Isola chamadas de APIs internas (_create_statements, _create_verdicts, _compute_score)
-# e implementa avaliação segmentada para conteúdos > 2500 caracteres.
+# e implementa avaliação segmentada para conteúdos > 4000 caracteres.
 
+import re
 import asyncio
 import logging
 from typing import List, Dict, Any, Tuple
@@ -11,13 +12,14 @@ from ragas.metrics.collections import Faithfulness
 
 logger = logging.getLogger("rag-evaluation")
 
-MAX_SEGMENT_CHARS = 2000
+MAX_SEGMENT_CHARS = 4000
 
 
 def segment_response(response: str) -> List[str]:
     """
-    Divide a resposta gerada em segmentos lógicos (quebra por parágrafos/seções)
+    Divide a resposta gerada em segmentos lógicos (quebra por parágrafos/seções e frases),
     garantindo que cada trecho tenha no máximo MAX_SEGMENT_CHARS.
+    Prioriza quebras semânticas em fins de parágrafo e frases para evitar cortar texto no meio de uma afirmação.
     """
     if len(response) <= MAX_SEGMENT_CHARS:
         return [response]
@@ -34,17 +36,19 @@ def segment_response(response: str) -> List[str]:
         else:
             if current_segment:
                 segments.append(current_segment)
-            # Se um único parágrafo for maior que MAX_SEGMENT_CHARS, divide por linhas
+                current_segment = ""
+
+            # Se um único parágrafo for maior que MAX_SEGMENT_CHARS, divide por limites de frases (.!?)
             if len(p) > MAX_SEGMENT_CHARS:
-                lines = p.split("\n")
+                sentences = re.split(r'(?<=[.!?])\s+', p)
                 sub_seg = ""
-                for line in lines:
-                    if len(sub_seg) + len(line) + 1 <= MAX_SEGMENT_CHARS:
-                        sub_seg = f"{sub_seg}\n{line}".strip()
+                for sentence in sentences:
+                    if len(sub_seg) + len(sentence) + 1 <= MAX_SEGMENT_CHARS:
+                        sub_seg = f"{sub_seg} {sentence}".strip()
                     else:
                         if sub_seg:
                             segments.append(sub_seg)
-                        sub_seg = line[:MAX_SEGMENT_CHARS]
+                        sub_seg = sentence[:MAX_SEGMENT_CHARS]
                 if sub_seg:
                     current_segment = sub_seg
             else:
@@ -60,7 +64,7 @@ class RagasFaithfulnessAdapter:
     """
     Encapsula o RAGAS Faithfulness (v0.4.3) oferecendo:
     1. Extração detalhada de afirmações (statements), vereditos e justificativas (reasons).
-    2. Avaliação por segmentos quando o conteúdo excede 2500 caracteres (evita truncamento).
+    2. Avaliação por segmentos quando o conteúdo excede 4000 caracteres (evita truncamento).
     3. Isolamento contra futuras alterações nas APIs internas do RAGAS.
     """
 
@@ -84,17 +88,22 @@ class RagasFaithfulnessAdapter:
         segments = segment_response(response)
         is_segmented = len(segments) > 1
 
-        if is_segmented:
-            logger.info(
-                "Resposta de %d caracteres dividida em %d segmentos para avaliação global",
-                len(response),
-                len(segments),
-            )
+        logger.info(
+            "Iniciando avaliação RAGAS | content_chars=%d | segments=%d",
+            len(response),
+            len(segments),
+        )
 
         all_statements: List[str] = []
 
-        # 1. Extração de afirmações (por segmento se necessário)
+        # 1. Extração de afirmações sequencialmente por segmento (preserva ordem dos resultados)
         for idx, seg in enumerate(segments):
+            logger.info(
+                "Processando segmento %d/%d | segment_chars=%d",
+                idx + 1,
+                len(segments),
+                len(seg),
+            )
             try:
                 if hasattr(self.metric, "_create_statements"):
                     seg_statements = await self.metric._create_statements(user_input, seg)
@@ -103,7 +112,7 @@ class RagasFaithfulnessAdapter:
                 if seg_statements:
                     all_statements.extend(seg_statements)
             except Exception as e:
-                logger.error("Erro ao gerar afirmações para segmento %d: %s", idx + 1, str(e))
+                logger.error("Erro ao gerar afirmações para segmento %d/%d: %s", idx + 1, len(segments), str(e))
                 raise e
 
         if not all_statements:
