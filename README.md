@@ -124,37 +124,37 @@ O Lumina LMS utiliza uma arquitetura Full-Stack moderna com forte separação de
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND                                  │
+│                        FRONTEND                                 │
 │  Next.js 16 (App Router) + React 19 + Tailwind CSS v4           │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐       │
-│  │  Área Pública │  │ Painel Aluno │  │ Dashboard Prof.  │       │
-│  │  (Landing)    │  │ (Quiz + RAG) │  │ (CRUD + Upload)  │       │
+│  │  Área Pública│  │ Painel Aluno │  │ Dashboard Prof.  │       │
+│  │  (Landing)   │  │ (Quiz + RAG) │  │ (CRUD + Upload)  │       │
 │  └──────────────┘  └──────────────┘  └──────────────────┘       │
 └────────────────────────────┬────────────────────────────────────┘
                              │ API Route Handlers
 ┌────────────────────────────┴────────────────────────────────────┐
-│                        BACKEND                                   │
+│                        BACKEND                                  │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  Camada de Serviços (Services Layer)                      │   │
+│  │  Camada de Serviços (Services Layer)                     │   │
 │  │  ┌────────────┐ ┌──────────────┐ ┌────────────────────┐  │   │
 │  │  │ Generation │ │ Analytics    │ │ Learning           │  │   │
 │  │  │ (IA + RAG) │ │ (Dashboards) │ │ (Quiz + Explain)   │  │   │
 │  │  └────────────┘ └──────────────┘ └────────────────────┘  │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  Camada de IA (LLM Router)                                │   │
-│  │  Primário: Google Gemini 2.5 Flash                        │   │
+│  │  Camada de IA (LLM Router)                               │   │
+│  │  Primário: Google Gemini 2.5 Flash                       │   │
 │  │  Fallback: Groq (Llama 3.3 70B) — retry + backoff        │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  Camada RAG                                               │   │
-│  │  Ingestão (BullMQ Worker) → Chunking → Embeddings         │   │
-│  │  → pgvector (Busca Vetorial) → Reranker → Geração         │   │
+│  │  Camada RAG                                              │   │
+│  │  Ingestão (BullMQ Worker) → Chunking → Embeddings        │   │
+│  │  → pgvector (Busca Vetorial) → Reranker → Geração        │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
                              │
 ┌────────────────────────────┴────────────────────────────────────┐
-│                     INFRAESTRUTURA                               │
+│                     INFRAESTRUTURA                              │
 │  ┌────────────────┐  ┌─────────────┐  ┌──────────────────────┐  │
 │  │ PostgreSQL 16  │  │  Redis 7    │  │  Docker Compose      │  │
 │  │ + pgvector     │  │  (Cache +   │  │  (Orquestração)      │  │
