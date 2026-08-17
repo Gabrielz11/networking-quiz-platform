@@ -606,7 +606,15 @@ export default function AiQualityPage() {
                                                             <span className="font-bold text-slate-500 block text-[10px] uppercase tracking-wider mb-0.5">
                                                                 Justificativa do avaliador:
                                                             </span>
-                                                            <p className="italic leading-relaxed">{claim.reason}</p>
+                                                            <p className="italic leading-relaxed">
+                                                                {claim.reason
+                                                                    ? claim.reason
+                                                                        .replace(/^The statement is directly supported by the context\.?/i, "A afirmação é diretamente suportada pelo contexto.")
+                                                                        .replace(/^The statement can be directly inferred based on the context\.?/i, "A afirmação pode ser inferida diretamente a partir do contexto.")
+                                                                        .replace(/^There is no information in the context about/i, "Não há informações no contexto sobre")
+                                                                        .replace(/^No reason provided\.?/i, "Justificativa não fornecida pelo avaliador.")
+                                                                    : "Justificativa não fornecida pelo avaliador."}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>

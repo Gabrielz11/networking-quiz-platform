@@ -9,6 +9,13 @@ import asyncio
 import logging
 from typing import List, Dict, Any, Tuple
 from ragas.metrics.collections import Faithfulness
+from ragas.metrics.collections.faithfulness.util import (
+    StatementGeneratorInput,
+    StatementGeneratorOutput,
+    NLIStatementInput,
+    NLIStatementOutput,
+    StatementFaithfulnessAnswer,
+)
 
 logger = logging.getLogger("rag-evaluation")
 
@@ -63,13 +70,84 @@ def segment_response(response: str) -> List[str]:
 class RagasFaithfulnessAdapter:
     """
     Encapsula o RAGAS Faithfulness (v0.4.3) oferecendo:
-    1. Extração detalhada de afirmações (statements), vereditos e justificativas (reasons).
+    1. Extração detalhada de afirmações (statements), vereditos e justificativas (reasons) em PT-BR.
     2. Avaliação por segmentos quando o conteúdo excede 4000 caracteres (evita truncamento).
     3. Isolamento contra futuras alterações nas APIs internas do RAGAS.
     """
 
     def __init__(self, metric: Faithfulness):
         self.metric = metric
+        self._configure_portuguese_prompts()
+
+    def _configure_portuguese_prompts(self):
+        """
+        Configura instruções e exemplos em Português do Brasil (PT-BR) nos prompts
+        do RAGAS Faithfulness para garantir que afirmações (statements) e justificativas (reasons)
+        sejam geradas 100% em português.
+        """
+        if hasattr(self.metric, "statement_generator_prompt") and self.metric.statement_generator_prompt:
+            self.metric.statement_generator_prompt.instruction = (
+                "Dada uma pergunta e uma resposta em português, analise a resposta e decomponha "
+                "cada frase em uma ou mais afirmações atômicas e totalmente compreensíveis em português "
+                "do Brasil (PT-BR). Garanta que nenhum pronome ambíguo seja utilizado e que todo o texto "
+                "gerado esteja estritamente em português do Brasil (PT-BR)."
+            )
+            self.metric.statement_generator_prompt.examples = [
+                (
+                    StatementGeneratorInput(
+                        question="O que é o protocolo IPv6 e qual seu tamanho de endereço?",
+                        answer="O IPv6 é a versão mais recente do Protocolo de Internet, desenvolvida pela IETF. Ele utiliza endereços de 128 bits para resolver a escassez de IPs.",
+                    ),
+                    StatementGeneratorOutput(
+                        statements=[
+                            "O IPv6 é a versão mais recente do Protocolo de Internet.",
+                            "O IPv6 foi desenvolvido pela IETF.",
+                            "O IPv6 utiliza endereços de 128 bits.",
+                            "O IPv6 visa resolver a escassez de endereços IP.",
+                        ]
+                    ),
+                ),
+            ]
+
+        if hasattr(self.metric, "nli_statement_prompt") and self.metric.nli_statement_prompt:
+            self.metric.nli_statement_prompt.instruction = (
+                "Sua tarefa é julgar a fidelidade (faithfulness) de uma série de afirmações com base "
+                "estrita no contexto fornecido. Para cada afirmação, você deve retornar um veredito (verdict) "
+                "igual a 1 se a afirmação puder ser inferida diretamente a partir do contexto, ou 0 se ela "
+                "não puder ser inferida diretamente. A justificativa (reason) DEVE ser obrigatoriamente "
+                "escrita em português do Brasil (PT-BR), explicando de forma clara e objetiva o motivo do veredito."
+            )
+            self.metric.nli_statement_prompt.examples = [
+                (
+                    NLIStatementInput(
+                        context="O IPv6 utiliza um espaço de endereçamento de 128 bits. O mecanismo SLAAC permite a autoconfiguração de endereços na rede.",
+                        statements=[
+                            "O IPv6 utiliza 128 bits de endereçamento.",
+                            "O IPv6 exige a configuração manual de todos os IPs.",
+                            "O IPsec é obrigatório em todas as conexões IPv6.",
+                        ],
+                    ),
+                    NLIStatementOutput(
+                        statements=[
+                            StatementFaithfulnessAnswer(
+                                statement="O IPv6 utiliza 128 bits de endereçamento.",
+                                reason="O contexto afirma expressamente que o IPv6 utiliza um espaço de endereçamento de 128 bits.",
+                                verdict=1,
+                            ),
+                            StatementFaithfulnessAnswer(
+                                statement="O IPv6 exige a configuração manual de todos os IPs.",
+                                reason="O contexto menciona que o SLAAC permite a autoconfiguração de endereços, contradizendo a exigência de configuração manual.",
+                                verdict=0,
+                            ),
+                            StatementFaithfulnessAnswer(
+                                statement="O IPsec é obrigatório em todas as conexões IPv6.",
+                                reason="Não há qualquer menção sobre a obrigatoriedade do IPsec no contexto fornecido.",
+                                verdict=0,
+                            ),
+                        ]
+                    ),
+                ),
+            ]
 
     async def evaluate_with_diagnostics(
         self,
