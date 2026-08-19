@@ -3,6 +3,8 @@
 # Adaptador isolado para a métrica Faithfulness do RAGAS 0.4.3.
 # Isola chamadas de APIs internas (_create_statements, _create_verdicts, _compute_score)
 # e implementa avaliação segmentada para conteúdos > 4000 caracteres.
+#
+# v2: Avaliação de vereditos em lotes para evitar limite de contexto.
 
 import re
 import asyncio
@@ -20,6 +22,7 @@ from ragas.metrics.collections.faithfulness.util import (
 logger = logging.getLogger("rag-evaluation")
 
 MAX_SEGMENT_CHARS = 4000
+VERDICT_BATCH_SIZE = 15  # Máximo de claims por lote de avaliação NLI
 
 
 def segment_response(response: str) -> List[str]:
@@ -72,7 +75,8 @@ class RagasFaithfulnessAdapter:
     Encapsula o RAGAS Faithfulness (v0.4.3) oferecendo:
     1. Extração detalhada de afirmações (statements), vereditos e justificativas (reasons) em PT-BR.
     2. Avaliação por segmentos quando o conteúdo excede 4000 caracteres (evita truncamento).
-    3. Isolamento contra futuras alterações nas APIs internas do RAGAS.
+    3. Avaliação de vereditos em lotes para evitar limite de contexto do avaliador.
+    4. Isolamento contra futuras alterações nas APIs internas do RAGAS.
     """
 
     def __init__(self, metric: Faithfulness):
@@ -114,8 +118,10 @@ class RagasFaithfulnessAdapter:
                 "Sua tarefa é julgar a fidelidade (faithfulness) de uma série de afirmações com base "
                 "estrita no contexto fornecido. Para cada afirmação, você deve retornar um veredito (verdict) "
                 "igual a 1 se a afirmação puder ser inferida diretamente a partir do contexto, ou 0 se ela "
-                "não puder ser inferida diretamente. A justificativa (reason) DEVE ser obrigatoriamente "
-                "escrita em português do Brasil (PT-BR), explicando de forma clara e objetiva o motivo do veredito."
+                "não puder ser inferida diretamente. Uma afirmação pode ser TECNICAMENTE VERDADEIRA mas "
+                "receber verdict=0 se NÃO estiver presente no contexto. A justificativa (reason) DEVE ser "
+                "obrigatoriamente escrita em português do Brasil (PT-BR), explicando de forma clara e "
+                "objetiva o motivo do veredito."
             )
             self.metric.nli_statement_prompt.examples = [
                 (
@@ -141,7 +147,7 @@ class RagasFaithfulnessAdapter:
                             ),
                             StatementFaithfulnessAnswer(
                                 statement="O IPsec é obrigatório em todas as conexões IPv6.",
-                                reason="Não há qualquer menção sobre a obrigatoriedade do IPsec no contexto fornecido.",
+                                reason="Não há qualquer menção sobre a obrigatoriedade do IPsec no contexto fornecido. Embora possa ser tecnicamente discutível, a afirmação não é sustentada pelo contexto.",
                                 verdict=0,
                             ),
                         ]
@@ -158,6 +164,8 @@ class RagasFaithfulnessAdapter:
         """
         Executa a avaliação de Faithfulness e retorna (score, details_dict).
         Score é garantido como ratio: supportedClaims / totalClaims.
+        Vereditos são avaliados em lotes de VERDICT_BATCH_SIZE para evitar
+        ultrapassar limite de contexto do modelo avaliador.
         """
         if not response or not user_input or not retrieved_contexts:
             raise ValueError("user_input, response e retrieved_contexts são obrigatórios.")
@@ -204,30 +212,51 @@ class RagasFaithfulnessAdapter:
                 "segmentsCount": len(segments),
             }
 
-        # 2. Vereditos NLI sobre todas as afirmações acumuladas
-        try:
-            if hasattr(self.metric, "_create_verdicts"):
-                verdicts = await self.metric._create_verdicts(all_statements, context_str)
-            else:
-                raise AttributeError("Método interno _create_verdicts não encontrado no RAGAS.")
-        except Exception as e:
-            logger.error("Erro ao avaliar vereditos NLI: %s", str(e))
-            raise e
+        # 2. Vereditos NLI em lotes sobre as afirmações acumuladas
+        all_verdict_items = []
 
-        # 3. Cálculo do score oficial
-        if hasattr(self.metric, "_compute_score"):
-            raw_score = self.metric._compute_score(verdicts)
-            score = 0.0 if (raw_score is None or str(raw_score) == "nan") else float(raw_score)
-        else:
-            faithful_count = sum(1 for s in verdicts.statements if getattr(s, "verdict", 0) == 1)
-            score = faithful_count / len(verdicts.statements) if verdicts.statements else 0.0
+        batches = [
+            all_statements[i:i + VERDICT_BATCH_SIZE]
+            for i in range(0, len(all_statements), VERDICT_BATCH_SIZE)
+        ]
 
-        # 4. Formatação da lista de claims
+        logger.info(
+            "Avaliando vereditos em %d lotes (batch_size=%d) | total_statements=%d",
+            len(batches),
+            VERDICT_BATCH_SIZE,
+            len(all_statements),
+        )
+
+        for batch_idx, batch in enumerate(batches):
+            logger.info(
+                "Processando lote de vereditos %d/%d | statements=%d",
+                batch_idx + 1,
+                len(batches),
+                len(batch),
+            )
+            try:
+                if hasattr(self.metric, "_create_verdicts"):
+                    verdicts = await self.metric._create_verdicts(batch, context_str)
+                else:
+                    raise AttributeError("Método interno _create_verdicts não encontrado no RAGAS.")
+
+                if verdicts and hasattr(verdicts, "statements"):
+                    all_verdict_items.extend(verdicts.statements)
+            except Exception as e:
+                logger.error(
+                    "Erro ao avaliar vereditos no lote %d/%d: %s",
+                    batch_idx + 1,
+                    len(batches),
+                    str(e),
+                )
+                raise e
+
+        # 3. Cálculo do score: supportedClaims / totalClaims
         claims_details = []
         supported_count = 0
         unsupported_count = 0
 
-        for item in verdicts.statements:
+        for item in all_verdict_items:
             is_supported = bool(getattr(item, "verdict", 0) == 1)
             if is_supported:
                 supported_count += 1
@@ -240,13 +269,17 @@ class RagasFaithfulnessAdapter:
                 "reason": str(getattr(item, "reason", "Justificativa não fornecida pelo avaliador.")),
             })
 
+        total_claims = len(claims_details)
+        score = supported_count / total_claims if total_claims > 0 else 0.0
+
         details = {
-            "totalClaims": len(claims_details),
+            "totalClaims": total_claims,
             "supportedClaims": supported_count,
             "unsupportedClaims": unsupported_count,
             "claims": claims_details,
             "isSegmented": is_segmented,
             "segmentsCount": len(segments),
+            "verdictBatches": len(batches),
         }
 
         return score, details

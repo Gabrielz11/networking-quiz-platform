@@ -10,6 +10,7 @@ export interface AiGenerateOptions {
     thinkingBudget?: number;
     fallbackEnabled?: boolean;
     maxTokens?: number;
+    provider?: string;
     // Metadados para persistência
     pipeline?: string;
     moduleId?: string;

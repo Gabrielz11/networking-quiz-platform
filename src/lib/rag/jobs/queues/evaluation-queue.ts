@@ -15,12 +15,16 @@ export interface EvaluationJobData {
     moduleId: string;
     contentHash: string;
     sourceChunkIds: string[];
+    /** ID do snapshot imutável de contexto usado na geração (opcional) */
+    snapshotId?: string;
+    /** Número da tentativa de avaliação (0 = original, 1+ = retry após auto-healing) */
+    attempt?: number;
 }
 
 /**
  * Enfileira um job de avaliação RAGAS para o módulo especificado.
  *
- * O jobId determinístico (eval_{moduleId}_{contentHash}) garante que
+ * O jobId determinístico (eval_{evaluationId}_{timestamp}) garante que
  * jobs duplicados para o mesmo conteúdo não sejam adicionados à fila.
  */
 export async function enqueueRagEvaluation(data: EvaluationJobData) {

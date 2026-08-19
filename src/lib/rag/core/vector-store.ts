@@ -117,6 +117,8 @@ export class PgVectorStore {
                 parentChunkId: string | null;
                 sectionTitle: string | null;
                 embeddingModel: string | null;
+                fileId: string;
+                chunkIndex: number;
             }>
         >(
             `SELECT
@@ -125,6 +127,8 @@ export class PgVectorStore {
                 c."parentChunkId",
                 c."sectionTitle",
                 c."embeddingModel",
+                c."fileId",
+                c."chunkIndex",
                 f."originalName" AS "fileName",
                 1 - (c."embedding" <=> $1::vector) AS "score"
              FROM "ModuleSourceChunk" c
@@ -194,6 +198,8 @@ export class PgVectorStore {
                 fileName: row.fileName,
                 score: row.score,
                 sectionTitle: row.sectionTitle ?? undefined,
+                fileId: row.fileId,
+                chunkIndex: row.chunkIndex,
             });
         }
 

@@ -29,21 +29,45 @@ let groqInstance: GroqProvider | null = null;
 let openaiInstance: OpenaiProvider | null = null;
 
 function getProviderInstance(name: string): AiProvider {
-    const key = name.toLowerCase();
-    if (key.includes("openai") || key.includes("gpt")) {
+    const key = name.toLowerCase().trim();
+    if (key === "groq") {
+        if (!groqInstance) groqInstance = new GroqProvider();
+        return groqInstance;
+    }
+    if (key === "openai") {
         if (!openaiInstance) openaiInstance = new OpenaiProvider();
         return openaiInstance;
     }
-    if (key.includes("groq") || key.includes("llama")) {
+    if (key === "gemini" || key === "google") {
+        if (!geminiInstance) geminiInstance = new GeminiProvider();
+        return geminiInstance;
+    }
+
+    // Inferência inteligente pelo nome do modelo (ex: modelos de código aberto da OpenAI/Qwen hospedados no Groq)
+    if (key.startsWith("openai/gpt-oss") || key.startsWith("groq/") || key.startsWith("qwen/") || key.includes("llama")) {
         if (!groqInstance) groqInstance = new GroqProvider();
         return groqInstance;
+    }
+    if (key.startsWith("gpt-") || key.includes("openai")) {
+        if (!openaiInstance) openaiInstance = new OpenaiProvider();
+        return openaiInstance;
     }
     if (!geminiInstance) geminiInstance = new GeminiProvider();
     return geminiInstance;
 }
 
 /** Seleciona provider baseado no modelName e prepara o fallback configurado no .env. */
-function selectProvider(modelName?: string) {
+function selectProvider(options: AiGenerateOptions = {}) {
+    const { modelName, provider: explicitProvider } = options;
+    if (explicitProvider) {
+        return {
+            provider: getProviderInstance(explicitProvider),
+            resolvedModel: modelName ?? (explicitProvider === "groq" ? env.EXPLANATION_MODEL : env.CONTENT_GENERATION_MODEL),
+            fallback: () => getProviderInstance("gemini"),
+            fallbackModel: env.CONTENT_GENERATION_MODEL,
+        };
+    }
+
     const name = (modelName ?? "").toLowerCase();
     const fallbackProviderName = env.CONTENT_FALLBACK_PROVIDER;
     const fallbackModelName = env.CONTENT_FALLBACK_MODEL;
@@ -191,7 +215,7 @@ export async function generateJson<T = unknown>(
         }
     }
 
-    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options.modelName);
+    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options);
     const start = Date.now();
 
     const { result } = await executeWithFallback<T>({
@@ -230,7 +254,7 @@ export async function generateText(
         }
     }
 
-    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options.modelName);
+    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options);
     const start = Date.now();
 
     const { result } = await executeWithFallback<string>({
@@ -259,7 +283,7 @@ export async function generateTextStream(
     prompt: string,
     options: AiGenerateOptions = {}
 ): Promise<ReadableStream<Uint8Array>> {
-    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options.modelName);
+    const { provider, resolvedModel, fallback, fallbackModel } = selectProvider(options);
 
     logger.info("generateTextStream", `Iniciando stream com ${provider.name}`, { model: resolvedModel });
 

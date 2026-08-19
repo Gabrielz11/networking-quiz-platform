@@ -141,7 +141,13 @@ function styleHtml(html: string): string {
 export function renderModuleMarkdown(markdown: string): string {
     const renderer = createModuleRenderer();
 
-    const rawHtml = marked.parse(markdown, {
+    // Sanitizar marcadores [Fonte N] caso existam no texto do módulo
+    const cleanMarkdown = (markdown || "")
+        .replace(/\[Fonte\s*[\d,\s-]+\]/gi, "")
+        .replace(/\s+([.,;:!?])/g, "$1")
+        .replace(/[ \t]{2,}/g, " ");
+
+    const rawHtml = marked.parse(cleanMarkdown, {
         renderer,
         gfm: true,
         breaks: true,

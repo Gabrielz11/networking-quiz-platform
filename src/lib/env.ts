@@ -87,7 +87,7 @@ const envSchema = z
             temperatureFromEnv(0.4),
 
         CONTENT_GENERATION_MAX_TOKENS:
-            positiveIntegerFromEnv(4096),
+            positiveIntegerFromEnv(8192),
 
         QUESTION_GENERATION_PROVIDER: z
             .enum(["gemini"])
@@ -114,7 +114,7 @@ const envSchema = z
         EXPLANATION_MODEL: z
             .string()
             .min(1)
-            .default("llama-3.1-8b-instant"),
+            .default("openai/gpt-oss-20b"),
 
         EXPLANATION_TEMPERATURE:
             temperatureFromEnv(0.3),
@@ -177,10 +177,19 @@ const envSchema = z
             positiveIntegerFromEnv(200),
 
         RAG_FINAL_CONTEXT_LIMIT:
-            positiveIntegerFromEnv(3),
+            positiveIntegerFromEnv(8),
 
         RAG_RETRIEVAL_LIMIT:
-            positiveIntegerFromEnv(10),
+            positiveIntegerFromEnv(25),
+
+        RAG_CONTEXT_BUDGET_TOKENS:
+            positiveIntegerFromEnv(12000),
+
+        RAG_MAX_CHUNKS_PER_FILE:
+            positiveIntegerFromEnv(3),
+
+        RAG_MAX_CHUNKS_PER_SECTION:
+            positiveIntegerFromEnv(2),
 
         // RAG Evaluation (RAGAS Faithfulness)
         RAG_EVALUATION_ENABLED: booleanFromEnv,

@@ -5,7 +5,7 @@ import { cleanMarkdownCodeFences, safeJsonParse, validateSchemaRequirements } fr
 
 const logger = new Logger("GroqProvider");
 
-const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_MODEL = "openai/gpt-oss-20b";
 const DEFAULT_TIMEOUT_MS = 45_000;
 
 export class GroqProvider implements AiProvider {

@@ -46,6 +46,11 @@ enum RagEvaluationStatus {
   OUTDATED
 }
 
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id           String               @id @default(cuid())
   email        String               @unique
@@ -62,23 +67,25 @@ model User {
 }
 
 model Module {
-  id           String               @id @default(cuid())
-  title        String
-  description  String?              @db.Text
-  content      String               @db.Text
-  imageUrl     String?              @db.Text
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-  authorId     String
-  author       User                 @relation(fields: [authorId], references: [id])
-  questions    Question[]
-  quizSessions QuizSession[]
-  sourceFiles  ModuleSourceFile[]
-  sourceChunks ModuleSourceChunk[]
-  scores       StudentModuleScore[]
-  aiGenerations AiGenerationMetadata[]
-  telemetries   StudentQuizTelemetry[]
-  evaluations   RagEvaluation[]
+  id             String               @id @default(cuid())
+  title          String
+  description    String?              @db.Text
+  content        String               @db.Text
+  contentStatus  ContentStatus        @default(PUBLISHED)
+  imageUrl       String?              @db.Text
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  authorId       String
+  author         User                 @relation(fields: [authorId], references: [id])
+  questions      Question[]
+  quizSessions   QuizSession[]
+  sourceFiles    ModuleSourceFile[]
+  sourceChunks   ModuleSourceChunk[]
+  scores         StudentModuleScore[]
+  aiGenerations  AiGenerationMetadata[]
+  telemetries    StudentQuizTelemetry[]
+  evaluations    RagEvaluation[]
+  snapshots      RagGenerationSnapshot[]
 }
 
 model Question {
@@ -301,7 +308,11 @@ model RagEvaluation {
 
   contentHash      String              // SHA-256 do conteúdo avaliado
 
-  details          Json?               // { sourceChunkIds: [...], claimsCount: N }
+  // Referência ao snapshot imutável de contexto usado na geração
+  snapshotId       String?
+  snapshot         RagGenerationSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+
+  details          Json?               // { claims: [...], contextHash, ... }
   error            String?
 
   startedAt        DateTime?
@@ -313,4 +324,41 @@ model RagEvaluation {
   @@unique([moduleId, metric, contentHash])
   @@index([moduleId])
   @@index([status])
+  @@index([snapshotId])
+}
+
+// ── Snapshot imutável do contexto de geração RAG ─────────────────────────────
+// Armazena o estado exato usado na geração: chunks, prompt, modelo, resposta.
+// Garante que a avaliação RAGAS use exatamente o mesmo contexto da geração.
+model RagGenerationSnapshot {
+  id              String   @id @default(cuid())
+
+  moduleId        String
+  module          Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  // Contexto exato enviado ao LLM
+  contextChunks   Json     // Array de { id, content, fileName, sectionTitle, score, truncated }
+  contextHash     String   // SHA-256 do contexto serializado
+  contextOrder    String[] // IDs na ordem exata de injeção
+
+  // Mapa de evidências extraído
+  evidenceMap     Json?    // EvidenceMap JSON
+
+  // Prompt e modelo
+  promptVersion   String   // ex: "2.0.0"
+  promptText      String   @db.Text
+  model           String   // ex: "gemini-2.5-flash"
+  temperature     Float
+  maxTokens       Int?
+
+  // Resposta
+  responseText    String   @db.Text
+  responseHash    String   // SHA-256 do conteúdo gerado
+
+  createdAt       DateTime @default(now())
+
+  evaluations     RagEvaluation[]
+
+  @@index([moduleId])
+  @@index([contextHash])
 }

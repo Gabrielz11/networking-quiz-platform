@@ -49,6 +49,7 @@ export class ExplainService {
         logger.info("generateExplanationStream", "Gerando explicação em streaming");
 
         const stream = await LlmRouter.generateTextStream(promptText, {
+            provider: env.EXPLANATION_PROVIDER,
             modelName: env.EXPLANATION_MODEL,
             systemInstruction: EXPLAIN_SYSTEM_PROMPT,
             temperature: env.EXPLANATION_TEMPERATURE,

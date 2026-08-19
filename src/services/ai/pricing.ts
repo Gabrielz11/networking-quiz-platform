@@ -49,6 +49,10 @@ const PRICING_TABLE: Record<string, ModelPricing> = {
         inputPer1M: 0.59,
         outputPer1M: 0.79,
     },
+    "openai/gpt-oss-20b": {
+        inputPer1M: 0.10,
+        outputPer1M: 0.10,
+    },
 };
 
 /**
